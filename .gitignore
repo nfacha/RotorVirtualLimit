@@ -1,0 +1,8 @@
+*.pyc
+__pycache__/
+.idea/
+*.iml
+*.xml
+test_limits.json
+virtual_limits.json
+profiles/

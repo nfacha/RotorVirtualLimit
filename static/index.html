@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Rotor Controller</title>
+<meta name="description" content="Rotor Virtual Limit Switch — transparent TCP proxy for hamlib rotctld with virtual limits, cable guard, and interactive rotor control.">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════
+   CLEAN TACTICAL / INSTRUMENT DARK SYSTEM
+   ═══════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#090d16;
+  --surface:#101726;
+  --surface2:#162035;
+  --surface-hover:#1c2942;
+  --border:#1e2d4a;
+  --border-hover:#2d426b;
+  --text:#f1f5f9;
+  --text-secondary:#94a3b8;
+  --muted:#64748b;
+  --accent:#3b82f6;
+  --accent-hover:#2563eb;
+  --accent-glow:rgba(59,130,246,.15);
+  --green:#22c55e;
+  --green-bg:rgba(34,197,94,.1);
+  --green-border:rgba(34,197,94,.25);
+  --red:#ef4444;
+  --red-bg:rgba(239,68,68,.1);
+  --red-border:rgba(239,68,68,.25);
+  --yellow:#eab308;
+  --yellow-bg:rgba(234,179,8,.1);
+  --yellow-border:rgba(234,179,8,.25);
+  --radius:14px;
+  --radius-md:10px;
+  --radius-sm:8px;
+  --radius-xs:6px;
+  --shadow-card:0 4px 20px rgba(0,0,0,.4), 0 0 0 1px var(--border);
+  --transition-fast:.15s ease;
+  --transition-med:.25s ease;
+  --transition-spring:.35s cubic-bezier(.22,1,.36,1);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+  --safe-top:env(safe-area-inset-top,0px);
+}
+html{font-size:15px;-webkit-text-size-adjust:100%}
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:var(--bg);color:var(--text);min-height:100dvh;
+  display:flex;justify-content:center;
+  padding:calc(12px + var(--safe-top)) 12px calc(16px + var(--safe-bottom));
+  -webkit-font-smoothing:antialiased;
+}
+.container{max-width:920px;width:100%}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+
+/* ═══════════════════════════════════════════════════════
+   HEADER
+   ═══════════════════════════════════════════════════════ */
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;flex-wrap:wrap;gap:10px;padding:0 2px;
+}
+header h1{
+  font-size:1.15rem;font-weight:700;display:flex;align-items:center;gap:10px;
+  letter-spacing:-.01em;color:var(--text);
+}
+.logo-icon{
+  width:34px;height:34px;border-radius:var(--radius-sm);
+  background:var(--surface2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--accent);flex-shrink:0;
+}
+.badge-group{display:flex;gap:6px;flex-wrap:wrap}
+.badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 12px;border-radius:999px;font-size:.7rem;font-weight:600;
+  border:1px solid;transition:all var(--transition-fast);
+}
+.badge .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.badge.on{background:var(--green-bg);border-color:var(--green-border);color:var(--green)}
+.badge.on .dot{background:var(--green)}
+.badge.off{background:rgba(100,116,139,.08);border-color:rgba(100,116,139,.2);color:var(--muted)}
+.badge.off .dot{background:var(--muted)}
+.badge.err{background:var(--red-bg);border-color:var(--red-border);color:var(--red)}
+.badge.err .dot{background:var(--red)}
+.badge.blocked{background:var(--red-bg);border-color:var(--red-border);color:var(--red);animation:pulse-badge 2s ease-in-out infinite}
+@keyframes pulse-badge{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* ═══════════════════════════════════════════════════════
+   GRID & CARDS
+   ═══════════════════════════════════════════════════════ */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:740px){.grid-2,.grid-3{grid-template-columns:1fr}}
+.section{margin-bottom:14px}
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px 18px;
+  box-shadow:var(--shadow-card);
+}
+.card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;flex-wrap:wrap;gap:8px;
+}
+.card-title{
+  font-size:.75rem;font-weight:700;display:flex;align-items:center;gap:8px;
+  color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;
+}
+.card-desc{font-size:.72rem;color:var(--muted);margin-bottom:10px;line-height:1.4}
+
+/* ─── Collapsible Sections ─── */
+.card-collapse{cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.card-collapse .collapse-arrow{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:var(--radius-xs);
+  background:var(--surface2);color:var(--muted);
+  font-size:.7rem;transition:transform var(--transition-med);
+  margin-left:auto;flex-shrink:0;
+}
+.card-collapse:hover .collapse-arrow{color:var(--text);background:var(--border)}
+.card-body{overflow:hidden;transition:max-height .3s ease, opacity .2s ease;max-height:800px;opacity:1}
+.card-body.collapsed{max-height:0!important;opacity:0;pointer-events:none;margin:0;padding:0}
+.collapse-arrow.rotated{transform:rotate(-90deg)}
+
+/* ═══════════════════════════════════════════════════════
+   DASHBOARD / INSTRUMENT READOUTS
+   ═══════════════════════════════════════════════════════ */
+.dash{display:flex;gap:14px}
+@media(max-width:480px){.dash{flex-direction:column}}
+.dash-item{
+  flex:1;text-align:center;
+  background:var(--surface2);border-radius:var(--radius-md);
+  padding:14px 12px;border:1px solid var(--border);
+  position:relative;
+}
+.dash-label{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+.dash-value{
+  font-family:'JetBrains Mono',monospace;
+  font-size:2.8rem;font-weight:700;font-variant-numeric:tabular-nums;
+  line-height:1;margin:6px 0;color:var(--text);
+}
+.dash-value .unit{font-size:.9rem;font-weight:500;color:var(--muted);margin-left:2px}
+
+.gauge-wrap{display:flex;justify-content:center;margin-top:6px}
+.gauge-wrap svg{display:block}
+
+/* ═══════════════════════════════════════════════════════
+   D-PAD
+   ═══════════════════════════════════════════════════════ */
+.dpad{
+  display:grid;grid-template-columns:58px 58px 58px;grid-template-rows:58px 58px 58px;
+  gap:6px;justify-content:center;
+}
+.dpad-btn{
+  display:flex;align-items:center;justify-content:center;
+  border-radius:var(--radius-sm);border:1px solid var(--border);
+  background:var(--surface2);color:var(--text);cursor:pointer;
+  font-size:18px;transition:all .1s;user-select:none;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+.dpad-btn:hover{border-color:var(--border-hover);background:var(--surface-hover)}
+.dpad-btn:active{transform:scale(.92);background:var(--accent);color:#fff;border-color:var(--accent)}
+.dpad-btn.stop{border-color:var(--red-border);color:var(--red);background:var(--red-bg)}
+.dpad-btn.stop:active{background:var(--red);color:#fff}
+.dpad-btn.u{grid-column:2;grid-row:1}
+.dpad-btn.l{grid-column:1;grid-row:2}
+.dpad-btn.s{grid-column:2;grid-row:2}
+.dpad-btn.r{grid-column:3;grid-row:2}
+.dpad-btn.d{grid-column:2;grid-row:3}
+
+/* ═══════════════════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════════════════ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:9px 16px;border-radius:var(--radius-sm);font-size:.8rem;font-weight:600;
+  border:1px solid transparent;cursor:pointer;transition:all var(--transition-fast);
+  color:#fff;white-space:nowrap;min-height:42px;
+  user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  font-family:inherit;
+}
+.btn:active{transform:scale(.96)}
+.btn:disabled{opacity:.3;cursor:not-allowed;transform:none}
+.btn-primary{background:var(--accent);border-color:var(--accent)}
+.btn-primary:hover:not(:disabled){background:var(--accent-hover);border-color:var(--accent-hover)}
+.btn-green{background:var(--green);border-color:var(--green)}
+.btn-green:hover:not(:disabled){background:#16a34a}
+.btn-red{background:var(--red);border-color:var(--red)}
+.btn-red:hover:not(:disabled){background:#dc2626}
+.btn-ghost{
+  background:var(--surface2);border-color:var(--border);
+  color:var(--text-secondary);
+}
+.btn-ghost:hover:not(:disabled){background:var(--surface-hover);border-color:var(--border-hover);color:var(--text)}
+.btn-ghost:active:not(:disabled){background:var(--border);color:var(--text)}
+.btn-sm{padding:7px 12px;font-size:.76rem;min-height:36px}
+.btn-xs{padding:4px 10px;font-size:.7rem;min-height:30px}
+.btn-group{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+
+/* ═══════════════════════════════════════════════════════
+   TOGGLE SWITCH
+   ═══════════════════════════════════════════════════════ */
+.toggle{position:relative;display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:.78rem;user-select:none}
+.toggle input{position:absolute;opacity:0;width:0;height:0}
+.toggle .slider{
+  width:42px;height:24px;background:var(--surface2);border-radius:12px;
+  transition:background var(--transition-fast),border-color var(--transition-fast);
+  position:relative;flex-shrink:0;border:1px solid var(--border);
+}
+.toggle .slider::after{
+  content:'';position:absolute;top:3px;left:3px;
+  width:16px;height:16px;background:var(--muted);border-radius:50%;
+  transition:transform var(--transition-med),background var(--transition-fast);
+}
+.toggle input:checked+.slider{background:var(--accent-glow);border-color:var(--accent)}
+.toggle input:checked+.slider::after{background:var(--accent);transform:translateX(18px)}
+.toggle .label{font-weight:600;color:var(--muted);transition:color var(--transition-fast);font-size:.75rem}
+.toggle input:checked~.label{color:var(--text)}
+.toggle.danger input:checked+.slider{background:var(--red-bg);border-color:var(--red)}
+.toggle.danger input:checked+.slider::after{background:var(--red)}
+
+/* ═══════════════════════════════════════════════════════
+   INPUTS
+   ═══════════════════════════════════════════════════════ */
+.input-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.input-row label{font-size:.72rem;color:var(--muted);font-weight:600}
+input[type=text],input[type=number]{
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);
+  padding:8px 10px;color:var(--text);font-size:.82rem;font-family:'JetBrains Mono',monospace;
+  transition:border-color var(--transition-fast);
+  outline:none;min-height:38px;
+}
+input[type=text]:focus,input[type=number]:focus{
+  border-color:var(--accent);
+}
+input[type=text]{width:130px;font-family:inherit}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;height:6px;border-radius:3px;
+  background:var(--border);outline:none;width:110px;flex:1;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:22px;height:22px;
+  border-radius:50%;background:var(--accent);cursor:pointer;
+  transition:.1s;border:2px solid var(--surface);
+}
+input[type=range]::-moz-range-thumb{
+  width:22px;height:22px;border-radius:50%;background:var(--accent);
+  cursor:pointer;border:2px solid var(--surface);
+}
+.num-sm{width:72px!important}
+
+/* ═══════════════════════════════════════════════════════
+   LIMITS BAR
+   ═══════════════════════════════════════════════════════ */
+.lim-bar{
+  position:relative;height:28px;background:var(--surface2);
+  border-radius:6px;margin:6px 0 8px;overflow:visible;
+  border:1px solid var(--border);
+}
+.lim-range{
+  position:absolute;top:2px;bottom:2px;border-radius:4px;
+  background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4);
+  transition:left var(--transition-spring),width var(--transition-spring);
+}
+.lim-edge{
+  position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--red);z-index:1;
+  transition:left var(--transition-spring);
+}
+.lim-edge span{
+  position:absolute;top:-16px;left:50%;transform:translateX(-50%);
+  font-size:.6rem;color:var(--red);white-space:nowrap;font-weight:700;
+  font-family:'JetBrains Mono',monospace;
+}
+.lim-pos{
+  position:absolute;top:50%;transform:translate(-50%,-50%);
+  width:14px;height:14px;border-radius:50%;
+  border:2.5px solid var(--accent);z-index:2;background:var(--surface);
+  transition:left var(--transition-spring);
+}
+
+/* ═══════════════════════════════════════════════════════
+   CABLE GUARD BAR
+   ═══════════════════════════════════════════════════════ */
+.cg-wrap{position:relative;height:36px;margin:4px 0}
+.cg-track{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:8px;background:var(--surface2);border-radius:4px;border:1px solid var(--border)}
+.cg-fill{
+  position:absolute;top:50%;transform:translateY(-50%);height:100%;border-radius:4px;
+  transition:width var(--transition-spring),left var(--transition-spring);
+}
+.cg-fill.pos{right:50%;background:rgba(59,130,246,.4)}
+.cg-fill.neg{left:50%;background:rgba(239,68,68,.4)}
+.cg-dot{
+  position:absolute;top:50%;transform:translate(-50%,-50%);
+  width:16px;height:16px;border-radius:50%;border:2px solid;z-index:2;
+  background:var(--surface);transition:left var(--transition-spring);
+}
+.cg-dot.pos{border-color:var(--accent)}
+.cg-dot.neg{border-color:var(--red)}
+.cg-dot.zero{border-color:var(--muted);width:4px;height:24px;border-radius:2px;transform:translate(-50%,-50%)}
+.cg-labels{display:flex;justify-content:space-between;font-size:.62rem;color:var(--muted);margin-top:2px;font-weight:600;font-family:'JetBrains Mono',monospace}
+
+/* ═══════════════════════════════════════════════════════
+   ALERTS & BADGES
+   ═══════════════════════════════════════════════════════ */
+.alert{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;border-radius:var(--radius-sm);font-size:.78rem;
+  margin-top:10px;line-height:1.4;font-weight:600;
+}
+.alert-danger{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red)}
+.alert-warn{background:var(--yellow-bg);border:1px solid var(--yellow-border);color:var(--yellow)}
+
+.hidden{display:none!important}
+.flex{display:flex;align-items:center;gap:6px}
+.flex-wrap{flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+.shrink-0{flex-shrink:0}
+.gap-2{gap:8px}
+.gap-3{gap:12px}
+
+.tag{
+  display:inline-flex;align-items:center;gap:4px;padding:3px 10px;
+  border-radius:999px;font-size:.65rem;font-weight:600;
+}
+.tag-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.tag-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.tag-muted{background:rgba(100,116,139,.1);color:var(--muted);border:1px solid rgba(100,116,139,.2)}
+
+/* ═══════════════════════════════════════════════════════
+   PROFILES
+   ═══════════════════════════════════════════════════════ */
+.profile-item{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  border-radius:var(--radius-sm);background:var(--surface2);
+  border:1px solid var(--border);margin-bottom:6px;
+  transition:all var(--transition-fast);
+}
+.profile-item:hover{border-color:var(--border-hover)}
+.profile-item .info{flex:1;min-width:0}
+.profile-item .info .name{font-size:.85rem;font-weight:600}
+.profile-item .info .meta{font-size:.68rem;color:var(--muted)}
+.profile-item .actions{display:flex;gap:5px;flex-shrink:0}
+.profile-load-btn,.profile-del-btn{
+  padding:6px 12px;font-size:.72rem;font-weight:600;border:none;
+  border-radius:var(--radius-xs);cursor:pointer;transition:all .1s;
+  min-height:34px;font-family:inherit;
+}
+.profile-load-btn{background:var(--accent-glow);color:var(--accent);border:1px solid rgba(59,130,246,.3)}
+.profile-load-btn:hover{background:var(--accent);color:#fff}
+.profile-del-btn{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.profile-del-btn:hover{background:var(--red);color:#fff}
+
+/* ═══════════════════════════════════════════════════════
+   TOAST NOTIFICATIONS
+   ═══════════════════════════════════════════════════════ */
+.toast-container{
+  position:fixed;bottom:calc(20px + var(--safe-bottom));right:16px;
+  display:flex;flex-direction:column;gap:8px;z-index:9999;
+  pointer-events:none;
+}
+@media(max-width:480px){.toast-container{left:16px;right:16px}}
+.toast{
+  padding:12px 18px;border-radius:var(--radius-sm);font-size:.82rem;font-weight:600;
+  box-shadow:0 8px 30px rgba(0,0,0,.6);
+  animation:toast-in .25s ease;max-width:380px;pointer-events:auto;
+}
+.toast-success{background:#0b291a;border:1px solid var(--green-border);color:var(--green)}
+.toast-error{background:#290b0b;border:1px solid var(--red-border);color:var(--red)}
+@keyframes toast-in{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* ═══════════════════════════════════════════════════════
+   FOOTER & MAP
+   ═══════════════════════════════════════════════════════ */
+footer{
+  text-align:center;margin-top:24px;padding:16px 0 8px;
+  color:var(--muted);font-size:.72rem;line-height:1.6;
+  border-top:1px solid var(--border);
+}
+footer strong{color:var(--text-secondary);font-weight:600}
+footer a{color:var(--accent);text-decoration:none;font-weight:600;transition:color var(--transition-fast)}
+footer a:hover{color:var(--accent-hover);text-decoration:underline}
+
+#map{height:280px;border-radius:var(--radius-sm);overflow:hidden;background:var(--surface2);border:1px solid var(--border)}
+.leaflet-container{background:var(--surface2)!important}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>
+    <div class="logo-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2v20M17 5H7M19 9H5M21 13H3M17 17H7M15 21H9"/>
+      </svg>
+    </div>
+    Rotor Controller
+  </h1>
+  <div class="badge-group">
+    <div class="badge off" id="badge-api"><span class="dot"></span> API</div>
+    <div class="badge off" id="badge-backend"><span class="dot"></span> Backend</div>
+    <div class="badge off hidden" id="badge-blocked"><span class="dot"></span> Blocked</div>
+  </div>
+</header>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="section">
+  <div class="dash">
+    <div class="dash-item">
+      <div class="dash-label">Azimuth</div>
+      <div class="dash-value"><span id="v-az">---</span><span class="unit">&deg;</span></div>
+      <div class="gauge-wrap">
+        <svg width="180" height="96" viewBox="0 0 180 96" id="az-gauge">
+          <path d="M 15 86 A 75 75 0 0 1 165 86" fill="none" stroke="var(--border)" stroke-width="8" stroke-linecap="round"/>
+          <path id="az-lim-arc" d="" fill="none" stroke="rgba(34, 197, 94, 0.35)" stroke-width="12" stroke-linecap="round" class="hidden"/>
+          <line id="az-min-line" x1="0" y1="0" x2="0" y2="0" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" class="hidden"/>
+          <line id="az-max-line" x1="0" y1="0" x2="0" y2="0" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" class="hidden"/>
+          <path id="az-arc" d="M 15 86 A 75 75 0 0 1 165 86" fill="none" stroke="var(--accent)" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 236"/>
+          <text x="12" y="94" fill="var(--muted)" font-size="8" text-anchor="middle" font-family="JetBrains Mono">0°</text>
+          <text x="90" y="14" fill="var(--muted)" font-size="8" text-anchor="middle" font-family="JetBrains Mono">180°</text>
+          <text x="168" y="94" fill="var(--muted)" font-size="8" text-anchor="middle" font-family="JetBrains Mono">360°</text>
+          <circle id="az-dot" cx="15" cy="86" r="6" fill="var(--accent)"/>
+        </svg>
+      </div>
+    </div>
+    <div class="dash-item">
+      <div class="dash-label">Elevation</div>
+      <div class="dash-value"><span id="v-el">---</span><span class="unit">&deg;</span></div>
+      <div class="gauge-wrap">
+        <svg width="70" height="96" viewBox="0 0 70 96" id="el-gauge">
+          <rect x="24" y="4" width="12" height="80" rx="6" fill="var(--border)"/>
+          <rect id="el-lim-rect" x="20" y="4" width="20" height="80" rx="4" fill="rgba(34, 197, 94, 0.2)" stroke="var(--green)" stroke-width="1" class="hidden"/>
+          <line id="el-min-line" x1="18" y1="84" x2="42" y2="84" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" class="hidden"/>
+          <line id="el-max-line" x1="18" y1="4" x2="42" y2="4" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" class="hidden"/>
+          <rect id="el-fill" x="24" y="84" width="12" height="0" rx="6" fill="var(--yellow)"/>
+          <text x="50" y="88" fill="var(--muted)" font-size="7" font-family="JetBrains Mono">0°</text>
+          <text x="50" y="48" fill="var(--muted)" font-size="7" font-family="JetBrains Mono">90°</text>
+          <text x="50" y="10" fill="var(--muted)" font-size="7" font-family="JetBrains Mono">180°</text>
+          <circle id="el-dot" cx="30" cy="84" r="5" fill="var(--yellow)"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CONTROL + PROTECTION ═══ -->
+<div class="grid-2 section">
+
+  <!-- ── Manual Control ── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Manual Control</div>
+      <label class="toggle danger" id="block-toggle-wrap">
+        <span class="label">Block</span>
+        <input type="checkbox" id="block-toggle">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="flex gap-3 flex-wrap" style="align-items:flex-start">
+      <div class="dpad shrink-0">
+        <button class="dpad-btn u" data-dir="2">&#9650;</button>
+        <button class="dpad-btn l" data-dir="8">&#9664;</button>
+        <button class="dpad-btn s stop" data-dir="stop">&#9632;</button>
+        <button class="dpad-btn r" data-dir="16">&#9654;</button>
+        <button class="dpad-btn d" data-dir="4">&#9660;</button>
+      </div>
+      <div class="grow" style="display:flex;flex-direction:column;gap:10px">
+        <div class="flex gap-2 flex-wrap">
+          <span style="font-size:.72rem;color:var(--muted);font-weight:600">Step</span>
+          <input type="range" id="speed-slider" min="1" max="100" value="10">
+          <span id="speed-val" style="font-size:.85rem;font-weight:700;min-width:32px;text-align:right;color:var(--accent);font-family:'JetBrains Mono',monospace">10&deg;</span>
+        </div>
+        <div class="flex gap-2 flex-wrap">
+          <input type="number" id="goto-az" step="0.1" min="0" max="360" placeholder="Az" class="num-sm">
+          <input type="number" id="goto-el" step="0.1" min="0" max="180" placeholder="El" class="num-sm">
+          <button class="btn btn-primary btn-sm" id="goto-btn">Go To</button>
+        </div>
+        <div class="flex gap-2 flex-wrap">
+          <input type="number" id="park-az" step="0.1" min="0" max="360" placeholder="Az" class="num-sm">
+          <input type="number" id="park-el" step="0.1" min="0" max="180" placeholder="El" class="num-sm">
+          <button class="btn btn-ghost btn-sm" id="park-set-btn">Set Park</button>
+          <button class="btn btn-ghost btn-sm" id="park-btn">Park</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Virtual Limits ── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Virtual Limits</div>
+      <label class="toggle">
+        <input type="checkbox" id="limits-toggle">
+        <span class="slider"></span>
+        <span class="label" id="limits-label">Off</span>
+      </label>
+    </div>
+    <p class="card-desc">Set azimuth and elevation boundaries. Commands outside the range are rejected.</p>
+
+    <div style="font-size:.72rem;color:var(--muted);margin-bottom:3px;font-weight:600">Azimuth</div>
+    <div class="lim-bar" id="az-lim-bar">
+      <div class="lim-range" id="az-range" style="left:0;width:100%"></div>
+      <div class="lim-edge hidden" id="az-min-e"><span id="az-min-lbl">0&deg;</span></div>
+      <div class="lim-edge hidden" id="az-max-e"><span id="az-max-lbl">360&deg;</span></div>
+      <div class="lim-pos" id="az-pos" style="left:0%"></div>
+    </div>
+    <div class="flex" style="justify-content:space-between;margin-bottom:8px">
+      <button class="btn btn-ghost btn-xs capture" data-side="left">Az min &#8592;</button>
+      <button class="btn btn-ghost btn-xs capture" data-side="right">Az max &#8594;</button>
+      <button class="btn btn-ghost btn-xs capture" data-side="down">El min &#8595;</button>
+      <button class="btn btn-ghost btn-xs capture" data-side="up">El max &#8593;</button>
+    </div>
+
+    <div style="font-size:.72rem;color:var(--muted);margin-bottom:3px;font-weight:600">Elevation</div>
+    <div class="lim-bar" id="el-lim-bar">
+      <div class="lim-range" id="el-range" style="left:0;width:100%"></div>
+      <div class="lim-edge hidden" id="el-min-e"><span>0&deg;</span></div>
+      <div class="lim-edge hidden" id="el-max-e"><span>180&deg;</span></div>
+      <div class="lim-pos" id="el-pos" style="left:0%"></div>
+    </div>
+
+    <div class="flex gap-2 flex-wrap" style="margin-top:6px">
+      <div class="input-row">
+        <label>Az min</label>
+        <input type="number" id="man-az-min" step="0.1" min="0" max="360" placeholder="0" class="num-sm">
+        <label>max</label>
+        <input type="number" id="man-az-max" step="0.1" min="0" max="360" placeholder="360" class="num-sm">
+        <button class="btn btn-primary btn-xs" id="apply-az">Apply</button>
+      </div>
+      <div class="input-row">
+        <label>El min</label>
+        <input type="number" id="man-el-min" step="0.1" min="0" max="180" placeholder="0" class="num-sm">
+        <label>max</label>
+        <input type="number" id="man-el-max" step="0.1" min="0" max="180" placeholder="180" class="num-sm">
+        <button class="btn btn-primary btn-xs" id="apply-el">Apply</button>
+        <button class="btn btn-ghost btn-xs" id="clear-limits">Clear</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ CABLE GUARD ═══ -->
+<div class="section">
+  <div class="card">
+    <div class="card-header card-collapse" onclick="toggleCollapse('cg-body',this)">
+      <div class="card-title">Cable Tangling Guard</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <label class="toggle" onclick="event.stopPropagation()">
+          <input type="checkbox" id="cable-toggle">
+          <span class="slider"></span>
+          <span class="label" id="cable-label">Off</span>
+        </label>
+        <span class="collapse-arrow">&#9660;</span>
+      </div>
+    </div>
+    <div class="card-body" id="cg-body">
+      <p class="card-desc">Tracks accumulated azimuth rotation. Prevents the cable from over-twisting.</p>
+
+      <div class="flex" style="justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:.78rem;color:var(--muted);font-weight:600">Net Rotation</span>
+        <span style="font-weight:700;font-size:1.1rem;font-family:'JetBrains Mono',monospace" id="cg-net">0.0&deg;</span>
+      </div>
+
+      <div class="cg-wrap">
+        <div class="cg-track"></div>
+        <div class="cg-fill pos" id="cg-fill-p" style="width:0%;left:50%"></div>
+        <div class="cg-fill neg" id="cg-fill-n" style="width:0%;right:50%"></div>
+        <div class="cg-dot zero" style="left:50%"></div>
+        <div class="cg-dot" id="cg-dot" style="left:50%"></div>
+      </div>
+      <div class="cg-labels"><span id="cg-lo">-360&deg;</span><span>0&deg;</span><span id="cg-hi">+360&deg;</span></div>
+
+      <div class="alert alert-warn hidden" id="cg-warn">Approaching limit &mdash; unwind rotor</div>
+      <div class="alert alert-danger hidden" id="cg-trip">Cable guard tripped! Unwind or reset counter.</div>
+
+      <div class="flex gap-2 flex-wrap" style="margin-top:10px">
+        <div class="input-row">
+          <label>Max turns</label>
+          <input type="number" id="max-turns" step="0.1" min="0.1" max="10" value="1.0" class="num-sm">
+          <button class="btn btn-primary btn-sm" id="apply-turns">Set</button>
+        </div>
+        <button class="btn btn-green btn-sm" id="reset-cg">Reset Counter</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS ═══ -->
+<div class="grid-3 section">
+
+  <!-- ── Backend ── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Backend</div>
+      <span id="backend-tag" class="tag tag-muted">---</span>
+    </div>
+    <div class="flex gap-2 flex-wrap">
+      <div class="input-row">
+        <label>Host</label>
+        <input type="text" id="be-host" placeholder="127.0.0.1" style="width:100%">
+      </div>
+      <div class="input-row">
+        <label>Port</label>
+        <input type="number" id="be-port" min="1" max="65535" placeholder="4533" class="num-sm">
+      </div>
+    </div>
+    <div class="flex gap-2 flex-wrap" style="margin-top:8px">
+      <button class="btn btn-primary btn-sm" id="be-apply">Apply</button>
+      <button class="btn btn-ghost btn-sm" id="be-test">Test</button>
+      <button class="btn btn-ghost btn-sm" id="be-reconnect">Reconnect</button>
+    </div>
+    <div id="be-result" style="margin-top:8px;font-size:.72rem"></div>
+  </div>
+
+  <!-- ── Poll Rate ── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Poll Rate</div>
+    </div>
+    <div class="flex gap-2 flex-wrap" style="align-items:center">
+      <div class="input-row">
+        <label>ms</label>
+        <input type="number" id="poll-ms" min="200" max="30000" step="100" placeholder="1000" class="num-sm">
+        <button class="btn btn-primary btn-sm" id="poll-apply">Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Location ── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Location</div>
+    </div>
+    <div class="flex gap-2 flex-wrap">
+      <div class="input-row">
+        <label>Lat</label>
+        <input type="number" id="loc-lat" step="any" min="-90" max="90" placeholder="38.8" class="num-sm">
+        <label>Lng</label>
+        <input type="number" id="loc-lng" step="any" min="-180" max="180" placeholder="-9.1" class="num-sm">
+        <button class="btn btn-primary btn-sm" id="loc-apply">Set</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ MAP ═══ -->
+<div class="section">
+  <div class="card">
+    <div class="card-header card-collapse" onclick="toggleCollapse('map-body',this)">
+      <div class="card-title">Station Map</div>
+      <span class="collapse-arrow">&#9660;</span>
+    </div>
+    <div class="card-body" id="map-body">
+      <div id="map"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PROFILES ═══ -->
+<div class="section">
+  <div class="card">
+    <div class="card-header card-collapse" onclick="toggleCollapse('prof-body',this)">
+      <div class="card-title">Profiles</div>
+      <span class="collapse-arrow">&#9660;</span>
+    </div>
+    <div class="card-body" id="prof-body">
+      <div class="flex gap-2 flex-wrap" style="margin-bottom:10px">
+        <div class="input-row">
+          <label>Name</label>
+          <input type="text" id="prof-name" placeholder="e.g. balcony" style="width:110px">
+          <label>Notes</label>
+          <input type="text" id="prof-desc" placeholder="optional..." style="width:130px">
+          <button class="btn btn-primary btn-sm" id="prof-save">Save Current</button>
+        </div>
+      </div>
+      <div id="prof-list">
+        <div style="color:var(--muted);font-size:.75rem;padding:8px 0">No profiles saved yet.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Proxy port: <strong id="footer-port">4534</strong> &middot; Config: <strong>virtual_limits.json</strong>
+  <br>
+  Developed by <a href="https://facha.dev" target="_blank" rel="noopener">CS8ACT</a>
+</footer>
+
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+const API='/api';let S={};
+
+/* ─── Collapsible sections ─────────────────────────── */
+function toggleCollapse(id,header){
+  const body=document.getElementById(id);
+  const arrow=header.querySelector('.collapse-arrow');
+  if(!body)return;
+  body.classList.toggle('collapsed');
+  if(arrow) arrow.classList.toggle('rotated');
+  if(id==='map-body'&&!body.classList.contains('collapsed')&&typeof map!=='undefined'&&map){
+    setTimeout(()=>map.invalidateSize(),350);
+  }
+}
+
+/* ─── Fetch ──────────────────────────────────────────── */
+let _poll_ms = 1000;
+let _poll_timer = null;
+async function fetchStatus(){
+  try{
+    const r=await fetch(API+'/status');
+    if(!r.ok) throw Error(r.status);
+    const s=await r.json();
+    _poll_ms = Math.max(200, s.refresh_interval_ms || 1000);
+    S=s;
+    document.getElementById('badge-api').className='badge on';
+    document.getElementById('badge-api').innerHTML='<span class="dot"></span> API';
+    render(S);
+  }catch(e){
+    document.getElementById('badge-api').className='badge err';
+    document.getElementById('badge-api').innerHTML='<span class="dot"></span> API Offline';
+  }
+  if(_poll_timer) clearTimeout(_poll_timer);
+  _poll_timer = setTimeout(fetchStatus, _poll_ms);
+}
+fetchStatus();
+
+function setVal(id,v){const e=document.getElementById(id);if(e&&e!=document.activeElement)e.value=v;}
+
+/* ─── SVG Gauge Helpers ─────────────────────────────── */
+function setLine(id,x1,y1,x2,y2,show){
+  const el=document.getElementById(id);
+  if(!el) return;
+  if(show){
+    el.setAttribute('x1',x1);el.setAttribute('y1',y1);
+    el.setAttribute('x2',x2);el.setAttribute('y2',y2);
+    el.classList.remove('hidden');
+  }else{
+    el.classList.add('hidden');
+  }
+}
+
+function updateAzGauge(az, s){
+  if(az!=null){
+    const frac=Math.max(0,Math.min(360,az))/360;
+    const totalLen=Math.PI*75; // ~235.619
+    const fill=frac*totalLen;
+    const arc=document.getElementById('az-arc');
+    if(arc) arc.setAttribute('stroke-dasharray',fill+' '+totalLen);
+    
+    const angle=frac*Math.PI;
+    const cx=90-75*Math.cos(angle);
+    const cy=86-75*Math.sin(angle);
+    const dot=document.getElementById('az-dot');
+    if(dot){dot.setAttribute('cx',cx);dot.setAttribute('cy',cy);}
+  }
+
+  const showLim=s&&s.enabled;
+  const hasMin=showLim&&s.az_min!=null;
+  const hasMax=showLim&&s.az_max!=null;
+
+  if(hasMin){
+    const f=Math.max(0,Math.min(360,s.az_min))/360;
+    const a=f*Math.PI;
+    const xIn=90-67*Math.cos(a),yIn=86-67*Math.sin(a);
+    const xOut=90-83*Math.cos(a),yOut=86-83*Math.sin(a);
+    setLine('az-min-line',xIn,yIn,xOut,yOut,true);
+  }else{
+    setLine('az-min-line',0,0,0,0,false);
+  }
+
+  if(hasMax){
+    const f=Math.max(0,Math.min(360,s.az_max))/360;
+    const a=f*Math.PI;
+    const xIn=90-67*Math.cos(a),yIn=86-67*Math.sin(a);
+    const xOut=90-83*Math.cos(a),yOut=86-83*Math.sin(a);
+    setLine('az-max-line',xIn,yIn,xOut,yOut,true);
+  }else{
+    setLine('az-max-line',0,0,0,0,false);
+  }
+
+  const limArc=document.getElementById('az-lim-arc');
+  if(hasMin&&hasMax&&s.az_min<s.az_max&&limArc){
+    const f1=Math.max(0,Math.min(360,s.az_min))/360;
+    const f2=Math.max(0,Math.min(360,s.az_max))/360;
+    const a1=f1*Math.PI,a2=f2*Math.PI;
+    const x1=90-75*Math.cos(a1),y1=86-75*Math.sin(a1);
+    const x2=90-75*Math.cos(a2),y2=86-75*Math.sin(a2);
+    limArc.setAttribute('d',`M ${x1} ${y1} A 75 75 0 0 1 ${x2} ${y2}`);
+    limArc.classList.remove('hidden');
+  }else if(limArc){
+    limArc.classList.add('hidden');
+  }
+}
+
+function updateElGauge(el, s){
+  if(el!=null){
+    const frac=Math.max(0,Math.min(180,el))/180;
+    const maxH=80;
+    const h=frac*maxH;
+    const fill=document.getElementById('el-fill');
+    if(fill){
+      fill.setAttribute('y',84-h);
+      fill.setAttribute('height',h);
+    }
+    const dot=document.getElementById('el-dot');
+    if(dot) dot.setAttribute('cy',84-h);
+  }
+
+  const showLim=s&&s.enabled;
+  const hasMin=showLim&&s.el_min!=null;
+  const hasMax=showLim&&s.el_max!=null;
+
+  if(hasMin){
+    const f=Math.max(0,Math.min(180,s.el_min))/180;
+    const y=84-f*80;
+    setLine('el-min-line',18,y,42,y,true);
+  }else{
+    setLine('el-min-line',0,0,0,0,false);
+  }
+
+  if(hasMax){
+    const f=Math.max(0,Math.min(180,s.el_max))/180;
+    const y=84-f*80;
+    setLine('el-max-line',18,y,42,y,true);
+  }else{
+    setLine('el-max-line',0,0,0,0,false);
+  }
+
+  const limRect=document.getElementById('el-lim-rect');
+  if(hasMin&&hasMax&&s.el_min<s.el_max&&limRect){
+    const f1=Math.max(0,Math.min(180,s.el_min))/180;
+    const f2=Math.max(0,Math.min(180,s.el_max))/180;
+    const yMin=84-f1*80;
+    const yMax=84-f2*80;
+    limRect.setAttribute('y',yMax);
+    limRect.setAttribute('height',yMin-yMax);
+    limRect.classList.remove('hidden');
+  }else if(limRect){
+    limRect.classList.add('hidden');
+  }
+}
+
+function render(s){
+  const az=s.az!=null?s.az:null,el=s.el!=null?s.el:null;
+  document.getElementById('v-az').textContent=az!=null?az.toFixed(1):'---';
+  document.getElementById('v-el').textContent=el!=null?el.toFixed(1):'---';
+  updateAzGauge(az, s);
+  updateElGauge(el, s);
+
+  // Backend badge + tag
+  if(s.backend){
+    const reachable=s.backend.reachable;
+    const bb=document.getElementById('badge-backend');
+    if(reachable===true){
+      bb.className='badge on';
+      bb.innerHTML='<span class="dot"></span> '+s.backend.host+':'+s.backend.port;
+    }else if(reachable===false){
+      bb.className='badge err';
+      bb.innerHTML='<span class="dot"></span> '+s.backend.host+':'+s.backend.port+' (offline)';
+    }else{
+      bb.className='badge off';
+      bb.innerHTML='<span class="dot"></span> '+s.backend.host+':'+s.backend.port;
+    }
+    const t=document.getElementById('backend-tag');
+    if(reachable===true){
+      t.className='tag tag-green';
+      t.textContent='Connected';
+    }else if(reachable===false){
+      t.className='tag tag-red';
+      t.textContent='Offline';
+    }else{
+      t.className='tag tag-muted';
+      t.textContent='---';
+    }
+    setVal('be-host',s.backend.host);
+    setVal('be-port',s.backend.port);
+  }
+
+  if(s.refresh_interval_ms) setVal('poll-ms',s.refresh_interval_ms);
+
+  // Blocked badge
+  const blocked=s.commands_blocked||false;
+  const bbk=document.getElementById('badge-blocked');
+  const bt=document.getElementById('block-toggle');
+  bt.checked=blocked;
+  document.getElementById('block-toggle-wrap').querySelector('.label').textContent=blocked?'Blocked':'Block';
+  bbk.classList.toggle('hidden',!blocked);
+  if(blocked) bbk.className='badge blocked';
+
+  // Park position
+  if(s.park_az!=null) setVal('park-az',s.park_az);
+  if(s.park_el!=null) setVal('park-el',s.park_el);
+
+  // Station location + map
+  const lat=s.latitude,lng=s.longitude;
+  if(lat!=null) setVal('loc-lat',lat);
+  if(lng!=null) setVal('loc-lng',lng);
+  updateMap(lat,lng,s.az);
+
+  document.getElementById('footer-port').textContent=s.proxy_port||'4534';
+
+  // ── Limits ──
+  document.getElementById('limits-toggle').checked=s.enabled;
+  document.getElementById('limits-label').textContent=s.enabled?'On':'Off';
+
+  renderLimBar('az',s.az_min,s.az_max,az,360);
+  renderLimBar('el',s.el_min,s.el_max,el,180);
+
+  setVal('man-az-min',s.az_min!=null?s.az_min:'');
+  setVal('man-az-max',s.az_max!=null?s.az_max:'');
+  setVal('man-el-min',s.el_min!=null?s.el_min:'');
+  setVal('man-el-max',s.el_max!=null?s.el_max:'');
+
+  // ── Cable Guard ──
+  const cg=s.cable_guard||{};
+  document.getElementById('cable-toggle').checked=cg.enabled||false;
+  document.getElementById('cable-label').textContent=cg.enabled?'On':'Off';
+
+  const net=cg.net_rotation||0,mt=cg.max_turns||1,md=mt*360;
+  document.getElementById('cg-net').textContent=(net>=0?'+':'')+net.toFixed(1)+'°';
+  document.getElementById('max-turns').value=mt;
+
+  const hw=Math.min(Math.abs(net)/md*50,50);
+  if(net>=0){
+    document.getElementById('cg-fill-p').style.width=hw+'%';
+    document.getElementById('cg-fill-p').style.left='50%';
+    document.getElementById('cg-fill-n').style.width='0%';
+  }else{
+    document.getElementById('cg-fill-n').style.width=hw+'%';
+    document.getElementById('cg-fill-n').style.right='50%';
+    document.getElementById('cg-fill-p').style.width='0%';
+  }
+  const mp=50+Math.min(Math.max(net/md*50,-50),50);
+  const d=document.getElementById('cg-dot');
+  d.style.left=mp+'%';d.className='cg-dot '+(net>0?'pos':net<0?'neg':'zero');
+  document.getElementById('cg-lo').textContent='-'+md.toFixed(0)+'°';
+  document.getElementById('cg-hi').textContent='+'+md.toFixed(0)+'°';
+
+  const tripped=cg.tripped||false,u=cg.usage_pct||0;
+  document.getElementById('cg-trip').classList.toggle('hidden',!tripped);
+  document.getElementById('cg-warn').classList.toggle('hidden',tripped||u<75);
+}
+
+function renderLimBar(pfx,lo,hi,pos,max){
+  const has=lo!=null&&hi!=null;
+  const r=document.getElementById(pfx+'-range'),e1=document.getElementById(pfx+'-min-e'),e2=document.getElementById(pfx+'-max-e');
+  const m=document.getElementById(pfx+'-pos');
+  if(has){
+    const lp=lo/max*100,hp=hi/max*100;
+    r.style.left=lp+'%';r.style.width=(hp-lp)+'%';
+    e1.style.left=lp+'%';e2.style.left=hp+'%';
+    e1.querySelector('span').textContent=lo.toFixed(1)+'°';
+    e2.querySelector('span').textContent=hi.toFixed(1)+'°';
+    e1.classList.remove('hidden');e2.classList.remove('hidden');
+  }else{
+    r.style.left='0';r.style.width='100%';
+    e1.classList.add('hidden');e2.classList.add('hidden');
+  }
+  if(pos!=null) m.style.left=(pos/max*100)+'%';
+}
+
+/* ─── HTTP ───────────────────────────────────────────── */
+async function post(url,body={}){
+  try{
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok) throw Error(String(r.status));
+    return await r.json();
+  }catch(e){throw e}
+}
+
+function toast(type,msg){
+  const c=document.getElementById('toasts'),t=document.createElement('div');
+  t.className='toast toast-'+type;t.textContent=msg;
+  c.appendChild(t);setTimeout(()=>t.remove(),3000);
+}
+
+function lock(btn,fn){return async function(){btn.disabled=true;try{await fn()}finally{btn.disabled=false}}}
+
+/* ─── Manual Control ─────────────────────────────────── */
+document.querySelectorAll('.dpad-btn[data-dir]').forEach(b=>{
+  b.addEventListener('click',lock(b,async()=>{
+    const d=b.dataset.dir;
+    if(d==='stop'){const r=await post(API+'/rotor/stop');toast(r.ok?'success':'error',r.ok?'Stop':'Stop failed');}
+    else{
+      const spd=document.getElementById('speed-slider').value;
+      const r=await post(API+'/rotor/move',{direction:parseInt(d),speed:parseInt(spd)});
+      toast(r.ok?'success':'error',r.ok?'Moving ('+d+')':'Move failed: '+(r.response||r.error||''));
+    }
+    await fetchStatus();
+  }));
+});
+
+document.getElementById('speed-slider').addEventListener('input',function(){
+  document.getElementById('speed-val').textContent=this.value+'°';
+});
+
+document.getElementById('goto-btn').addEventListener('click',lock(document.getElementById('goto-btn'),async()=>{
+  const az=parseFloat(document.getElementById('goto-az').value);
+  const el=parseFloat(document.getElementById('goto-el').value);
+  const body={};
+  if(!isNaN(az)) body.az=az;
+  if(!isNaN(el)) body.el=el;
+  if(!body.az&&!body.el) return;
+  const r=await post(API+'/rotor/goto',body);
+  if(r.ok) toast('success','Rotor positioned');
+  else toast('error','Move failed: '+(r.response||''));
+  await fetchStatus();
+}));
+
+document.getElementById('park-btn').addEventListener('click',lock(document.getElementById('park-btn'),async()=>{
+  const r=await post(API+'/rotor/park');
+  if(r.ok) toast('success','Park command sent');
+  else toast('error','Park failed');
+  await fetchStatus();
+}));
+document.getElementById('park-set-btn').addEventListener('click',lock(document.getElementById('park-set-btn'),async()=>{
+  const az=parseFloat(document.getElementById('park-az').value);
+  const el=parseFloat(document.getElementById('park-el').value);
+  if(isNaN(az)&&isNaN(el)) return;
+  const r=await post(API+'/rotor/park-position',{az:isNaN(az)?null:az,el:isNaN(el)?null:el});
+  if(r.ok) toast('success','Park position saved');
+  else toast('error','Failed to save park position');
+  await fetchStatus();
+}));
+
+/* ─── Limits ─────────────────────────────────────────── */
+document.querySelectorAll('.capture').forEach(b=>{
+  b.addEventListener('click',lock(b,async()=>{
+    await post(API+'/limits/set-'+b.dataset.side);
+    toast('success',b.dataset.side+' limit captured');
+    await fetchStatus();
+  }));
+});
+document.getElementById('limits-toggle').addEventListener('change',async function(){
+  await post(API+'/limits/'+(this.checked?'enable':'disable'));
+  toast('success','Limits '+(this.checked?'enabled':'disabled'));
+  await fetchStatus();
+});
+document.getElementById('apply-az').addEventListener('click',lock(document.getElementById('apply-az'),async()=>{
+  const mn=parseFloat(document.getElementById('man-az-min').value),mx=parseFloat(document.getElementById('man-az-max').value);
+  await post(API+'/limits/manual',{az_min:isNaN(mn)?null:mn,az_max:isNaN(mx)?null:mx});
+  toast('success','Az limits applied');await fetchStatus();
+}));
+document.getElementById('apply-el').addEventListener('click',lock(document.getElementById('apply-el'),async()=>{
+  const mn=parseFloat(document.getElementById('man-el-min').value),mx=parseFloat(document.getElementById('man-el-max').value);
+  await post(API+'/limits/manual',{el_min:isNaN(mn)?null:mn,el_max:isNaN(mx)?null:mx});
+  toast('success','El limits applied');await fetchStatus();
+}));
+document.getElementById('clear-limits').addEventListener('click',lock(document.getElementById('clear-limits'),async()=>{
+  await post(API+'/limits/clear');toast('success','Limits cleared');await fetchStatus();
+}));
+
+/* ─── Cable Guard ───────────────────────────────────── */
+document.getElementById('cable-toggle').addEventListener('change',async function(){
+  await post(API+'/cable-guard/'+(this.checked?'enable':'disable'));
+  toast('success','Cable guard '+(this.checked?'enabled':'disabled'));
+  await fetchStatus();
+});
+document.getElementById('apply-turns').addEventListener('click',lock(document.getElementById('apply-turns'),async()=>{
+  const t=parseFloat(document.getElementById('max-turns').value);
+  if(isNaN(t)||t<=0) return;
+  await post(API+'/cable-guard/max-turns',{turns:t});
+  toast('success','Max turns set');await fetchStatus();
+}));
+document.getElementById('reset-cg').addEventListener('click',lock(document.getElementById('reset-cg'),async()=>{
+  await post(API+'/cable-guard/reset');toast('success','Counter reset');await fetchStatus();
+}));
+
+/* ─── Commands Block ────────────────────────────────── */
+document.getElementById('block-toggle').addEventListener('change',async function(){
+  await post(API+'/commands/'+(this.checked?'block':'unblock'));
+  toast('success','Inbound commands '+(this.checked?'blocked':'unblocked'));
+  await fetchStatus();
+});
+
+/* ─── Backend ───────────────────────────────────────── */
+document.getElementById('be-apply').addEventListener('click',lock(document.getElementById('be-apply'),async()=>{
+  const h=document.getElementById('be-host').value.trim(),p=parseInt(document.getElementById('be-port').value);
+  if(!h||isNaN(p)) return;
+  await post(API+'/backend/config',{host:h,port:p});
+  await post(API+'/backend/reconnect');
+  toast('success','Backend set to '+h+':'+p);await fetchStatus();
+}));
+document.getElementById('be-test').addEventListener('click',lock(document.getElementById('be-test'),async()=>{
+  const h=document.getElementById('be-host').value.trim()||'127.0.0.1',p=parseInt(document.getElementById('be-port').value)||4533;
+  const rd=document.getElementById('be-result');
+  rd.textContent='Testing...';rd.style.color='var(--muted)';
+  try{
+    const r=await post(API+'/backend/test',{host:h,port:p});
+    rd.innerHTML=r.reachable?'Reachable: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:.75rem">'+esc(r.response||'ok')+'</code>':'Error: '+r.error;
+    rd.style.color=r.reachable?'var(--green)':'var(--red)';
+  }catch(e){rd.innerHTML='Error';rd.style.color='var(--red)'}
+}));
+document.getElementById('be-reconnect').addEventListener('click',lock(document.getElementById('be-reconnect'),async()=>{
+  await post(API+'/backend/reconnect');toast('success','Reconnecting...');setTimeout(fetchStatus,500);
+}));
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+
+/* ─── Profiles ──────────────────────────────────────── */
+async function refreshProfiles(){
+  try{
+    const r=await fetch(API+'/profiles/list');
+    if(!r.ok) return;
+    const d=await r.json();
+    const list=document.getElementById('prof-list');
+    const p=d.profiles||[];
+    if(!p.length){
+      list.innerHTML='<div style="color:var(--muted);font-size:.75rem;padding:8px 0">No profiles saved yet.</div>';
+      return;
+    }
+    list.innerHTML=p.map(prof=>{
+      const meta=[prof.created_at||'',prof.description||''].filter(Boolean).join(' · ');
+      return '<div class="profile-item">'+
+        '<div class="info"><div class="name">'+esc(prof.name)+'</div>'+
+        '<div class="meta">'+esc(meta)+'</div></div>'+
+        '<div class="actions">'+
+        '<button class="profile-load-btn" data-name="'+escAttr(prof.name)+'">Load</button>'+
+        '<button class="profile-del-btn" data-name="'+escAttr(prof.name)+'">Del</button>'+
+        '</div></div>';
+    }).join('');
+    list.querySelectorAll('.profile-load-btn').forEach(b=>{
+      b.addEventListener('click',lock(b,async()=>{
+        const r=await post(API+'/profiles/load',{name:b.dataset.name});
+        if(r.ok){
+          toast('success','Profile "'+b.dataset.name+'" loaded');
+          await fetchStatus();
+          await refreshProfiles();
+        } else toast('error','Load failed');
+      }));
+    });
+    list.querySelectorAll('.profile-del-btn').forEach(b=>{
+      b.addEventListener('click',lock(b,async()=>{
+        if(!confirm('Delete profile "'+b.dataset.name+'"?')) return;
+        const r=await post(API+'/profiles/delete',{name:b.dataset.name});
+        if(r.ok){toast('success','Profile deleted');await refreshProfiles();}
+        else toast('error','Delete failed');
+      }));
+    });
+  }catch(e){}
+}
+
+function escAttr(s){return String(s).replace(/["']/g,'')}
+
+document.getElementById('prof-save').addEventListener('click',lock(document.getElementById('prof-save'),async()=>{
+  const name=document.getElementById('prof-name').value.trim();
+  if(!name){toast('error','Enter a profile name');return;}
+  const desc=document.getElementById('prof-desc').value.trim();
+  const r=await post(API+'/profiles/save',{name,description:desc});
+  if(r.ok){
+    toast('success','Profile "'+name+'" saved');
+    document.getElementById('prof-name').value='';
+    document.getElementById('prof-desc').value='';
+    await refreshProfiles();
+  } else toast('error','Save failed');
+}));
+
+const _origRender=render;
+render=function(s){_origRender(s);refreshProfiles();};
+
+/* ─── Station Location / Map ────────────────────────── */
+let map, marker, azimuthLine;
+function updateMap(lat,lng,az){
+  if(!map){
+    map=L.map('map',{zoomControl:false,attributionControl:false}).setView([lat||0,lng||0],lat!=null?10:1);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(map);
+    map.attributionControl=L.control.attribution({prefix:false}).addTo(map);
+    setTimeout(function(){map.invalidateSize()},300);
+  }
+  if(lat!=null&&lng!=null){
+    if(!marker){
+      marker=L.marker([lat,lng],{draggable:true}).addTo(map);
+      marker.on('dragend',async function(){
+        const p=marker.getLatLng();
+        document.getElementById('loc-lat').value=parseFloat(p.lat.toFixed(4));
+        document.getElementById('loc-lng').value=parseFloat(p.lng.toFixed(4));
+        const r=await post(API+'/location',{latitude:p.lat,longitude:p.lng});
+        if(r.ok){toast('success','Location updated');await fetchStatus();}
+      });
+    }else{
+      marker.setLatLng([lat,lng]);
+    }
+    if(!azimuthLine) azimuthLine=L.polyline([[lat,lng],[lat,lng]],{color:'#3b82f6',weight:3,opacity:0.9,dashArray:'6 6'}).addTo(map);
+    if(az!=null){
+      const R=6371,bear=az*Math.PI/180,dlat=50/R;
+      const lat1=lat*Math.PI/180,lng1=lng*Math.PI/180;
+      const lat2=Math.asin(Math.sin(lat1)*Math.cos(dlat)+Math.cos(lat1)*Math.sin(dlat)*Math.cos(bear));
+      const lng2=lng1+Math.atan2(Math.sin(bear)*Math.sin(dlat)*Math.cos(lat1),Math.cos(dlat)-Math.sin(lat1)*Math.sin(lat2));
+      azimuthLine.setLatLngs([[lat,lng],[lat2*180/Math.PI,lng2*180/Math.PI]]);
+    }
+  }
+}
+
+document.getElementById('loc-apply').addEventListener('click',lock(document.getElementById('loc-apply'),async()=>{
+  const lat=parseFloat(document.getElementById('loc-lat').value);
+  const lng=parseFloat(document.getElementById('loc-lng').value);
+  if(isNaN(lat)||isNaN(lng)){toast('error','Enter valid lat/lng');return;}
+  const r=await post(API+'/location',{latitude:lat,longitude:lng});
+  if(r.ok){toast('success','Location saved');await fetchStatus();}
+  else toast('error','Failed to save location');
+}));
+
+document.getElementById('poll-apply').addEventListener('click',lock(document.getElementById('poll-apply'),async()=>{
+  const ms=parseInt(document.getElementById('poll-ms').value);
+  if(isNaN(ms)||ms<200) return;
+  await post(API+'/refresh-interval',{ms});
+  _poll_ms=ms;
+  toast('success','Poll rate: '+ms+'ms');
+  if(_poll_timer) clearTimeout(_poll_timer);
+  _poll_timer = setTimeout(fetchStatus, _poll_ms);
+}));
+</script>
+</body>
+</html>
