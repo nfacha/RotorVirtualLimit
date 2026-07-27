@@ -42,11 +42,18 @@ class Backend:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(10)
         s.connect((host, port))
+        s.settimeout(None)
         self.limits.set_backend_reachable(True)
         return s
 
+    @property
+    def is_connected(self):
+        return self.sock is not None
+
     def ensure_connected(self):
-        self.close()
+        """Connect to backend only if not already connected."""
+        if self.sock is not None:
+            return True
         host = self.limits.backend_host
         port = self.limits.backend_port
         try:
@@ -56,7 +63,13 @@ class Backend:
         except Exception as e:
             log.error("  -> backend %s:%d connect failed: %s", host, port, e)
             self.sock = None
+            self.limits.set_backend_reachable(False)
             return False
+
+    def reconnect(self):
+        """Force close and reconnect to the backend."""
+        self.close()
+        return self.ensure_connected()
 
     def send(self, data):
         if not self.sock:
@@ -80,14 +93,14 @@ class Backend:
                 return None
             return data.decode()
         except socket.timeout:
-            self.close()
+            # Timeout is not a fatal error — don't destroy the connection
             return None
         except Exception as e:
             log.error("  -> backend recv err: %s", e)
             self.close()
             return None
 
-    def recv_until(self, min_newlines=1, timeout=0.5):
+    def recv_until(self, min_newlines=1, timeout=2.0):
         """Read until we have min_newlines or timeout/error."""
         if not self.sock:
             return None
@@ -97,18 +110,21 @@ class Backend:
             while True:
                 chunk = self.sock.recv(4096)
                 if not chunk:
+                    self.close()
                     break
                 data += chunk
                 if data.count(b"\n") >= min_newlines:
                     break
         except socket.timeout:
+            # Timeout is not fatal — return whatever we have so far
             pass
         except Exception as e:
             log.error("  -> backend recv_until err: %s", e)
             self.close()
             return data.decode() if data else None
         finally:
-            self.sock.settimeout(None)
+            if self.sock:
+                self.sock.settimeout(None)
         return data.decode() if data else None
 
     def close(self):
@@ -133,11 +149,6 @@ class ClientHandler(threading.Thread):
         log.info("  <- client %s connected", self.addr)
         self.client.settimeout(None)
 
-        if not self.backend.ensure_connected():
-            self._respond("RPRT -4\n")
-            self._cleanup()
-            return
-
         buf = ""
         while not self._stop:
             try:
@@ -155,6 +166,43 @@ class ClientHandler(threading.Thread):
                 break
 
         self._cleanup()
+
+    def _ensure_backend(self):
+        """Ensure backend is connected; returns True if ready."""
+        if self.backend.ensure_connected():
+            return True
+        # One retry after a short pause
+        time.sleep(0.1)
+        return self.backend.reconnect()
+
+    def _backend_exchange(self, data, recv_fn=None):
+        """Send data to backend and receive response, with one retry on failure.
+        recv_fn: optional custom receive function (e.g. recv_until for get_pos).
+        Returns the response string, or None on failure.
+        """
+        if recv_fn is None:
+            recv_fn = self.backend.recv
+
+        if not self._ensure_backend():
+            return None
+
+        if not self.backend.send(data):
+            # Send failed — connection is broken, try one reconnect
+            if not self.backend.reconnect():
+                return None
+            if not self.backend.send(data):
+                return None
+
+        resp = recv_fn()
+        if resp is None and not self.backend.is_connected:
+            # Connection died during recv — try one reconnect + resend
+            if not self.backend.reconnect():
+                return None
+            if not self.backend.send(data):
+                return None
+            resp = recv_fn()
+
+        return resp
 
     def _handle(self, line):
         parsed = parse(line)
@@ -191,15 +239,7 @@ class ClientHandler(threading.Thread):
             self._respond("RPRT -15\n")
             return
 
-        if not self.backend.ensure_connected():
-            self._respond("RPRT -4\n")
-            return
-
-        if not self.backend.send(line + "\n"):
-            self._respond("RPRT -4\n")
-            return
-
-        resp = self.backend.recv()
+        resp = self._backend_exchange(line + "\n")
         if resp is None:
             self._respond("RPRT -4\n")
             return
@@ -220,27 +260,14 @@ class ClientHandler(threading.Thread):
             self._respond("RPRT -15\n")
             return
 
-        if not self.backend.ensure_connected():
-            self._respond("RPRT -4\n")
-            return
-
-        if not self.backend.send(line + "\n"):
-            self._respond("RPRT -4\n")
-            return
-
-        resp = self.backend.recv()
+        resp = self._backend_exchange(line + "\n")
         self._respond(resp if resp else "RPRT -4\n")
 
     def _get_pos(self, line):
-        if not self.backend.ensure_connected():
-            self._respond("RPRT -4\n")
-            return
-
-        if not self.backend.send(line + "\n"):
-            self._respond("RPRT -4\n")
-            return
-
-        resp = self.backend.recv_until(3)
+        resp = self._backend_exchange(
+            line + "\n",
+            recv_fn=lambda: self.backend.recv_until(3),
+        )
         if resp is None:
             self._respond("RPRT -4\n")
             return
@@ -257,15 +284,7 @@ class ClientHandler(threading.Thread):
         self._respond(resp)
 
     def _passthrough(self, line):
-        if not self.backend.ensure_connected():
-            self._respond("RPRT -4\n")
-            return
-
-        if not self.backend.send(line + "\n"):
-            self._respond("RPRT -4\n")
-            return
-
-        resp = self.backend.recv()
+        resp = self._backend_exchange(line + "\n")
         self._respond(resp if resp else "RPRT -4\n")
 
     def _respond(self, data):
