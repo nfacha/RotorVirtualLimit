@@ -6,8 +6,11 @@ import socket
 import threading
 import time
 
+import os
+
 from limits import RotorLimits
 from server import start_http_server
+from tracker import SatelliteTracker
 
 log = logging.getLogger("proxy")
 logging.basicConfig(
@@ -383,7 +386,27 @@ def main():
         limits.set_cable_guard_enabled(True)
 
     static_dir = os.path.join(os.path.dirname(__file__), "static")
-    start_http_server(limits, static_dir, args.http_port)
+    config_dir = os.path.dirname(os.path.abspath(args.config))
+    tracker = SatelliteTracker(limits, config_dir)
+    if tracker.satellites:
+        log.info("TLE cache loaded: %d satellites", len(tracker.satellites))
+    else:
+        log.info("No TLE cache — use Fetch button in the UI to download")
+
+    # Resume tracking if limits indicate it was active before restart
+    if limits.tracking_active and limits.tracking_target:
+        norad_id = limits.tracking_target.get("norad_id")
+        if norad_id is not None:
+            sat = tracker.find_satellite(norad_id)
+            if sat:
+                tracker.start(sat)
+                log.info("Auto-resumed tracking %s from saved state", sat.name)
+            else:
+                limits.set_tracking_active(False)
+                limits.set_tracking_target(None)
+                log.info("Cleared stale tracking state — satellite %d not in cache", norad_id)
+
+    start_http_server(limits, static_dir, args.http_port, tracker=tracker)
 
     run_proxy(limits)
 

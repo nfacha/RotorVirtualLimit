@@ -38,6 +38,12 @@ class RotorLimits:
         self.el_offset = 0.0
         self.offset_enabled = True
 
+        self.tracking_sources = [
+            {"url": "https://celestrak.org/NORAD/elements/amateur.txt", "enabled": True}
+        ]
+        self.tracking_target = None
+        self.tracking_active = False
+
         self._backend_version = 0
         self._backend_reachable = None  # None=unknown, True, False
 
@@ -66,6 +72,9 @@ class RotorLimits:
             self.az_offset = d.get("az_offset", 0.0)
             self.el_offset = d.get("el_offset", 0.0)
             self.offset_enabled = d.get("offset_enabled", True)
+            self.tracking_sources = d.get("tracking_sources", self.tracking_sources)
+            self.tracking_target = d.get("tracking_target")
+            self.tracking_active = d.get("tracking_active", False)
             self.park_az = d.get("park_az")
             self.park_el = d.get("park_el")
             self.latitude = d.get("latitude")
@@ -104,6 +113,9 @@ class RotorLimits:
                 "net_rotation": self.cable_guard_net_rotation,
                 "reference_az": self.cable_guard_reference_az,
             },
+            "tracking_sources": self.tracking_sources,
+            "tracking_target": self.tracking_target,
+            "tracking_active": self.tracking_active,
         }
         with open(self.config_path, "w") as f:
             json.dump(d, f, indent=2)
@@ -148,6 +160,8 @@ class RotorLimits:
                 "az_offset": self.az_offset,
                 "el_offset": self.el_offset,
                 "offset_enabled": self.offset_enabled,
+                "tracking_active": self.tracking_active,
+                "tracking_target": self.tracking_target,
             }
 
     def update_position(self, az, el):
@@ -285,6 +299,16 @@ class RotorLimits:
     def set_commands_blocked(self, blocked):
         with self.lock:
             self.commands_blocked = blocked
+            self.save()
+
+    def set_tracking_target(self, target):
+        with self.lock:
+            self.tracking_target = target
+            self.save()
+
+    def set_tracking_active(self, active):
+        with self.lock:
+            self.tracking_active = active
             self.save()
 
     def set_refresh_interval(self, ms):

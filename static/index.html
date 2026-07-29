@@ -444,6 +444,7 @@ footer a:hover{color:var(--accent-hover);text-decoration:underline}
     <div class="badge off" id="badge-api"><span class="dot"></span> API</div>
     <div class="badge off" id="badge-backend"><span class="dot"></span> Backend</div>
     <div class="badge off hidden" id="badge-blocked"><span class="dot"></span> Blocked</div>
+    <div class="badge off hidden" id="badge-tracking"><span class="dot"></span> Tracking</div>
   </div>
 </header>
 
@@ -695,6 +696,60 @@ footer a:hover{color:var(--accent-hover);text-decoration:underline}
   </div>
 </div>
 
+<!-- ═══ SATELLITE TRACKING ═══ -->
+<div class="section">
+  <div class="card">
+    <div class="card-header card-collapse" onclick="toggleCollapse('track-body',this)">
+      <div class="card-title">Satellite Tracking</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="tag tag-muted" id="track-status-tag" style="font-size:.65rem">Idle</span>
+        <span class="collapse-arrow">&#9660;</span>
+      </div>
+    </div>
+    <div class="card-body" id="track-body">
+      <p class="card-desc">Track amateur satellites by pointing the rotor at their computed position.</p>
+
+      <div class="flex gap-2 flex-wrap" style="margin-bottom:8px">
+        <span style="font-size:.72rem;color:var(--muted);font-weight:600">Source:</span>
+        <span style="font-size:.72rem;color:var(--text-secondary)" id="tle-source-info">—</span>
+        <span id="tle-age" class="tag tag-muted" style="font-size:.65rem">never</span>
+        <button class="btn btn-ghost btn-xs" id="tle-fetch-btn">Fetch</button>
+      </div>
+
+      <input type="text" id="sat-search" placeholder="Search satellites by name..."
+             style="width:100%;margin-bottom:8px">
+      <div id="sat-list"
+           style="max-height:280px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--surface2);margin-bottom:10px">
+        <div style="padding:16px;text-align:center;color:var(--muted);font-size:.75rem">Click Fetch to load satellites</div>
+      </div>
+
+      <div id="track-controls">
+        <button class="btn btn-primary" id="track-start-btn" disabled style="width:100%">Select a satellite</button>
+        <button class="btn btn-red hidden" id="track-stop-btn" style="width:100%">&#9632; Stop Tracking</button>
+      </div>
+
+      <div id="track-active-status" class="hidden"
+           style="margin-top:10px;padding:12px 14px;border-radius:var(--radius-sm);background:var(--green-bg);border:1px solid var(--green-border)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span class="dot" style="width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse-badge 1.5s ease-in-out infinite"></span>
+          <span style="font-size:.85rem;font-weight:700;color:var(--green)" id="track-target-name">---</span>
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <span style="font-size:.78rem;color:var(--text-secondary)">Target: <strong id="track-target-az">---°</strong> / <strong id="track-target-el">---°</strong></span>
+          <span style="font-size:.72rem;color:var(--muted)" id="track-below-horizon" class="hidden">&#9660; below horizon</span>
+        </div>
+      </div>
+
+      <div id="track-passes-area" class="hidden" style="margin-top:10px">
+        <div style="font-size:.72rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Upcoming Passes</div>
+        <div id="track-passes-list" style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-xs);background:var(--surface2)">
+          <div style="padding:12px;text-align:center;color:var(--muted);font-size:.72rem">No passes computed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ SETTINGS ═══ -->
 <div class="grid-3 section">
 
@@ -828,6 +883,7 @@ async function fetchStatus(){
     S=s;
     document.getElementById('badge-api').className='badge on';
     document.getElementById('badge-api').innerHTML='<span class="dot"></span> API';
+    updateTleInfo(s.tle_sources);
     render(S);
   }catch(e){
     document.getElementById('badge-api').className='badge err';
@@ -837,6 +893,8 @@ async function fetchStatus(){
   _poll_timer = setTimeout(fetchStatus, _poll_ms);
 }
 fetchStatus();
+// Load satellite list (cached data available immediately)
+setTimeout(refreshSatellites, 300);
 
 function setVal(id,v){const e=document.getElementById(id);if(e&&e!=document.activeElement&&!e.dataset.dirty)e.value=v;}
 document.addEventListener('input',e=>{if(e.target.tagName=='INPUT')e.target.dataset.dirty='1';});
@@ -1447,6 +1505,263 @@ document.getElementById('poll-apply').addEventListener('click',lock(document.get
   if(_poll_timer) clearTimeout(_poll_timer);
   _poll_timer = setTimeout(fetchStatus, _poll_ms);
 }));
+
+/* ─── Satellite Tracking ────────────────────────────── */
+let _satellites=[];
+let _satellitesLoading=false;
+let _selectedNorad=null;
+
+document.getElementById('tle-fetch-btn').addEventListener('click',lock(document.getElementById('tle-fetch-btn'),async()=>{
+  const btn=document.getElementById('tle-fetch-btn');
+  btn.textContent='Fetching...';
+  try{
+    const r=await post(API+'/tracking/fetch',{force:true});
+    if(r.ok){
+      toast('success',r.count+' satellites loaded');
+      await refreshSatellites();
+      await fetchStatus();
+    }else toast('error','TLE fetch failed: '+(r.error||''));
+  }catch(e){toast('error','Fetch error');}
+  finally{btn.textContent='Fetch';}
+}));
+
+async function refreshSatellites(){
+  if(_satellitesLoading) return;
+  _satellitesLoading=true;
+  try{
+    const r=await post(API+'/tracking/satellites',{});
+    if(r.ok&&r.satellites) _satellites=r.satellites;
+    else _satellites=[];
+  }catch(e){_satellites=[];}
+  _satellitesLoading=false;
+  renderSatelliteList('');
+}
+
+function renderSatelliteList(filter){
+  const list=document.getElementById('sat-list');
+  const q=(filter||'').toLowerCase().trim();
+  let sats=q?_satellites.filter(s=>s.name.toLowerCase().includes(q)):_satellites;
+  if(!sats.length){
+    list.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted);font-size:.75rem">'+
+      (q?'No matching satellites':'Click Fetch to load satellites')+'</div>';
+    return;
+  }
+  list.innerHTML=sats.map(s=>{
+    const sel=_selectedNorad===s.norad_id?' selected':'';
+    return '<div class="sat-item'+sel+'" data-norad="'+s.norad_id+'" style="display:flex;align-items:center;gap:8px;padding:8px 12px;min-height:44px;border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--transition-fast);-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none">'+
+      '<span style="flex:1;font-size:.82rem;font-weight:600">'+esc(s.name)+'</span>'+
+      '<span style="font-size:.68rem;color:var(--muted)">#'+s.norad_id+'</span>'+
+      '</div>';
+  }).join('');
+  list.querySelectorAll('.sat-item').forEach(el=>{
+    el.addEventListener('click',function(){
+      _selectedNorad=parseInt(this.dataset.norad);
+      renderSatelliteList(document.getElementById('sat-search').value);
+      const btn=document.getElementById('track-start-btn');
+      btn.disabled=false;
+      btn.textContent='Track '+(this.querySelector('span')||{}).textContent||'Satellite';
+      document.getElementById('track-active-status').classList.add('hidden');
+    });
+  });
+}
+
+document.getElementById('sat-search').addEventListener('input',function(){
+  renderSatelliteList(this.value);
+});
+
+document.getElementById('track-start-btn').addEventListener('click',lock(document.getElementById('track-start-btn'),async()=>{
+  if(!_selectedNorad) return;
+  const r=await post(API+'/tracking/start',{norad_id:_selectedNorad});
+  if(r.ok){
+    toast('success','Tracking '+r.satellite);
+    await fetchStatus();
+  }else toast('error','Failed: '+(r.error||''));
+}));
+
+document.getElementById('track-stop-btn').addEventListener('click',lock(document.getElementById('track-stop-btn'),async()=>{
+  const r=await post(API+'/tracking/stop');
+  if(r.ok){
+    toast('success','Tracking stopped');
+    await fetchStatus();
+  }else toast('error','Stop failed');
+}));
+
+// Tracking UI update added to render
+function updateTleInfo(tle){
+  if(!tle) return;
+  const tleAge=document.getElementById('tle-age');
+  const info=document.getElementById('tle-source-info');
+  const sources=tle.sources||[];
+  if(sources.length){
+    const src=sources[0];
+    if(tleAge) tleAge.textContent=src.age_display||'never';
+    if(tleAge) tleAge.className='tag '+(src.stale?'tag-red':src.downloaded?'tag-green':'tag-muted');
+    const srcLabel=(src.url||'').split('/').filter(Boolean).pop()||'unknown';
+    if(info) info.textContent=srcLabel+' ('+tle.satellite_count+' sats)';
+  }else{
+    if(tleAge) tleAge.textContent=tle.downloaded?'cached':'no data';
+    if(tleAge) tleAge.className='tag tag-muted';
+    if(info) info.textContent=tle.downloaded?tle.satellite_count+' satellites':'no TLE source';
+  }
+}
+const _trackRender=render;
+let _extraTimer=null;
+let _satTrackLine=null;
+let _satMarker=null;
+let _lastExtraData=null;
+let _trackingActive=false;
+
+function clearSatMap(){
+  if(_satTrackLine){_satTrackLine.remove();_satTrackLine=null;}
+  if(_satMarker){_satMarker.remove();_satMarker=null;}
+}
+
+function renderPasses(passes){
+  const list=document.getElementById('track-passes-list');
+  const area=document.getElementById('track-passes-area');
+  if(!passes||!passes.length){
+    area.classList.add('hidden');
+    return;
+  }
+  area.classList.remove('hidden');
+  list.innerHTML=passes.map(p=>{
+    const aosDate=new Date(p.aos);
+    const losDate=new Date(p.los);
+    const dateStr=aosDate.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+    const aosStr=aosDate.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+    const losStr=losDate.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+    return '<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid var(--border);font-size:.72rem">'+
+      '<span style="font-weight:600;min-width:55px;color:var(--text)">'+dateStr+'</span>'+
+      '<span style="min-width:80px;color:var(--text-secondary)">'+aosStr+' → '+losStr+'</span>'+
+      '<span style="min-width:50px;color:var(--accent);font-weight:600">'+p.max_el+'°</span>'+
+      '<span style="color:var(--muted);font-size:.65rem">'+p.duration_min+'m</span>'+
+      '</div>';
+  }).join('');
+}
+
+function fetchExtraData(){
+  if(!_trackingActive){
+    clearSatMap();
+    return;
+  }
+  fetch(API+'/tracking/status?extra=1').then(r=>r.json()).then(data=>{
+    _lastExtraData=data;
+    if(data.ground_track&&data.ground_track.length){
+      if(!_satTrackLine&&map){
+        _satTrackLine=L.polyline([],{color:'#22c55e',weight:2,opacity:0.7,dashArray:'4 8'}).addTo(map);
+      }
+      if(_satTrackLine){
+        _satTrackLine.setLatLngs(data.ground_track);
+      }
+      // Satellite marker at current position
+      const cur=data.ground_track[0];
+      if(cur&&map){
+        if(!_satMarker){
+          _satMarker=L.circleMarker([cur[0],cur[1]],{
+            radius:6,color:'#22c55e',fillColor:'#22c55e',fillOpacity:1,weight:2
+          }).addTo(map);
+        }else{
+          _satMarker.setLatLng([cur[0],cur[1]]);
+        }
+      }
+    }else{
+      clearSatMap();
+    }
+    if(data.passes) renderPasses(data.passes);
+  }).catch(()=>{clearSatMap();});
+}
+
+render=function(s){
+  try{_trackRender(s);}catch(e){}
+
+  const track=s.tracking||{};
+  const tle=s.tle_sources||{};
+  const active=s.tracking_active||false;
+  const target=s.tracking_target||null;
+
+  // Tracking tag
+  const tag=document.getElementById('track-status-tag');
+  if(active&&target){
+    tag.className='tag tag-green';
+    tag.textContent='Tracking';
+  }else if(active){
+    tag.className='tag tag-yellow';
+    tag.textContent='Active';
+  }else{
+    tag.className='tag tag-muted';
+    tag.textContent='Idle';
+  }
+
+  // TLE age / source info
+  const tleAge=document.getElementById('tle-age');
+  const sources=tle.sources||[];
+  if(sources.length){
+    const src=sources[0];
+    tleAge.textContent=src.age_display||'never';
+    tleAge.className='tag '+(src.stale?'tag-red':src.downloaded?'tag-green':'tag-muted');
+    const srcLabel = (src.url||'').split('/').filter(Boolean).pop() || 'unknown';
+    document.getElementById('tle-source-info').textContent=srcLabel+' ('+tle.satellite_count+' sats)';
+  }else{
+    tleAge.textContent=tle.downloaded?'cached':'no data';
+    tleAge.className='tag tag-muted';
+    document.getElementById('tle-source-info').textContent=tle.downloaded?tle.satellite_count+' satellites':'no TLE source';
+  }
+
+  // Tracking badge
+  _trackingActive=!!active;
+  const trkBadge=document.getElementById('badge-tracking');
+  if(active){
+    trkBadge.className='badge blocked';
+    trkBadge.innerHTML='<span class="dot"></span> '+(target?target.name:'Tracking');
+    trkBadge.classList.remove('hidden');
+  }else{
+    trkBadge.className='badge off hidden';
+  }
+
+  // Tracking status panel
+  const statusDiv=document.getElementById('track-active-status');
+  const startBtn=document.getElementById('track-start-btn');
+  const stopBtn=document.getElementById('track-stop-btn');
+  if(active&&target){
+    startBtn.classList.add('hidden');
+    stopBtn.classList.remove('hidden');
+    statusDiv.classList.remove('hidden');
+    document.getElementById('track-target-name').textContent=target.name;
+    const az=track.computed_az!=null?track.computed_az.toFixed(1):'---';
+    const el=track.computed_el!=null?track.computed_el.toFixed(1):'---';
+    document.getElementById('track-target-az').textContent=az+'°';
+    document.getElementById('track-target-el').textContent=el+'°';
+    const bh=document.getElementById('track-below-horizon');
+    bh.classList.toggle('hidden',!track.below_horizon);
+
+    // Fetch extra data (ground track + passes) every 30s
+    if(!_extraTimer){
+      fetchExtraData();
+      _extraTimer=setInterval(fetchExtraData,30000);
+    }
+  }else{
+    startBtn.classList.remove('hidden');
+    stopBtn.classList.add('hidden');
+    statusDiv.classList.add('hidden');
+    document.getElementById('track-passes-area').classList.add('hidden');
+    if(!_selectedNorad){
+      startBtn.disabled=true;
+      startBtn.textContent='Select a satellite';
+    }else{
+      startBtn.disabled=false;
+      const sat=_satellites.find(s=>s.norad_id===_selectedNorad);
+      startBtn.textContent='Track '+(sat?sat.name:'Satellite');
+    }
+    // Stop extra timer
+    if(_extraTimer){clearInterval(_extraTimer);_extraTimer=null;}
+    clearSatMap();
+  }
+};
+
+// Add tag-yellow CSS (used by tracking state)
+const style=document.createElement('style');
+style.textContent='.tag-yellow{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-border)}.sat-item:hover{background:var(--surface-hover)}.sat-item.selected{background:var(--accent-glow);border-left:3px solid var(--accent)}';
+document.head.appendChild(style);
 </script>
 </body>
 </html>
