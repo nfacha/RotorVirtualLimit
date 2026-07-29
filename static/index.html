@@ -437,7 +437,7 @@ input[type=text]{width:130px;font-family:inherit}
 /* ════════════════════════════════════════════════════════
    MAP
    ════════════════════════════════════════════════════════ */
-#map{height:200px;border-radius:var(--r);overflow:hidden;background:var(--surface)}
+#map{height:320px;border-radius:var(--r);overflow:hidden;background:var(--surface)}
 .leaflet-container{background:var(--surface)!important}
 
 /* ════════════════════════════════════════════════════════
@@ -918,6 +918,7 @@ async function fetchStatus(){
   _poll_timer = setTimeout(fetchStatus, _poll_ms);
 }
 fetchStatus();
+document.getElementById('sat-search').value='';
 setTimeout(refreshSatellites, 300);
 
 function setVal(id,v){const e=document.getElementById(id);if(e&&e!=document.activeElement&&!e.dataset.dirty)e.value=v;}
@@ -1627,12 +1628,14 @@ function updateTleInfo(tle){
 const _trackRender=render;
 let _extraTimer=null;
 let _satTrackLine=null;
+let _satOrbitLine=null;
 let _satMarker=null;
 let _lastExtraData=null;
 let _trackingActive=false;
 
 function clearSatMap(){
   if(_satTrackLine){_satTrackLine.remove();_satTrackLine=null;}
+  if(_satOrbitLine){_satOrbitLine.remove();_satOrbitLine=null;}
   if(_satMarker){_satMarker.remove();_satMarker=null;}
 }
 
@@ -1673,21 +1676,22 @@ function fetchExtraData(){
       if(_satTrackLine){
         _satTrackLine.setLatLngs(data.ground_track);
       }
-      const cur=data.ground_track[0];
-      if(cur&&map){
-        if(!_satMarker){
-          _satMarker=L.circleMarker([cur[0],cur[1]],{
-            radius:6,color:'#22c55e',fillColor:'#22c55e',fillOpacity:1,weight:2
-          }).addTo(map);
-        }else{
-          _satMarker.setLatLng([cur[0],cur[1]]);
-        }
-      }
-    }else{
+    }else if(!_trackingActive){
       clearSatMap();
     }
+    if(data.orbit&&data.orbit.length){
+      if(!_satOrbitLine&&map){
+        _satOrbitLine=L.polyline([],{color:'rgba(34,197,94,0.35)',weight:1.5,opacity:0.5}).addTo(map);
+      }
+      if(_satOrbitLine){
+        _satOrbitLine.setLatLngs(data.orbit);
+      }
+    }else if(_satOrbitLine){
+      _satOrbitLine.remove();
+      _satOrbitLine=null;
+    }
     if(data.passes) renderPasses(data.passes);
-  }).catch(()=>{clearSatMap();});
+  }).catch(()=>{if(!_trackingActive)clearSatMap();});
 }
 
 render=function(s){
@@ -1752,6 +1756,21 @@ render=function(s){
     document.getElementById('track-target-el').textContent=el+'°';
     const bh=document.getElementById('track-below-horizon');
     bh.classList.toggle('hidden',!track.below_horizon);
+
+    // Update satellite marker position on every poll
+    if(track.sat_lat!=null&&track.sat_lng!=null&&map){
+      if(!_satMarker){
+        var satIcon=L.divIcon({
+          className:'',
+          html:'<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6"/><path d="M12 22l4-4-4-4 4-4-4-4"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/></svg>',
+          iconSize:[24,24],
+          iconAnchor:[12,12]
+        });
+        _satMarker=L.marker([track.sat_lat,track.sat_lng],{icon:satIcon}).addTo(map);
+      }else{
+        _satMarker.setLatLng([track.sat_lat,track.sat_lng]);
+      }
+    }
 
     if(!_extraTimer){
       fetchExtraData();

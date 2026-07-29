@@ -472,6 +472,8 @@ class SatelliteTracker:
         self.target = None
         self.computed_az = None
         self.computed_el = None
+        self._sat_lat = None
+        self._sat_lng = None
         self._sgp4 = None
         self._epoch_jd = None
         self._last_fetch_time = None
@@ -633,6 +635,8 @@ class SatelliteTracker:
             self._sgp4 = None
             self.computed_az = None
             self.computed_el = None
+            self._sat_lat = None
+            self._sat_lng = None
             self.limits.set_commands_blocked(False)
             log.info("Stopped tracking")
 
@@ -651,6 +655,8 @@ class SatelliteTracker:
         self._sgp4 = None
         self.computed_az = None
         self.computed_el = None
+        self._sat_lat = None
+        self._sat_lng = None
         self.limits.set_commands_blocked(False)
         log.info("Stopped tracking")
 
@@ -681,9 +687,12 @@ class SatelliteTracker:
                     now = datetime.now(timezone.utc)
                     az, el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, 0.0, dt=now)
 
+                    sat_lat_rad, sat_lon_rad, _ = _teme_to_geodetic(x, y, z, dt=now)
                     with self._lock:
                         self.computed_az = round(az, 1)
                         self.computed_el = round(el, 1)
+                        self._sat_lat = round(math.degrees(sat_lat_rad), 4)
+                        self._sat_lng = round(math.degrees(sat_lon_rad), 4)
 
                     if el >= 0:
                         self._send_goto(az, el)
@@ -702,6 +711,28 @@ class SatelliteTracker:
         now_ts = (now.timestamp() - (epoch_jd - 2440587.5) * 86400) / 60.0
         points = []
         for i in range(0, minutes_ahead, 1):
+            tsince = now_ts + i
+            x, y, z = sgp4.propagate(tsince)
+            dt = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + tsince * 60, tz=timezone.utc)
+            try:
+                lat, lon, alt = _teme_to_geodetic(x, y, z, dt=dt)
+                points.append([round(math.degrees(lat), 4), round(math.degrees(lon), 4)])
+            except Exception:
+                continue
+        return points
+
+    def compute_orbit(self, sat=None):
+        sat = sat or self.target
+        if not sat:
+            return []
+        sgp4 = SGP4(sat)
+        epoch_jd = sat.epoch_jd
+        now = datetime.now(timezone.utc)
+        now_ts = (now.timestamp() - (epoch_jd - 2440587.5) * 86400) / 60.0
+        period_min = 1.0 / sat.mean_motion * MIN_PER_DAY
+        half = period_min / 2.0
+        points = []
+        for i in range(int(-half), int(half) + 1):
             tsince = now_ts + i
             x, y, z = sgp4.propagate(tsince)
             dt = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + tsince * 60, tz=timezone.utc)
@@ -778,6 +809,8 @@ class SatelliteTracker:
                 "satellite": self.target.to_dict() if self.target else None,
                 "computed_az": self.computed_az,
                 "computed_el": self.computed_el,
+                "sat_lat": self._sat_lat,
+                "sat_lng": self._sat_lng,
                 "below_horizon": self.computed_el is not None and self.computed_el < 0,
             }
             sat = self.target
@@ -789,6 +822,11 @@ class SatelliteTracker:
                     result["ground_track"] = ground_track
                 except Exception:
                     result["ground_track"] = []
+                try:
+                    orbit = self.compute_orbit(sat)
+                    result["orbit"] = orbit
+                except Exception:
+                    result["orbit"] = []
                 try:
                     passes = self.compute_upcoming_passes(sat, obs_lat, obs_lon)
                     result["passes"] = passes
