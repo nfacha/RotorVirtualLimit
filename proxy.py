@@ -233,19 +233,27 @@ class ClientHandler(threading.Thread):
             self._passthrough(line)
             return
 
-        allowed, reason = self.limits.check_position(az, el)
+        # Apply offset before limits check and forwarding
+        if self.limits.offset_enabled:
+            offset_az = az + self.limits.az_offset
+            offset_el = el + self.limits.el_offset
+        else:
+            offset_az = az
+            offset_el = el
+
+        allowed, reason = self.limits.check_position(offset_az, offset_el)
         if not allowed:
             log.info("  REJECT set_pos(%.1f, %.1f) from %s: %s", az, el, self.addr, reason)
             self._respond("RPRT -15\n")
             return
 
-        resp = self._backend_exchange(line + "\n")
+        resp = self._backend_exchange(f"P {offset_az} {offset_el}\n")
         if resp is None:
             self._respond("RPRT -4\n")
             return
 
         self._respond(resp)
-        self.limits.update_position(az, el)
+        self.limits.update_position(offset_az, offset_el)
 
     def _move(self, line, args):
         try:
@@ -275,9 +283,19 @@ class ClientHandler(threading.Thread):
         lines = resp.strip().split("\n")
         if len(lines) >= 2 and not (lines[0].startswith("RPRT") if lines else False):
             try:
-                az = float(lines[0].strip())
-                el = float(lines[1].strip())
-                self.limits.update_position(az, el)
+                raw_az = float(lines[0].strip())
+                raw_el = float(lines[1].strip())
+                self.limits.update_position(raw_az, raw_el)
+                if self.limits.offset_enabled:
+                    # Subtract offset so client sees commanded position
+                    adj_az = raw_az - self.limits.az_offset
+                    adj_el = raw_el - self.limits.el_offset
+                    rest = "\n".join(lines[2:]) if len(lines) > 2 else ""
+                    adj_resp = f"{adj_az:.1f}\n{adj_el:.1f}"
+                    if rest.strip():
+                        adj_resp += "\n" + rest
+                    self._respond(adj_resp + "\n")
+                    return
             except ValueError:
                 pass
 

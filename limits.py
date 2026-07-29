@@ -34,6 +34,10 @@ class RotorLimits:
         self.commands_blocked = False
         self.refresh_interval_ms = 1000
 
+        self.az_offset = 0.0
+        self.el_offset = 0.0
+        self.offset_enabled = True
+
         self._backend_version = 0
         self._backend_reachable = None  # None=unknown, True, False
 
@@ -59,6 +63,9 @@ class RotorLimits:
             self.proxy_port = d.get("proxy_port", 4534)
             self.commands_blocked = d.get("commands_blocked", False)
             self.refresh_interval_ms = d.get("refresh_interval_ms", 1000)
+            self.az_offset = d.get("az_offset", 0.0)
+            self.el_offset = d.get("el_offset", 0.0)
+            self.offset_enabled = d.get("offset_enabled", True)
             self.park_az = d.get("park_az")
             self.park_el = d.get("park_el")
             self.latitude = d.get("latitude")
@@ -88,6 +95,9 @@ class RotorLimits:
             "park_el": self.park_el,
             "latitude": self.latitude,
             "longitude": self.longitude,
+            "az_offset": self.az_offset,
+            "el_offset": self.el_offset,
+            "offset_enabled": self.offset_enabled,
             "cable_guard": {
                 "enabled": self.cable_guard_enabled,
                 "max_turns": self.cable_guard_max_turns,
@@ -135,6 +145,9 @@ class RotorLimits:
                 "proxy_port": self.proxy_port,
                 "commands_blocked": self.commands_blocked,
                 "refresh_interval_ms": self.refresh_interval_ms,
+                "az_offset": self.az_offset,
+                "el_offset": self.el_offset,
+                "offset_enabled": self.offset_enabled,
             }
 
     def update_position(self, az, el):
@@ -279,6 +292,25 @@ class RotorLimits:
             self.refresh_interval_ms = max(200, int(ms))
             self.save()
 
+    def set_offset(self, az=None, el=None):
+        with self.lock:
+            if az is not None:
+                self.az_offset = float(az)
+            if el is not None:
+                self.el_offset = float(el)
+            self.save()
+
+    def clear_offset(self):
+        with self.lock:
+            self.az_offset = 0.0
+            self.el_offset = 0.0
+            self.save()
+
+    def set_offset_enabled(self, enabled):
+        with self.lock:
+            self.offset_enabled = enabled
+            self.save()
+
     # ── Profile system ─────────────────────────────────
 
     @property
@@ -300,6 +332,11 @@ class RotorLimits:
                 "el_min": self.el_min,
                 "el_max": self.el_max,
                 "enabled": self.enabled,
+            },
+            "offset": {
+                "az": self.az_offset,
+                "el": self.el_offset,
+                "enabled": self.offset_enabled,
             },
             "cable_guard": {
                 "enabled": self.cable_guard_enabled,
@@ -325,6 +362,11 @@ class RotorLimits:
         self.el_min = limits.get("el_min")
         self.el_max = limits.get("el_max")
         self.enabled = limits.get("enabled", True)
+
+        off = data.get("offset", {})
+        self.az_offset = off.get("az", 0.0)
+        self.el_offset = off.get("el", 0.0)
+        self.offset_enabled = off.get("enabled", True)
 
         cg = data.get("cable_guard", {})
         self.cable_guard_enabled = cg.get("enabled", False)

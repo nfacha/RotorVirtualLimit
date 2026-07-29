@@ -396,6 +396,36 @@ footer a:hover{color:var(--accent-hover);text-decoration:underline}
 
 #map{height:280px;border-radius:var(--radius-sm);overflow:hidden;background:var(--surface2);border:1px solid var(--border)}
 .leaflet-container{background:var(--surface2)!important}
+.offset-badge{
+  display:inline-flex;align-items:center;font-size:.65rem;font-weight:700;
+  color:var(--yellow);background:var(--yellow-bg);border:1px solid var(--yellow-border);
+  padding:1px 7px;border-radius:999px;vertical-align:middle;margin-left:4px;
+}
+.offset-row{
+  display:flex;align-items:center;gap:4px;flex-wrap:wrap;
+  background:var(--surface2);border-radius:var(--radius-md);
+  padding:6px;border:1px solid var(--border);
+}
+.off-step{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:38px;min-height:40px;padding:4px 6px;
+  border-radius:var(--radius-xs);border:1px solid var(--border);
+  background:var(--surface);color:var(--text);cursor:pointer;
+  font-size:.7rem;font-weight:700;font-family:inherit;
+  transition:all var(--transition-fast);user-select:none;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+.off-step:hover{border-color:var(--border-hover);background:var(--surface-hover)}
+.off-step:active{transform:scale(.92);background:var(--accent);color:#fff;border-color:var(--accent)}
+.off-zero{background:var(--red-bg);border-color:var(--red-border);color:var(--red);min-width:32px}
+.off-zero:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.off-zero:active{background:var(--red);color:#fff}
+.off-val{
+  min-width:72px;text-align:center;
+  font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;
+  color:var(--accent);padding:0 6px;cursor:pointer;user-select:none;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
 </style>
 </head>
 <body>
@@ -422,7 +452,7 @@ footer a:hover{color:var(--accent-hover);text-decoration:underline}
   <div class="dash">
     <div class="dash-item">
       <div class="dash-label">Azimuth</div>
-      <div class="dash-value"><span id="v-az">---</span><span class="unit">&deg;</span></div>
+      <div class="dash-value"><span id="v-az">---</span><span class="unit">&deg;</span> <span class="offset-badge hidden" id="az-offset-badge"></span></div>
       <div class="gauge-wrap">
         <svg width="180" height="96" viewBox="0 0 180 96" id="az-gauge">
           <path d="M 15 86 A 75 75 0 0 1 165 86" fill="none" stroke="var(--border)" stroke-width="8" stroke-linecap="round"/>
@@ -439,7 +469,7 @@ footer a:hover{color:var(--accent-hover);text-decoration:underline}
     </div>
     <div class="dash-item">
       <div class="dash-label">Elevation</div>
-      <div class="dash-value"><span id="v-el">---</span><span class="unit">&deg;</span></div>
+      <div class="dash-value"><span id="v-el">---</span><span class="unit">&deg;</span> <span class="offset-badge hidden" id="el-offset-badge"></span></div>
       <div class="gauge-wrap">
         <svg width="70" height="96" viewBox="0 0 70 96" id="el-gauge">
           <rect x="24" y="4" width="12" height="80" rx="6" fill="var(--border)"/>
@@ -449,7 +479,7 @@ footer a:hover{color:var(--accent-hover);text-decoration:underline}
           <rect id="el-fill" x="24" y="84" width="12" height="0" rx="6" fill="var(--yellow)"/>
           <text x="50" y="88" fill="var(--muted)" font-size="7" font-family="JetBrains Mono">0°</text>
           <text x="50" y="48" fill="var(--muted)" font-size="7" font-family="JetBrains Mono">90°</text>
-          <text x="50" y="10" fill="var(--muted)" font-size="7" font-family="JetBrains Mono">180°</text>
+          <text x="50" y="10" fill="var(--muted)" font-size="7" font-family="JetBrains Mono">90°</text>
           <circle id="el-dot" cx="30" cy="84" r="5" fill="var(--yellow)"/>
         </svg>
       </div>
@@ -487,12 +517,12 @@ footer a:hover{color:var(--accent-hover);text-decoration:underline}
         </div>
         <div class="flex gap-2 flex-wrap">
           <input type="number" id="goto-az" step="0.1" min="0" max="360" placeholder="Az" class="num-sm">
-          <input type="number" id="goto-el" step="0.1" min="0" max="180" placeholder="El" class="num-sm">
+          <input type="number" id="goto-el" step="0.1" min="0" max="90" placeholder="El" class="num-sm">
           <button class="btn btn-primary btn-sm" id="goto-btn">Go To</button>
         </div>
         <div class="flex gap-2 flex-wrap">
           <input type="number" id="park-az" step="0.1" min="0" max="360" placeholder="Az" class="num-sm">
-          <input type="number" id="park-el" step="0.1" min="0" max="180" placeholder="El" class="num-sm">
+          <input type="number" id="park-el" step="0.1" min="0" max="90" placeholder="El" class="num-sm">
           <button class="btn btn-ghost btn-sm" id="park-set-btn">Set Park</button>
           <button class="btn btn-ghost btn-sm" id="park-btn">Park</button>
         </div>
@@ -530,7 +560,7 @@ footer a:hover{color:var(--accent-hover);text-decoration:underline}
     <div class="lim-bar" id="el-lim-bar">
       <div class="lim-range" id="el-range" style="left:0;width:100%"></div>
       <div class="lim-edge hidden" id="el-min-e"><span>0&deg;</span></div>
-      <div class="lim-edge hidden" id="el-max-e"><span>180&deg;</span></div>
+      <div class="lim-edge hidden" id="el-max-e"><span>90&deg;</span></div>
       <div class="lim-pos" id="el-pos" style="left:0%"></div>
     </div>
 
@@ -544,9 +574,9 @@ footer a:hover{color:var(--accent-hover);text-decoration:underline}
       </div>
       <div class="input-row">
         <label>El min</label>
-        <input type="number" id="man-el-min" step="0.1" min="0" max="180" placeholder="0" class="num-sm">
-        <label>max</label>
-        <input type="number" id="man-el-max" step="0.1" min="0" max="180" placeholder="180" class="num-sm">
+<input type="number" id="man-el-min" step="0.1" min="0" max="90" placeholder="0" class="num-sm">
+          <label>max</label>
+          <input type="number" id="man-el-max" step="0.1" min="0" max="90" placeholder="90" class="num-sm">
         <button class="btn btn-primary btn-xs" id="apply-el">Apply</button>
         <button class="btn btn-ghost btn-xs" id="clear-limits">Clear</button>
       </div>
@@ -596,6 +626,70 @@ footer a:hover{color:var(--accent-hover);text-decoration:underline}
           <button class="btn btn-primary btn-sm" id="apply-turns">Set</button>
         </div>
         <button class="btn btn-green btn-sm" id="reset-cg">Reset Counter</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ OFFSET COMPENSATION ═══ -->
+<div class="section">
+  <div class="card">
+    <div class="card-header card-collapse" onclick="toggleCollapse('off-body',this)">
+      <div class="card-title">Offset Compensation</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <label class="toggle" onclick="event.stopPropagation()">
+          <input type="checkbox" id="off-toggle">
+          <span class="slider"></span>
+          <span class="label" id="off-toggle-label">Off</span>
+        </label>
+        <span class="collapse-arrow">&#9660;</span>
+      </div>
+    </div>
+    <div class="card-body" id="off-body">
+      <p class="card-desc">Adjust for physical misalignment. Commands are biased by these values; responses are corrected so tracking software sees the effective position.</p>
+
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:4px;font-weight:600">Azimuth Offset</div>
+      <div class="offset-row" data-axis="az">
+        <button class="off-step" data-step="-30">&minus;30</button>
+        <button class="off-step" data-step="-25">&minus;25</button>
+        <button class="off-step" data-step="-20">&minus;20</button>
+        <button class="off-step" data-step="-15">&minus;15</button>
+        <button class="off-step" data-step="-10">&minus;10</button>
+        <button class="off-step" data-step="-5">&minus;5</button>
+        <button class="off-step" data-step="-1">&minus;1</button>
+        <span class="off-val" id="off-val-az">0&deg;</span>
+        <button class="off-step" data-step="1">+1</button>
+        <button class="off-step" data-step="5">+5</button>
+        <button class="off-step" data-step="10">+10</button>
+        <button class="off-step" data-step="15">+15</button>
+        <button class="off-step" data-step="20">+20</button>
+        <button class="off-step" data-step="25">+25</button>
+        <button class="off-step" data-step="30">+30</button>
+        <button class="off-step off-zero" data-axis="az">0</button>
+      </div>
+
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:4px;margin-top:10px;font-weight:600">Elevation Offset</div>
+      <div class="offset-row" data-axis="el">
+        <button class="off-step" data-step="-30">&minus;30</button>
+        <button class="off-step" data-step="-25">&minus;25</button>
+        <button class="off-step" data-step="-20">&minus;20</button>
+        <button class="off-step" data-step="-15">&minus;15</button>
+        <button class="off-step" data-step="-10">&minus;10</button>
+        <button class="off-step" data-step="-5">&minus;5</button>
+        <button class="off-step" data-step="-1">&minus;1</button>
+        <span class="off-val" id="off-val-el">0&deg;</span>
+        <button class="off-step" data-step="1">+1</button>
+        <button class="off-step" data-step="5">+5</button>
+        <button class="off-step" data-step="10">+10</button>
+        <button class="off-step" data-step="15">+15</button>
+        <button class="off-step" data-step="20">+20</button>
+        <button class="off-step" data-step="25">+25</button>
+        <button class="off-step" data-step="30">+30</button>
+        <button class="off-step off-zero" data-axis="el">0</button>
+      </div>
+
+      <div style="margin-top:10px">
+        <button class="btn btn-ghost btn-sm" id="off-clear">Clear All</button>
       </div>
     </div>
   </div>
@@ -744,7 +838,9 @@ async function fetchStatus(){
 }
 fetchStatus();
 
-function setVal(id,v){const e=document.getElementById(id);if(e&&e!=document.activeElement)e.value=v;}
+function setVal(id,v){const e=document.getElementById(id);if(e&&e!=document.activeElement&&!e.dataset.dirty)e.value=v;}
+document.addEventListener('input',e=>{if(e.target.tagName=='INPUT')e.target.dataset.dirty='1';});
+function clearDirty(...ids){ids.forEach(id=>{const e=document.getElementById(id);if(e)delete e.dataset.dirty;});}
 
 /* ─── SVG Gauge Helpers ─────────────────────────────── */
 function setLine(id,x1,y1,x2,y2,show){
@@ -814,7 +910,7 @@ function updateAzGauge(az, s){
 
 function updateElGauge(el, s){
   if(el!=null){
-    const frac=Math.max(0,Math.min(180,el))/180;
+    const frac=Math.max(0,Math.min(90,el))/90;
     const maxH=80;
     const h=frac*maxH;
     const fill=document.getElementById('el-fill');
@@ -831,7 +927,7 @@ function updateElGauge(el, s){
   const hasMax=showLim&&s.el_max!=null;
 
   if(hasMin){
-    const f=Math.max(0,Math.min(180,s.el_min))/180;
+    const f=Math.max(0,Math.min(90,s.el_min))/90;
     const y=84-f*80;
     setLine('el-min-line',18,y,42,y,true);
   }else{
@@ -839,7 +935,7 @@ function updateElGauge(el, s){
   }
 
   if(hasMax){
-    const f=Math.max(0,Math.min(180,s.el_max))/180;
+    const f=Math.max(0,Math.min(90,s.el_max))/90;
     const y=84-f*80;
     setLine('el-max-line',18,y,42,y,true);
   }else{
@@ -848,8 +944,8 @@ function updateElGauge(el, s){
 
   const limRect=document.getElementById('el-lim-rect');
   if(hasMin&&hasMax&&s.el_min<s.el_max&&limRect){
-    const f1=Math.max(0,Math.min(180,s.el_min))/180;
-    const f2=Math.max(0,Math.min(180,s.el_max))/180;
+    const f1=Math.max(0,Math.min(90,s.el_min))/90;
+    const f2=Math.max(0,Math.min(90,s.el_max))/90;
     const yMin=84-f1*80;
     const yMax=84-f2*80;
     limRect.setAttribute('y',yMax);
@@ -861,11 +957,28 @@ function updateElGauge(el, s){
 }
 
 function render(s){
-  const az=s.az!=null?s.az:null,el=s.el!=null?s.el:null;
-  document.getElementById('v-az').textContent=az!=null?az.toFixed(1):'---';
-  document.getElementById('v-el').textContent=el!=null?el.toFixed(1):'---';
-  updateAzGauge(az, s);
-  updateElGauge(el, s);
+  const azRaw=s.az,elRaw=s.el;
+  const azOff=s.az_offset||0,elOff=s.el_offset||0;
+  const offEn=s.offset_enabled===undefined||s.offset_enabled;
+  const azEff=azRaw!=null&&offEn?azRaw-azOff:azRaw;
+  const elEff=elRaw!=null&&offEn?elRaw-elOff:elRaw;
+  document.getElementById('v-az').textContent=azEff!=null?azEff.toFixed(1):'---';
+  document.getElementById('v-el').textContent=elEff!=null?elEff.toFixed(1):'---';
+
+  // Offset badges
+  const azBadge=document.getElementById('az-offset-badge');
+  const elBadge=document.getElementById('el-offset-badge');
+  if(offEn&&azOff!==0&&azRaw!=null){
+    azBadge.textContent=(azOff>0?'+':'')+azOff.toFixed(1)+'°';
+    azBadge.classList.remove('hidden');
+  }else{azBadge.classList.add('hidden')}
+  if(offEn&&elOff!==0&&elRaw!=null){
+    elBadge.textContent=(elOff>0?'+':'')+elOff.toFixed(1)+'°';
+    elBadge.classList.remove('hidden');
+  }else{elBadge.classList.add('hidden')}
+
+  updateAzGauge(azRaw, s);
+  updateElGauge(elRaw, s);
 
   // Backend badge + tag
   if(s.backend){
@@ -924,12 +1037,30 @@ function render(s){
   document.getElementById('limits-label').textContent=s.enabled?'On':'Off';
 
   renderLimBar('az',s.az_min,s.az_max,az,360);
-  renderLimBar('el',s.el_min,s.el_max,el,180);
+  renderLimBar('el',s.el_min,s.el_max,el,90);
 
   setVal('man-az-min',s.az_min!=null?s.az_min:'');
   setVal('man-az-max',s.az_max!=null?s.az_max:'');
   setVal('man-el-min',s.el_min!=null?s.el_min:'');
   setVal('man-el-max',s.el_max!=null?s.el_max:'');
+
+  // ── Offset ──
+  const offToggle=document.getElementById('off-toggle');
+  offToggle.checked=offEn;
+  document.getElementById('off-toggle-label').textContent=offEn?'On':'Off';
+  ['az','el'].forEach(axis=>{
+    const el=document.getElementById('off-val-'+axis);
+    if(!el) return;
+    // Remove any open inline editor
+    const inp=el.querySelector('input');
+    if(inp) inp.remove();
+    const off=axis==='az'?azOff:elOff;
+    el.textContent=(off>0?'+':'')+Math.round(off)+'°';
+  });
+  // Dim step buttons when disabled
+  document.querySelectorAll('.offset-row').forEach(r=>{
+    r.style.opacity=offEn?'1':'0.4';
+  });
 
   // ── Cable Guard ──
   const cg=s.cable_guard||{};
@@ -938,7 +1069,7 @@ function render(s){
 
   const net=cg.net_rotation||0,mt=cg.max_turns||1,md=mt*360;
   document.getElementById('cg-net').textContent=(net>=0?'+':'')+net.toFixed(1)+'°';
-  document.getElementById('max-turns').value=mt;
+  setVal('max-turns',mt);
 
   const hw=Math.min(Math.abs(net)/md*50,50);
   if(net>=0){
@@ -1040,7 +1171,7 @@ document.getElementById('park-set-btn').addEventListener('click',lock(document.g
   const r=await post(API+'/rotor/park-position',{az:isNaN(az)?null:az,el:isNaN(el)?null:el});
   if(r.ok) toast('success','Park position saved');
   else toast('error','Failed to save park position');
-  await fetchStatus();
+  clearDirty('park-az','park-el');await fetchStatus();
 }));
 
 /* ─── Limits ─────────────────────────────────────────── */
@@ -1059,12 +1190,12 @@ document.getElementById('limits-toggle').addEventListener('change',async functio
 document.getElementById('apply-az').addEventListener('click',lock(document.getElementById('apply-az'),async()=>{
   const mn=parseFloat(document.getElementById('man-az-min').value),mx=parseFloat(document.getElementById('man-az-max').value);
   await post(API+'/limits/manual',{az_min:isNaN(mn)?null:mn,az_max:isNaN(mx)?null:mx});
-  toast('success','Az limits applied');await fetchStatus();
+  toast('success','Az limits applied');clearDirty('man-az-min','man-az-max');await fetchStatus();
 }));
 document.getElementById('apply-el').addEventListener('click',lock(document.getElementById('apply-el'),async()=>{
   const mn=parseFloat(document.getElementById('man-el-min').value),mx=parseFloat(document.getElementById('man-el-max').value);
   await post(API+'/limits/manual',{el_min:isNaN(mn)?null:mn,el_max:isNaN(mx)?null:mx});
-  toast('success','El limits applied');await fetchStatus();
+  toast('success','El limits applied');clearDirty('man-el-min','man-el-max');await fetchStatus();
 }));
 document.getElementById('clear-limits').addEventListener('click',lock(document.getElementById('clear-limits'),async()=>{
   await post(API+'/limits/clear');toast('success','Limits cleared');await fetchStatus();
@@ -1080,11 +1211,100 @@ document.getElementById('apply-turns').addEventListener('click',lock(document.ge
   const t=parseFloat(document.getElementById('max-turns').value);
   if(isNaN(t)||t<=0) return;
   await post(API+'/cable-guard/max-turns',{turns:t});
-  toast('success','Max turns set');await fetchStatus();
+  toast('success','Max turns set');clearDirty('max-turns');await fetchStatus();
 }));
 document.getElementById('reset-cg').addEventListener('click',lock(document.getElementById('reset-cg'),async()=>{
   await post(API+'/cable-guard/reset');toast('success','Counter reset');await fetchStatus();
 }));
+
+/* ─── Offset Compensation ───────────────────────────── */
+// Each step button adjusts offset live
+document.querySelectorAll('.off-step:not(.off-zero)').forEach(btn=>{
+  btn.addEventListener('click',lock(btn,async()=>{
+    const offEn=S.offset_enabled===undefined||S.offset_enabled;
+    if(!offEn) return;
+    const axis=btn.closest('.offset-row').dataset.axis;
+    const step=parseFloat(btn.dataset.step);
+    const cur=S[axis+'_offset']||0;
+    const val=Math.round(cur+step);
+    const body={};
+    body[axis+'_offset']=val;
+    // Optimistic update — show new value immediately
+    const offEl=document.getElementById('off-val-'+axis);
+    if(offEl){
+      const inp=offEl.querySelector('input');
+      if(inp) inp.remove();
+      offEl.textContent=(val>0?'+':'')+val+'°';
+    }
+    await post(API+'/offset/set',body);
+    await fetchStatus();
+  }));
+});
+// Zero buttons reset that axis to 0
+document.querySelectorAll('.off-zero').forEach(btn=>{
+  btn.addEventListener('click',lock(btn,async()=>{
+    const offEn=S.offset_enabled===undefined||S.offset_enabled;
+    if(!offEn) return;
+    const axis=btn.dataset.axis;
+    const body={};
+    body[axis+'_offset']=0;
+    // Optimistic update
+    const offEl=document.getElementById('off-val-'+axis);
+    if(offEl){
+      const inp=offEl.querySelector('input');
+      if(inp) inp.remove();
+      offEl.textContent='0°';
+    }
+    await post(API+'/offset/set',body);
+    await fetchStatus();
+  }));
+});
+// Clicking the offset value opens an inline editor
+document.querySelectorAll('.off-val').forEach(el=>{
+  el.addEventListener('click',function(){
+    const offEn=S.offset_enabled===undefined||S.offset_enabled;
+    if(!offEn) return;
+    if(this.querySelector('input')) return;
+    const axis=this.id==='off-val-az'?'az':'el';
+    const cur=Math.round(S[axis+'_offset']||0);
+    const inp=document.createElement('input');
+    inp.type='number';
+    inp.step='1';
+    inp.value=cur;
+    inp.style.cssText='width:62px;background:var(--surface);border:1px solid var(--accent);border-radius:4px;padding:6px 8px;color:var(--text);font-family:inherit;font-size:1.1rem;font-weight:700;text-align:center;outline:none;min-height:38px';
+    this.textContent='';
+    this.appendChild(inp);
+    inp.focus();
+    inp.select();
+    const apply = async ()=>{
+      const v=parseInt(inp.value);
+      if(!isNaN(v)){
+        // Optimistic update
+        this.textContent=(v>0?'+':'')+v+'°';
+        const body={};
+        body[axis+'_offset']=v;
+        await post(API+'/offset/set',body);
+        await fetchStatus();
+      }else{
+        await fetchStatus();
+      }
+    };
+    inp.addEventListener('blur',apply);
+    inp.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){e.preventDefault();inp.blur();}
+      if(e.key==='Escape'){e.preventDefault();fetchStatus();}
+    });
+  });
+});
+document.getElementById('off-clear').addEventListener('click',lock(document.getElementById('off-clear'),async()=>{
+  await post(API+'/offset/clear');
+  await fetchStatus();
+  toast('success','Offset cleared');
+}));
+document.getElementById('off-toggle').addEventListener('change',async function(){
+  await post(API+'/offset/'+(this.checked?'enable':'disable'));
+  await fetchStatus();
+});
 
 /* ─── Commands Block ────────────────────────────────── */
 document.getElementById('block-toggle').addEventListener('change',async function(){
@@ -1099,7 +1319,7 @@ document.getElementById('be-apply').addEventListener('click',lock(document.getEl
   if(!h||isNaN(p)) return;
   await post(API+'/backend/config',{host:h,port:p});
   await post(API+'/backend/reconnect');
-  toast('success','Backend set to '+h+':'+p);await fetchStatus();
+  toast('success','Backend set to '+h+':'+p);clearDirty('be-host','be-port');await fetchStatus();
 }));
 document.getElementById('be-test').addEventListener('click',lock(document.getElementById('be-test'),async()=>{
   const h=document.getElementById('be-host').value.trim()||'127.0.0.1',p=parseInt(document.getElementById('be-port').value)||4533;
@@ -1119,9 +1339,7 @@ function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>
 /* ─── Profiles ──────────────────────────────────────── */
 async function refreshProfiles(){
   try{
-    const r=await fetch(API+'/profiles/list');
-    if(!r.ok) return;
-    const d=await r.json();
+    const d=await post(API+'/profiles/list');
     const list=document.getElementById('prof-list');
     const p=d.profiles||[];
     if(!p.length){
@@ -1215,7 +1433,7 @@ document.getElementById('loc-apply').addEventListener('click',lock(document.getE
   const lng=parseFloat(document.getElementById('loc-lng').value);
   if(isNaN(lat)||isNaN(lng)){toast('error','Enter valid lat/lng');return;}
   const r=await post(API+'/location',{latitude:lat,longitude:lng});
-  if(r.ok){toast('success','Location saved');await fetchStatus();}
+  if(r.ok){toast('success','Location saved');clearDirty('loc-lat','loc-lng');await fetchStatus();}
   else toast('error','Failed to save location');
 }));
 
@@ -1225,6 +1443,7 @@ document.getElementById('poll-apply').addEventListener('click',lock(document.get
   await post(API+'/refresh-interval',{ms});
   _poll_ms=ms;
   toast('success','Poll rate: '+ms+'ms');
+  clearDirty('poll-ms');
   if(_poll_timer) clearTimeout(_poll_timer);
   _poll_timer = setTimeout(fetchStatus, _poll_ms);
 }));

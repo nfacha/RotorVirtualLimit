@@ -1,8 +1,12 @@
 import json
+import logging
 import os
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse
+
+
+log = logging.getLogger("server")
 
 
 _api_limits = None
@@ -107,6 +111,10 @@ class APIHandler(BaseHTTPRequestHandler):
             "/api/refresh-interval": lambda: self._ok(
                 _api_limits.set_refresh_interval(data.get("ms", 1000))
             ),
+            "/api/offset/set": lambda: self._offset_set(data),
+            "/api/offset/clear": lambda: self._offset_clear(),
+            "/api/offset/enable": lambda: self._offset_enable(),
+            "/api/offset/disable": lambda: self._offset_disable(),
         }
 
         handler = routes.get(path)
@@ -219,13 +227,20 @@ class APIHandler(BaseHTTPRequestHandler):
         if el is None:
             el = _api_limits.last_el or 0
         az = float(az) % 360
-        el = max(0, min(180, float(el)))
-        allowed, reason = _api_limits.check_position(az, el)
+        el = max(0, min(90, float(el)))
+        # Apply offset before limits check
+        if _api_limits.offset_enabled:
+            offset_az = az + _api_limits.az_offset
+            offset_el = el + _api_limits.el_offset
+        else:
+            offset_az = az
+            offset_el = el
+        allowed, reason = _api_limits.check_position(offset_az, offset_el)
         if not allowed:
             self._send_json({"ok": False, "error": reason, "response": "RPRT -15"})
             return
-        resp = self._backend_send(f"P {az} {el}")
-        _api_limits.update_position(az, el)
+        resp = self._backend_send(f"P {offset_az} {offset_el}")
+        _api_limits.update_position(offset_az, offset_el)
         ok = "RPRT 0" in resp
         self._refresh_position()
         self._send_json({"ok": ok, "response": resp})
@@ -256,12 +271,19 @@ class APIHandler(BaseHTTPRequestHandler):
             az = (_api_limits.last_az or 0) + az_off
             el = (_api_limits.last_el or 0) + el_off
             az = max(0, min(360, az))
-            el = max(0, min(180, el))
-            allowed, reason = _api_limits.check_position(az, el)
+            el = max(0, min(90, el))
+            # Apply offset before limits check
+            if _api_limits.offset_enabled:
+                offset_az = az + _api_limits.az_offset
+                offset_el = el + _api_limits.el_offset
+            else:
+                offset_az = az
+                offset_el = el
+            allowed, reason = _api_limits.check_position(offset_az, offset_el)
             if not allowed:
                 self._send_json({"ok": False, "error": reason, "response": "RPRT -15"})
                 return
-            resp = self._backend_send(f"P {az} {el}")
+            resp = self._backend_send(f"P {offset_az} {offset_el}")
             ok = "RPRT 0" in resp
         self._refresh_position()
         self._send_json({"ok": ok, "response": resp})
@@ -299,6 +321,64 @@ class APIHandler(BaseHTTPRequestHandler):
             return
         _api_limits.set_location(lat, lng)
         self._send_json({"ok": True})
+
+    def _offset_set(self, data):
+        az = data.get("az_offset")
+        el = data.get("el_offset")
+        old_az = _api_limits.az_offset
+        old_el = _api_limits.el_offset
+        _api_limits.set_offset(az=az, el=el)
+        new_az = _api_limits.az_offset
+        new_el = _api_limits.el_offset
+        if _api_limits.offset_enabled:
+            self._offset_move_rotor(new_az - old_az, new_el - old_el)
+        self._send_json({"ok": True})
+
+    def _offset_clear(self):
+        old_az = _api_limits.az_offset
+        old_el = _api_limits.el_offset
+        _api_limits.clear_offset()
+        if _api_limits.offset_enabled:
+            self._offset_move_rotor(-old_az, -old_el)
+        self._send_json({"ok": True})
+
+    def _offset_enable(self):
+        _api_limits.set_offset_enabled(True)
+        self._offset_move_rotor(_api_limits.az_offset, _api_limits.el_offset)
+        self._send_json({"ok": True})
+
+    def _offset_disable(self):
+        old_az = _api_limits.az_offset
+        old_el = _api_limits.el_offset
+        _api_limits.set_offset_enabled(False)
+        self._offset_move_rotor(-old_az, -old_el)
+        self._send_json({"ok": True})
+
+    def _offset_move_rotor(self, az_delta, el_delta):
+        """Move the rotor by the given deltas to reflect an offset change."""
+        if az_delta == 0 and el_delta == 0:
+            return
+        az = _api_limits.last_az
+        el = _api_limits.last_el
+        if az is None:
+            if el is None:
+                log.info("  offset move skipped — no position known")
+                return
+            az = el
+        if el is None:
+            el = az
+        target_az = round(az + az_delta, 1)
+        target_el = round(el + el_delta, 1)
+        target_az = max(0, min(360, target_az))
+        target_el = max(0, min(90, target_el))
+        allowed, _ = _api_limits.check_position(target_az, target_el)
+        if not allowed:
+            log.info("  offset move skipped — limits reject %.1f %.1f", target_az, target_el)
+            return
+        resp = self._backend_send(f"P {target_az} {target_el}")
+        log.info("  offset move P %.1f %.1f -> %s", target_az, target_el, resp)
+        if "RPRT 0" in resp or not resp.startswith("RPRT -"):
+            _api_limits.update_position(target_az, target_el)
 
     # ── Profiles ────────────────────────────────────────
 
