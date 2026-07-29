@@ -701,7 +701,7 @@ class SatelliteTracker:
 
             self._stop_event.wait(1.0)
 
-    def compute_ground_track(self, sat=None, minutes_ahead=100):
+    def compute_ground_track(self, sat=None, minutes_ahead=None):
         sat = sat or self.target
         if not sat:
             return []
@@ -709,8 +709,11 @@ class SatelliteTracker:
         epoch_jd = sat.epoch_jd
         now = datetime.now(timezone.utc)
         now_ts = (now.timestamp() - (epoch_jd - 2440587.5) * 86400) / 60.0
+        period_min = int(1.0 / sat.mean_motion * MIN_PER_DAY) if (sat and sat.mean_motion) else 95
+        # Center around current time (-half to +half) leaving open gap between start and end
+        half = int(period_min / 2) - 3
         points = []
-        for i in range(0, minutes_ahead, 1):
+        for i in range(-half, half + 1):
             tsince = now_ts + i
             x, y, z = sgp4.propagate(tsince)
             dt = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + tsince * 60, tz=timezone.utc)
@@ -729,10 +732,10 @@ class SatelliteTracker:
         epoch_jd = sat.epoch_jd
         now = datetime.now(timezone.utc)
         now_ts = (now.timestamp() - (epoch_jd - 2440587.5) * 86400) / 60.0
-        period_min = 1.0 / sat.mean_motion * MIN_PER_DAY
+        period_min = (1.0 / sat.mean_motion * MIN_PER_DAY) if sat.mean_motion else 95.0
         half = period_min / 2.0
         points = []
-        for i in range(int(-half), int(half) + 1):
+        for i in range(int(-half), int(half)):
             tsince = now_ts + i
             x, y, z = sgp4.propagate(tsince)
             dt = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + tsince * 60, tz=timezone.utc)
@@ -789,18 +792,143 @@ class SatelliteTracker:
                     los_time = dt
                     duration = int((los_time - aos_time).total_seconds() / 60)
                     if duration >= 1:
+                        pass_sky = []
+                        pass_ground = []
+                        t_aos = (aos_time.timestamp() - (epoch_jd - 2440587.5) * 86400) / 60.0
+                        t_los = (los_time.timestamp() - (epoch_jd - 2440587.5) * 86400) / 60.0
+                        t_sub = t_aos
+                        while t_sub <= t_los:
+                            x_s, y_s, z_s = sgp4.propagate(t_sub)
+                            dt_sub = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + t_sub * 60, tz=timezone.utc)
+                            try:
+                                az_s, el_s, _ = teme_to_az_el(x_s, y_s, z_s, obs_lat, obs_lon, 0, dt=dt_sub)
+                                if el_s >= 0:
+                                    pass_sky.append([round(az_s, 1), round(el_s, 1)])
+                            except Exception:
+                                pass
+                            try:
+                                lat_g, lon_g, _ = _teme_to_geodetic(x_s, y_s, z_s, dt=dt_sub)
+                                pass_ground.append([round(math.degrees(lat_g), 4), round(math.degrees(lon_g), 4)])
+                            except Exception:
+                                pass
+                            t_sub += 10.0 / 60.0
+
                         passes.append({
+                            "id": len(passes),
                             "aos": aos_time.isoformat(),
                             "los": los_time.isoformat(),
                             "max_el": round(max_el, 1),
                             "aos_az": round(aos_az, 1),
                             "los_az": round(az, 1),
                             "duration_min": duration,
+                            "sky_track": pass_sky,
+                            "ground_track": pass_ground,
                         })
                     in_pass = False
                     aos_time = None
 
+            if len(passes) >= 10:
+                break
+
         return passes
+
+    def compute_sky_track(self, sat=None, obs_lat=None, obs_lon=None):
+        sat = sat or self.target
+        if not sat:
+            return []
+        if obs_lat is None:
+            obs_lat = self.limits.latitude
+        if obs_lon is None:
+            obs_lon = self.limits.longitude
+        if obs_lat is None or obs_lon is None:
+            return []
+
+        sgp4 = SGP4(sat)
+        epoch_jd = sat.epoch_jd
+        now = datetime.now(timezone.utc)
+        now_ts = (now.timestamp() - (epoch_jd - 2440587.5) * 86400) / 60.0
+
+        pass_start_ts = None
+        pass_end_ts = None
+
+        # Check current elevation
+        x, y, z = sgp4.propagate(now_ts)
+        now_dt = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + now_ts * 60, tz=timezone.utc)
+        try:
+            _, cur_el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, 0, dt=now_dt)
+        except Exception:
+            cur_el = -90.0
+
+        if cur_el >= 0:
+            # Active pass! Scan backwards for AOS
+            t = now_ts
+            while t > now_ts - 35:
+                t -= 0.5
+                x, y, z = sgp4.propagate(t)
+                dt = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + t * 60, tz=timezone.utc)
+                try:
+                    _, el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, 0, dt=dt)
+                    if el < 0:
+                        pass_start_ts = t
+                        break
+                except Exception:
+                    break
+            if pass_start_ts is None:
+                pass_start_ts = now_ts - 15
+
+            # Scan forwards for LOS
+            t = now_ts
+            while t < now_ts + 35:
+                t += 0.5
+                x, y, z = sgp4.propagate(t)
+                dt = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + t * 60, tz=timezone.utc)
+                try:
+                    _, el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, 0, dt=dt)
+                    if el < 0:
+                        pass_end_ts = t
+                        break
+                except Exception:
+                    break
+            if pass_end_ts is None:
+                pass_end_ts = now_ts + 15
+        else:
+            # Next upcoming pass: search ahead up to 24h (1440 min)
+            found_aos = False
+            for m in range(0, 1440):
+                t = now_ts + m
+                x, y, z = sgp4.propagate(t)
+                dt = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + t * 60, tz=timezone.utc)
+                try:
+                    _, el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, 0, dt=dt)
+                except Exception:
+                    continue
+
+                if el >= 0 and not found_aos:
+                    pass_start_ts = t
+                    found_aos = True
+                elif el < 0 and found_aos:
+                    pass_end_ts = t
+                    break
+
+        if pass_start_ts is None or pass_end_ts is None:
+            return []
+
+        # High resolution sampling (every 10 seconds = 1/6 minute)
+        sky_points = []
+        step_min = 10.0 / 60.0
+        t = pass_start_ts
+        while t <= pass_end_ts:
+            x, y, z = sgp4.propagate(t)
+            dt = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + t * 60, tz=timezone.utc)
+            try:
+                az, el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, 0, dt=dt)
+                if el >= 0:
+                    sky_points.append([round(az, 1), round(el, 1)])
+            except Exception:
+                pass
+            t += step_min
+
+        return sky_points
 
     def get_tracking_status(self, include_extra=False):
         with self._lock:
@@ -832,6 +960,11 @@ class SatelliteTracker:
                     result["passes"] = passes
                 except Exception:
                     result["passes"] = []
+                try:
+                    sky_track = self.compute_sky_track(sat, obs_lat, obs_lon)
+                    result["sky_track"] = sky_track
+                except Exception:
+                    result["sky_track"] = []
             return result
 
     def get_satellites(self, search=None):

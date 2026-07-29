@@ -11,654 +11,494 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-/* ════════════════════════════════════════════════════════
-   FIELD-OPS DARK SYSTEM — Mobile-first, zero clutter
-   ════════════════════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0a0e17;
-  --surface:#111827;
-  --surface2:#1a2236;
-  --surface-hover:#1f2b42;
-  --border:rgba(255,255,255,.06);
-  --border-active:rgba(255,255,255,.12);
-  --text:#f0f4f8;
-  --text-sec:#8b9dc3;
-  --muted:#5b6b8a;
+  --bg:#080b12;
+  --s1:#0f1520;
+  --s2:#151d2e;
+  --s3:#1c2740;
+  --hover:#222f4a;
+  --border:rgba(255,255,255,.05);
+  --text:#edf2f7;
+  --sub:#8899b8;
+  --dim:#556680;
   --accent:#3b82f6;
-  --accent-dim:rgba(59,130,246,.12);
-  --accent-hover:#2563eb;
+  --accent2:rgba(59,130,246,.12);
   --green:#22c55e;
-  --green-dim:rgba(34,197,94,.1);
-  --green-border:rgba(34,197,94,.25);
+  --green2:rgba(34,197,94,.1);
+  --greenB:rgba(34,197,94,.25);
   --red:#ef4444;
-  --red-dim:rgba(239,68,68,.1);
-  --red-border:rgba(239,68,68,.25);
+  --red2:rgba(239,68,68,.08);
+  --redB:rgba(239,68,68,.25);
   --yellow:#eab308;
-  --yellow-dim:rgba(234,179,8,.1);
-  --yellow-border:rgba(234,179,8,.25);
-  --r:10px;
-  --r-sm:8px;
-  --r-xs:6px;
-  --fast:.12s ease;
-  --med:.22s ease;
-  --spring:.3s cubic-bezier(.22,1,.36,1);
-  --safe-b:env(safe-area-inset-bottom,0px);
-  --safe-t:env(safe-area-inset-top,0px);
+  --yellow2:rgba(234,179,8,.08);
+  --yellowB:rgba(234,179,8,.25);
+  --r:8px;
+  --rs:6px;
+  --F:.1s ease;
+  --M:.2s ease;
+  --S:.28s cubic-bezier(.22,1,.36,1);
+  --sb:env(safe-area-inset-bottom,0px);
+  --st:env(safe-area-inset-top,0px);
 }
-html{font-size:15px;-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+html{font-size:14px;-webkit-text-size-adjust:100%}
 body{
-  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-family:'Inter',system-ui,sans-serif;
   background:var(--bg);color:var(--text);min-height:100dvh;
   -webkit-font-smoothing:antialiased;
-  padding-top:0;
 }
-
-/* Scrollbar */
-::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar{width:3px;height:3px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border-active);border-radius:2px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:2px}
 
-/* ════════════════════════════════════════════════════════
-   STICKY HEADER — always shows position
-   ════════════════════════════════════════════════════════ */
-.top-bar{
+/* ═══ TOP BAR ═══ */
+.hdr{
   position:sticky;top:0;z-index:100;
-  background:rgba(10,14,23,.92);
-  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  background:rgba(8,11,18,.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-bottom:1px solid var(--border);
-  padding:calc(8px + var(--safe-t)) 16px 8px;
+  padding:calc(6px + var(--st)) 12px 6px;
 }
-.top-row{
-  display:flex;align-items:center;gap:12px;
+.hdr-top{display:flex;align-items:center;gap:8px}
+.hdr-name{font-size:.72rem;font-weight:700;color:var(--dim);letter-spacing:.02em}
+.hdr-badges{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.pill{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2px 8px;border-radius:99px;font-size:.6rem;font-weight:700;
+  border:1px solid;white-space:nowrap;
 }
-.top-title{
-  font-size:.82rem;font-weight:700;color:var(--text-sec);
-  letter-spacing:.02em;white-space:nowrap;
-}
-.top-badges{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
-.badge{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:3px 10px;border-radius:999px;font-size:.65rem;font-weight:700;
-  border:1px solid;transition:all var(--fast);white-space:nowrap;
-}
-.badge .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.badge.on{background:var(--green-dim);border-color:var(--green-border);color:var(--green)}
-.badge.on .dot{background:var(--green)}
-.badge.off{background:rgba(91,107,138,.06);border-color:rgba(91,107,138,.15);color:var(--muted)}
-.badge.off .dot{background:var(--muted)}
-.badge.err{background:var(--red-dim);border-color:var(--red-border);color:var(--red)}
-.badge.err .dot{background:var(--red)}
-.badge.blocked{background:var(--red-dim);border-color:var(--red-border);color:var(--red);animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.pill .dt{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.pill.on{background:var(--green2);border-color:var(--greenB);color:var(--green)}
+.pill.on .dt{background:var(--green)}
+.pill.off{background:rgba(85,102,128,.06);border-color:rgba(85,102,128,.12);color:var(--dim)}
+.pill.off .dt{background:var(--dim)}
+.pill.err{background:var(--red2);border-color:var(--redB);color:var(--red)}
+.pill.err .dt{background:var(--red)}
+.pill.warn{background:var(--red2);border-color:var(--redB);color:var(--red);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
 
-.pos-bar{
-  display:flex;align-items:center;gap:16px;margin-top:6px;
-}
-.pos-item{display:flex;align-items:baseline;gap:4px}
-.pos-label{font-size:.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-.pos-value{
-  font-family:'JetBrains Mono',monospace;
-  font-size:1.6rem;font-weight:700;font-variant-numeric:tabular-nums;
-  color:var(--text);line-height:1;
-}
-.pos-unit{font-size:.7rem;color:var(--muted);font-weight:500}
-.offset-badge{
-  font-size:.6rem;font-weight:700;
-  color:var(--yellow);background:var(--yellow-dim);border:1px solid var(--yellow-border);
-  padding:1px 6px;border-radius:999px;margin-left:2px;
-}
+/* Position readout in header */
+.hdr-pos{display:flex;align-items:baseline;gap:14px;margin-top:2px}
+.pv{display:flex;align-items:baseline;gap:3px}
+.pv-l{font-size:.55rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
+.pv-n{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.pv-u{font-size:.6rem;color:var(--dim)}
+.off-pill{font-size:.55rem;font-weight:700;color:var(--yellow);background:var(--yellow2);border:1px solid var(--yellowB);padding:0 5px;border-radius:99px;margin-left:1px}
 
-/* ════════════════════════════════════════════════════════
-   MAIN CONTENT
-   ════════════════════════════════════════════════════════ */
-.main{
-  max-width:960px;margin:0 auto;
-  padding:12px 14px calc(16px + var(--safe-b));
-}
+/* ═══ MAIN ═══ */
+.mx{max-width:960px;margin:0 auto;padding:8px 10px calc(8px + var(--sb))}
 
-/* Section spacing — no cards, no borders */
-.sec{margin-bottom:16px}
-.sec-header{
-  display:flex;align-items:center;gap:8px;margin-bottom:8px;
-  min-height:36px;
-}
-.sec-title{
-  font-size:.7rem;font-weight:700;color:var(--muted);
-  text-transform:uppercase;letter-spacing:.06em;
-}
-.sec-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+/* ═══ DASHBOARD ROW — gauges + control side by side ═══ */
+.dash{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+@media(max-width:580px){.dash{grid-template-columns:1fr}}
 
-/* ════════════════════════════════════════════════════════
-   GAUGES — compact inline
-   ════════════════════════════════════════════════════════ */
-.gauges{
-  display:flex;gap:12px;margin-bottom:4px;
+.g-panel{
+  background:var(--s1);border-radius:var(--r);padding:8px 10px;
+  display:flex;align-items:center;gap:8px;
 }
-.gauge-box{
-  flex:1;background:var(--surface);border-radius:var(--r);
-  padding:12px;text-align:center;
-}
-.gauge-box .g-label{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:4px}
-.gauge-box svg{display:block;margin:0 auto}
+.g-panel svg{flex-shrink:0}
+.g-info{flex:1;min-width:0}
+.g-info .g-top{display:flex;align-items:baseline;gap:4px;margin-bottom:2px}
+.g-info .g-big{font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:700;line-height:1}
+.g-info .g-unit{font-size:.65rem;color:var(--dim)}
+.g-info .g-sub{font-size:.6rem;color:var(--dim)}
 
-/* ════════════════════════════════════════════════════════
-   D-PAD — large touch targets
-   ════════════════════════════════════════════════════════ */
-.ctrl-grid{
-  display:grid;gap:12px;
-  grid-template-columns:auto 1fr;
-  align-items:start;
-}
-@media(max-width:520px){
-  .ctrl-grid{grid-template-columns:1fr;justify-items:center}
-}
+/* ═══ CONTROL SECTION ═══ */
+.ctrl{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;margin-bottom:8px}
+@media(max-width:480px){.ctrl{grid-template-columns:1fr;justify-items:center}}
 
-.dpad{
-  display:grid;grid-template-columns:68px 68px 68px;grid-template-rows:68px 68px 68px;
-  gap:5px;
-}
-@media(max-width:380px){
-  .dpad{grid-template-columns:60px 60px 60px;grid-template-rows:60px 60px 60px}
-}
-.dpad-btn{
+.dpad{display:grid;grid-template-columns:62px 62px 62px;grid-template-rows:62px 62px 62px;gap:4px}
+@media(min-width:480px){.dpad{grid-template-columns:66px 66px 66px;grid-template-rows:66px 66px 66px}}
+.db{
   display:flex;align-items:center;justify-content:center;
-  border-radius:var(--r-sm);border:none;
-  background:var(--surface);color:var(--text);cursor:pointer;
-  font-size:20px;transition:all .08s;user-select:none;
+  border-radius:var(--r);border:none;
+  background:var(--s1);color:var(--text);cursor:pointer;
+  font-size:18px;user-select:none;
   -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  transition:background .06s,transform .06s;
 }
-.dpad-btn:active{transform:scale(.9);background:var(--accent);color:#fff}
-.dpad-btn.stop{color:var(--red);background:var(--red-dim)}
-.dpad-btn.stop:active{background:var(--red);color:#fff}
-.dpad-btn.u{grid-column:2;grid-row:1}
-.dpad-btn.l{grid-column:1;grid-row:2}
-.dpad-btn.s{grid-column:2;grid-row:2}
-.dpad-btn.r{grid-column:3;grid-row:2}
-.dpad-btn.d{grid-column:2;grid-row:3}
+.db:active{transform:scale(.88);background:var(--accent);color:#fff}
+.db.st{color:var(--red);background:var(--red2)}
+.db.st:active{background:var(--red);color:#fff}
+.db.u{grid-column:2;grid-row:1}
+.db.l{grid-column:1;grid-row:2}
+.db.s{grid-column:2;grid-row:2}
+.db.r{grid-column:3;grid-row:2}
+.db.d{grid-column:2;grid-row:3}
 
-.ctrl-side{display:flex;flex-direction:column;gap:10px;width:100%}
+.c-side{display:flex;flex-direction:column;gap:6px;width:100%}
 
-/* Speed slider */
-.speed-row{display:flex;align-items:center;gap:8px}
-.speed-row .lbl{font-size:.68rem;color:var(--muted);font-weight:600;white-space:nowrap}
-.speed-row .val{
-  font-family:'JetBrains Mono',monospace;font-size:.9rem;font-weight:700;
-  color:var(--accent);min-width:36px;text-align:right;
-}
-input[type=range]{
-  -webkit-appearance:none;appearance:none;height:6px;border-radius:3px;
-  background:var(--surface);outline:none;flex:1;min-width:80px;
-}
-input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;appearance:none;width:28px;height:28px;
-  border-radius:50%;background:var(--accent);cursor:pointer;
-  border:3px solid var(--bg);
-}
-input[type=range]::-moz-range-thumb{
-  width:28px;height:28px;border-radius:50%;background:var(--accent);
-  cursor:pointer;border:3px solid var(--bg);
-}
+/* Speed */
+.sp-row{display:flex;align-items:center;gap:6px;background:var(--s1);border-radius:var(--r);padding:6px 10px}
+.sp-row .lb{font-size:.62rem;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.sp-row .vl{font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:700;color:var(--accent);min-width:30px;text-align:right}
+input[type=range]{-webkit-appearance:none;appearance:none;height:5px;border-radius:3px;background:var(--s2);outline:none;flex:1;min-width:60px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid var(--bg)}
+input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid var(--bg)}
 
-/* Goto / Park row */
-.action-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+/* Action rows */
+.a-row{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.a-row .sep{width:1px;height:20px;background:var(--border);margin:0 2px}
 
-/* ════════════════════════════════════════════════════════
-   BUTTONS
-   ════════════════════════════════════════════════════════ */
+/* ═══ BUTTONS ═══ */
 .btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:6px;
-  padding:10px 16px;border-radius:var(--r-sm);font-size:.8rem;font-weight:600;
-  border:none;cursor:pointer;transition:all var(--fast);
-  color:#fff;white-space:nowrap;min-height:44px;
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  padding:8px 14px;border-radius:var(--rs);font-size:.75rem;font-weight:600;
+  border:none;cursor:pointer;transition:all var(--F);
+  color:#fff;white-space:nowrap;min-height:40px;
   user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
   font-family:inherit;
 }
-.btn:active{transform:scale(.95)}
-.btn:disabled{opacity:.3;cursor:not-allowed;transform:none}
-.btn-primary{background:var(--accent)}
-.btn-primary:hover:not(:disabled){background:var(--accent-hover)}
-.btn-green{background:var(--green)}
-.btn-green:hover:not(:disabled){background:#16a34a}
-.btn-red{background:var(--red)}
-.btn-red:hover:not(:disabled){background:#dc2626}
-.btn-ghost{background:var(--surface);color:var(--text-sec)}
-.btn-ghost:hover:not(:disabled){background:var(--surface-hover);color:var(--text)}
-.btn-ghost:active:not(:disabled){background:var(--border-active);color:var(--text)}
-.btn-sm{padding:8px 14px;font-size:.76rem;min-height:40px}
-.btn-xs{padding:6px 12px;font-size:.72rem;min-height:36px}
+.btn:active{transform:scale(.94)}
+.btn:disabled{opacity:.25;cursor:not-allowed;transform:none}
+.bp{background:var(--accent)}
+.bp:hover:not(:disabled){background:#2563eb}
+.bg{background:var(--green)}
+.bg:hover:not(:disabled){background:#16a34a}
+.br{background:var(--red)}
+.br:hover:not(:disabled){background:#dc2626}
+.bt{background:var(--s2);color:var(--sub)}
+.bt:hover:not(:disabled){background:var(--s3);color:var(--text)}
+.bt:active:not(:disabled){background:var(--hover);color:var(--text)}
+.btn-sm{padding:6px 10px;font-size:.7rem;min-height:36px}
 
-/* ════════════════════════════════════════════════════════
-   TOGGLE
-   ════════════════════════════════════════════════════════ */
-.toggle{position:relative;display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
-.toggle input{position:absolute;opacity:0;width:0;height:0}
-.toggle .slider{
-  width:46px;height:26px;background:var(--surface);border-radius:13px;
-  transition:background var(--fast);position:relative;flex-shrink:0;
+/* ═══ TOGGLE ═══ */
+.tg{position:relative;display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+.tg input{position:absolute;opacity:0;width:0;height:0}
+.tg .sl{
+  width:40px;height:22px;background:var(--s2);border-radius:11px;
+  transition:background var(--F);position:relative;flex-shrink:0;
 }
-.toggle .slider::after{
-  content:'';position:absolute;top:3px;left:3px;
-  width:20px;height:20px;background:var(--muted);border-radius:50%;
-  transition:transform var(--med),background var(--fast);
+.tg .sl::after{
+  content:'';position:absolute;top:2px;left:2px;
+  width:18px;height:18px;background:var(--dim);border-radius:50%;
+  transition:transform var(--M),background var(--F);
 }
-.toggle input:checked+.slider{background:var(--accent-dim)}
-.toggle input:checked+.slider::after{background:var(--accent);transform:translateX(20px)}
-.toggle .label{font-weight:600;color:var(--muted);font-size:.72rem;transition:color var(--fast)}
-.toggle input:checked~.label{color:var(--text)}
-.toggle.danger input:checked+.slider{background:var(--red-dim)}
-.toggle.danger input:checked+.slider::after{background:var(--red)}
+.tg input:checked+.sl{background:var(--accent2)}
+.tg input:checked+.sl::after{background:var(--accent);transform:translateX(18px)}
+.tg .tl{font-weight:600;color:var(--dim);font-size:.68rem}
+.tg input:checked~.tl{color:var(--text)}
+.tg.dng input:checked+.sl{background:var(--red2)}
+.tg.dng input:checked+.sl::after{background:var(--red)}
 
-/* ════════════════════════════════════════════════════════
-   INPUTS
-   ════════════════════════════════════════════════════════ */
-.input-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.input-row label{font-size:.68rem;color:var(--muted);font-weight:600}
+/* ═══ INPUTS ═══ */
+.ir{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.ir label{font-size:.62rem;color:var(--dim);font-weight:700;text-transform:uppercase}
 input[type=text],input[type=number]{
-  background:var(--surface);border:1px solid var(--border-active);border-radius:var(--r-xs);
-  padding:10px 12px;color:var(--text);font-size:.82rem;font-family:'JetBrains Mono',monospace;
-  transition:border-color var(--fast);outline:none;min-height:44px;
+  background:var(--s1);border:1px solid var(--border);border-radius:var(--rs);
+  padding:8px 10px;color:var(--text);font-size:.78rem;font-family:'JetBrains Mono',monospace;
+  outline:none;min-height:40px;transition:border-color var(--F);
 }
 input[type=text]:focus,input[type=number]:focus{border-color:var(--accent)}
-input[type=text]{width:130px;font-family:inherit}
-.num-sm{width:76px!important}
+input[type=text]{width:120px;font-family:inherit}
+.ns{width:68px!important}
 
-/* ════════════════════════════════════════════════════════
-   LIMITS BAR
-   ════════════════════════════════════════════════════════ */
-.lim-bar{
-  position:relative;height:24px;background:var(--surface);
-  border-radius:12px;margin:4px 0 6px;overflow:visible;
+/* ═══ SECTION HEADERS ═══ */
+.sh{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 0 4px;min-height:28px;
 }
-.lim-range{
-  position:absolute;top:2px;bottom:2px;border-radius:10px;
-  background:rgba(59,130,246,.15);
-  transition:left var(--spring),width var(--spring);
-}
-.lim-edge{
-  position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--red);z-index:1;
-  transition:left var(--spring);
-}
-.lim-edge span{
-  position:absolute;top:-15px;left:50%;transform:translateX(-50%);
-  font-size:.58rem;color:var(--red);white-space:nowrap;font-weight:700;
-  font-family:'JetBrains Mono',monospace;
-}
-.lim-pos{
-  position:absolute;top:50%;transform:translate(-50%,-50%);
-  width:12px;height:12px;border-radius:50%;
-  border:2.5px solid var(--accent);z-index:2;background:var(--bg);
-  transition:left var(--spring);
+.sh-t{font-size:.62rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+.sh-r{margin-left:auto;display:flex;align-items:center;gap:6px}
+
+/* ═══ PANEL BLOCK ═══ */
+.panel{
+  background:var(--s1);border-radius:var(--r);padding:8px 10px;margin-bottom:6px;
 }
 
-/* ════════════════════════════════════════════════════════
-   CABLE GUARD BAR
-   ════════════════════════════════════════════════════════ */
-.cg-wrap{position:relative;height:32px;margin:4px 0}
-.cg-track{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:6px;background:var(--surface);border-radius:3px}
-.cg-fill{
-  position:absolute;top:50%;transform:translateY(-50%);height:100%;border-radius:3px;
-  transition:width var(--spring),left var(--spring);
-}
-.cg-fill.pos{right:50%;background:rgba(59,130,246,.35)}
-.cg-fill.neg{left:50%;background:rgba(239,68,68,.35)}
-.cg-dot{
-  position:absolute;top:50%;transform:translate(-50%,-50%);
-  width:14px;height:14px;border-radius:50%;border:2px solid;z-index:2;
-  background:var(--bg);transition:left var(--spring);
-}
+/* ═══ LIMITS ═══ */
+.lim-bar{position:relative;height:20px;background:var(--s2);border-radius:10px;margin:2px 0 4px;overflow:visible}
+.lim-range{position:absolute;top:2px;bottom:2px;border-radius:8px;background:rgba(59,130,246,.12);transition:left var(--S),width var(--S)}
+.lim-edge{position:absolute;top:-1px;bottom:-1px;width:2px;background:var(--red);z-index:1;transition:left var(--S)}
+.lim-edge span{position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-size:.52rem;color:var(--red);white-space:nowrap;font-weight:700;font-family:'JetBrains Mono',monospace}
+.lim-pos{position:absolute;top:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;border:2px solid var(--accent);z-index:2;background:var(--bg);transition:left var(--S)}
+
+.cap-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px}
+.cap-grid .btn{width:100%;justify-content:center;padding:6px 4px;font-size:.65rem;min-height:34px}
+
+/* ═══ CABLE GUARD ═══ */
+.cg-wrap{position:relative;height:28px;margin:2px 0}
+.cg-track{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:5px;background:var(--s2);border-radius:3px}
+.cg-fill{position:absolute;top:50%;transform:translateY(-50%);height:100%;border-radius:3px;transition:width var(--S),left var(--S)}
+.cg-fill.pos{right:50%;background:rgba(59,130,246,.3)}
+.cg-fill.neg{left:50%;background:rgba(239,68,68,.3)}
+.cg-dot{position:absolute;top:50%;transform:translate(-50%,-50%);width:12px;height:12px;border-radius:50%;border:2px solid;z-index:2;background:var(--bg);transition:left var(--S)}
 .cg-dot.pos{border-color:var(--accent)}
 .cg-dot.neg{border-color:var(--red)}
-.cg-dot.zero{border-color:var(--muted);width:3px;height:20px;border-radius:2px;transform:translate(-50%,-50%)}
-.cg-labels{display:flex;justify-content:space-between;font-size:.58rem;color:var(--muted);font-weight:600;font-family:'JetBrains Mono',monospace}
-.cg-net-val{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.95rem}
+.cg-dot.zero{border-color:var(--dim);width:2px;height:16px;border-radius:1px;transform:translate(-50%,-50%)}
+.cg-labels{display:flex;justify-content:space-between;font-size:.52rem;color:var(--dim);font-weight:600;font-family:'JetBrains Mono',monospace}
 
-/* ════════════════════════════════════════════════════════
-   ALERTS
-   ════════════════════════════════════════════════════════ */
-.alert{
-  display:flex;align-items:center;gap:8px;
-  padding:10px 14px;border-radius:var(--r-sm);font-size:.78rem;
-  margin-top:8px;line-height:1.4;font-weight:600;
-}
-.alert-danger{background:var(--red-dim);border:1px solid var(--red-border);color:var(--red)}
-.alert-warn{background:var(--yellow-dim);border:1px solid var(--yellow-border);color:var(--yellow)}
+/* ═══ ALERTS ═══ */
+.alert{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:var(--rs);font-size:.72rem;margin-top:4px;font-weight:600}
+.alert-danger{background:var(--red2);border:1px solid var(--redB);color:var(--red)}
+.alert-warn{background:var(--yellow2);border:1px solid var(--yellowB);color:var(--yellow)}
 
 .hidden{display:none!important}
-.flex{display:flex;align-items:center;gap:6px}
-.flex-wrap{flex-wrap:wrap}
-.grow{flex:1;min-width:0}
+.flex{display:flex;align-items:center;gap:4px}
+.fw{flex-wrap:wrap}
 
-/* ════════════════════════════════════════════════════════
-   OFFSET — streamlined step buttons
-   ════════════════════════════════════════════════════════ */
-.offset-row{
-  display:flex;align-items:center;gap:4px;flex-wrap:wrap;
-  padding:4px;background:var(--surface);border-radius:var(--r);
-}
-.off-step{
+/* ═══ OFFSET ═══ */
+.off-row{display:flex;align-items:center;gap:3px;flex-wrap:wrap;padding:4px;background:var(--s1);border-radius:var(--r)}
+.os{
   display:inline-flex;align-items:center;justify-content:center;
-  min-width:42px;min-height:44px;padding:4px 6px;
-  border-radius:var(--r-xs);border:none;
-  background:var(--surface2);color:var(--text);cursor:pointer;
-  font-size:.72rem;font-weight:700;font-family:inherit;
-  transition:all var(--fast);user-select:none;
-  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  min-width:38px;min-height:40px;padding:4px;
+  border-radius:var(--rs);border:none;
+  background:var(--s2);color:var(--text);cursor:pointer;
+  font-size:.68rem;font-weight:700;font-family:inherit;
+  user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  transition:all var(--F);
 }
-.off-step:active{transform:scale(.9);background:var(--accent);color:#fff}
-.off-zero{background:var(--red-dim);color:var(--red);min-width:36px}
-.off-zero:active{background:var(--red);color:#fff}
-.off-val{
-  min-width:68px;text-align:center;
-  font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:700;
-  color:var(--accent);padding:0 4px;cursor:pointer;user-select:none;
+.os:active{transform:scale(.88);background:var(--accent);color:#fff}
+.oz{background:var(--red2);color:var(--red);min-width:32px}
+.oz:active{background:var(--red);color:#fff}
+.ov{
+  min-width:58px;text-align:center;
+  font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:700;
+  color:var(--accent);padding:0 2px;cursor:pointer;user-select:none;
   -webkit-tap-highlight-color:transparent;touch-action:manipulation;
 }
 
-/* ════════════════════════════════════════════════════════
-   CAPTURE GRID — 2x2 for limits
-   ════════════════════════════════════════════════════════ */
-.capture-grid{
-  display:grid;grid-template-columns:1fr 1fr;gap:5px;
-}
-.capture-grid .btn{width:100%;justify-content:center}
+/* ═══ DRAWER ═══ */
+.dr{cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:6px;padding:6px 0}
+.dr .aw{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:var(--rs);background:var(--s1);color:var(--dim);font-size:.6rem;transition:transform var(--M)}
+.db-body{overflow:hidden;transition:max-height .25s ease,opacity .15s ease;max-height:2000px;opacity:1}
+.db-body.collapsed{max-height:0!important;opacity:0;pointer-events:none}
+.aw.rotated{transform:rotate(-90deg)}
 
-/* ════════════════════════════════════════════════════════
-   PROFILES
-   ════════════════════════════════════════════════════════ */
-.profile-item{
-  display:flex;align-items:center;gap:10px;padding:10px 12px;
-  border-radius:var(--r-sm);background:var(--surface);
-  margin-bottom:5px;
+/* ═══ PROFILES ═══ */
+.prof-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--rs);background:var(--s2);margin-bottom:3px}
+.prof-item .info{flex:1;min-width:0}
+.prof-item .info .name{font-size:.78rem;font-weight:600}
+.prof-item .info .meta{font-size:.58rem;color:var(--dim)}
+.prof-item .actions{display:flex;gap:3px;flex-shrink:0}
+.pl-btn,.pd-btn{
+  padding:6px 10px;font-size:.68rem;font-weight:600;border:none;
+  border-radius:var(--rs);cursor:pointer;min-height:32px;font-family:inherit;
 }
-.profile-item .info{flex:1;min-width:0}
-.profile-item .info .name{font-size:.82rem;font-weight:600}
-.profile-item .info .meta{font-size:.65rem;color:var(--muted)}
-.profile-item .actions{display:flex;gap:5px;flex-shrink:0}
-.profile-load-btn,.profile-del-btn{
-  padding:8px 14px;font-size:.72rem;font-weight:600;border:none;
-  border-radius:var(--r-xs);cursor:pointer;transition:all .08s;
-  min-height:38px;font-family:inherit;
-}
-.profile-load-btn{background:var(--accent-dim);color:var(--accent)}
-.profile-load-btn:active{background:var(--accent);color:#fff}
-.profile-del-btn{background:var(--red-dim);color:var(--red)}
-.profile-del-btn:active{background:var(--red);color:#fff}
+.pl-btn{background:var(--accent2);color:var(--accent)}
+.pl-btn:active{background:var(--accent);color:#fff}
+.pd-btn{background:var(--red2);color:var(--red)}
+.pd-btn:active{background:var(--red);color:#fff}
 
-/* ════════════════════════════════════════════════════════
-   DRAWER — collapsible settings
-   ════════════════════════════════════════════════════════ */
-.drawer-toggle{
-  display:flex;align-items:center;gap:8px;cursor:pointer;
-  user-select:none;-webkit-tap-highlight-color:transparent;
-  padding:10px 0;
-}
-.drawer-toggle .arrow{
-  display:inline-flex;align-items:center;justify-content:center;
-  width:24px;height:24px;border-radius:var(--r-xs);
-  background:var(--surface);color:var(--muted);
-  font-size:.65rem;transition:transform var(--med);
-}
-.drawer-body{overflow:hidden;transition:max-height .3s ease,opacity .2s ease;max-height:2000px;opacity:1}
-.drawer-body.collapsed{max-height:0!important;opacity:0;pointer-events:none}
-.arrow.rotated{transform:rotate(-90deg)}
+/* ═══ SETTINGS GRID ═══ */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+@media(max-width:480px){.sg{grid-template-columns:1fr}}
+.sb{background:var(--s1);border-radius:var(--r);padding:8px 10px}
+.sb .st{font-size:.58rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
 
-/* Settings sub-grid */
-.settings-grid{
-  display:grid;grid-template-columns:1fr 1fr;gap:12px;
-}
-@media(max-width:520px){.settings-grid{grid-template-columns:1fr}}
-.setting-block{
-  background:var(--surface);border-radius:var(--r);padding:14px;
-}
-.setting-block .s-title{
-  font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;
-  letter-spacing:.06em;margin-bottom:8px;
-}
+/* ═══ TAGS ═══ */
+.tag{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:99px;font-size:.58rem;font-weight:700}
+.tag-r{background:var(--red2);color:var(--red);border:1px solid var(--redB)}
+.tag-g{background:var(--green2);color:var(--green);border:1px solid var(--greenB)}
+.tag-m{background:rgba(85,102,128,.06);color:var(--dim);border:1px solid rgba(85,102,128,.12)}
+.tag-y{background:var(--yellow2);color:var(--yellow);border:1px solid var(--yellowB)}
 
-/* ════════════════════════════════════════════════════════
-   TOAST
-   ════════════════════════════════════════════════════════ */
-.toast-container{
-  position:fixed;bottom:calc(16px + var(--safe-b));right:14px;left:14px;
-  display:flex;flex-direction:column;gap:6px;z-index:9999;
-  pointer-events:none;
-}
-@media(min-width:520px){.toast-container{left:auto;max-width:360px}}
-.toast{
-  padding:12px 16px;border-radius:var(--r-sm);font-size:.8rem;font-weight:600;
-  box-shadow:0 8px 30px rgba(0,0,0,.5);
-  animation:toast-in .2s ease;pointer-events:auto;
-}
-.toast-success{background:#0b291a;border:1px solid var(--green-border);color:var(--green)}
-.toast-error{background:#290b0b;border:1px solid var(--red-border);color:var(--red)}
-@keyframes toast-in{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+/* ═══ TWO COLUMNS ═══ */
+.tc{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:580px){.tc{grid-template-columns:1fr}}
 
-/* ════════════════════════════════════════════════════════
-   MAP
-   ════════════════════════════════════════════════════════ */
-#map{height:320px;border-radius:var(--r);overflow:hidden;background:var(--surface)}
-.leaflet-container{background:var(--surface)!important}
+/* ═══ MAP + POLAR ═══ */
+.map-polar{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
+@media(max-width:640px){.map-polar{grid-template-columns:1fr}}
+#map{height:400px;border-radius:var(--r);overflow:hidden;background:var(--s1);min-height:300px}
+.leaflet-container{background:var(--s1)!important}
+.polar-wrap{background:var(--s1);border-radius:var(--r);display:flex;align-items:center;justify-content:center;padding:10px;position:relative;min-height:300px}
+#polar{display:block;width:100%;height:100%;max-width:400px;max-height:400px}
 
-/* ════════════════════════════════════════════════════════
-   SATELLITE TRACKING
-   ════════════════════════════════════════════════════════ */
-.sat-list-wrap{
-  max-height:260px;overflow-y:auto;border-radius:var(--r-sm);
-  background:var(--surface);margin-bottom:8px;
-}
-.tag{
-  display:inline-flex;align-items:center;gap:4px;padding:3px 10px;
-  border-radius:999px;font-size:.62rem;font-weight:700;
-}
-.tag-red{background:var(--red-dim);color:var(--red);border:1px solid var(--red-border)}
-.tag-green{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
-.tag-muted{background:rgba(91,107,138,.08);color:var(--muted);border:1px solid rgba(91,107,138,.15)}
-.tag-yellow{background:var(--yellow-dim);color:var(--yellow);border:1px solid var(--yellow-border)}
+/* ═══ SAT ═══ */
+.sat-wrap{max-height:220px;overflow-y:auto;border-radius:var(--rs);background:var(--s1)}
+.sat-item:hover{background:var(--hover)}
+.sat-item.selected{background:var(--accent2);border-left:3px solid var(--accent)}
 
-.sat-item:hover{background:var(--surface-hover)}
-.sat-item.selected{background:var(--accent-dim);border-left:3px solid var(--accent)}
+/* ═══ TOAST ═══ */
+.toast-container{position:fixed;bottom:calc(12px + var(--sb));right:10px;left:10px;display:flex;flex-direction:column;gap:4px;z-index:9999;pointer-events:none}
+@media(min-width:480px){.toast-container{left:auto;max-width:320px}}
+.toast{padding:10px 14px;border-radius:var(--rs);font-size:.75rem;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.5);animation:ti .15s ease;pointer-events:auto}
+.toast-success{background:#0a2418;border:1px solid var(--greenB);color:var(--green)}
+.toast-error{background:#240a0a;border:1px solid var(--redB);color:var(--red)}
+@keyframes ti{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
 
-/* ════════════════════════════════════════════════════════
-   TWO-COL LAYOUT on wider screens
-   ════════════════════════════════════════════════════════ */
-.two-col{
-  display:grid;grid-template-columns:1fr 1fr;gap:14px;
+/* ═══ INFO BAR ═══ */
+.info-strip{
+  display:flex;gap:6px;flex-wrap:wrap;align-items:center;
+  padding:4px 0;font-size:.6rem;color:var(--dim);
 }
-@media(max-width:640px){.two-col{grid-template-columns:1fr}}
+.info-strip .is-item{display:flex;align-items:center;gap:3px}
+.info-strip .is-val{color:var(--sub);font-weight:600;font-family:'JetBrains Mono',monospace}
 
-/* Divider line between sections */
-.divider{
-  height:1px;background:var(--border);margin:4px 0 12px;
-}
-
-/* Footer minimal */
-footer{
-  text-align:center;padding:12px 0 8px;
-  color:var(--muted);font-size:.65rem;
-}
+footer{text-align:center;padding:6px 0;color:var(--dim);font-size:.58rem}
 footer a{color:var(--accent);text-decoration:none;font-weight:600}
-footer a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
 
-<!-- ═══ STICKY HEADER ═══ -->
-<div class="top-bar">
-  <div class="top-row">
-    <span class="top-title">Rotor Controller</span>
-    <div class="top-badges">
-      <div class="badge off" id="badge-api"><span class="dot"></span> API</div>
-      <div class="badge off" id="badge-backend"><span class="dot"></span> Backend</div>
-      <div class="badge off hidden" id="badge-blocked"><span class="dot"></span> Blocked</div>
-      <div class="badge off hidden" id="badge-tracking"><span class="dot"></span> Tracking</div>
+<!-- ═══ HEADER ═══ -->
+<div class="hdr">
+  <div class="hdr-top">
+    <span class="hdr-name">Rotor Controller</span>
+    <div class="hdr-badges">
+      <div class="pill off" id="badge-api"><span class="dt"></span> API</div>
+      <div class="pill off" id="badge-backend"><span class="dt"></span> Backend</div>
+      <div class="pill off hidden" id="badge-blocked"><span class="dt"></span> Blocked</div>
+      <div class="pill off hidden" id="badge-tracking"><span class="dt"></span> Tracking</div>
     </div>
   </div>
-  <div class="pos-bar">
-    <div class="pos-item">
-      <span class="pos-label">AZ</span>
-      <span class="pos-value" id="v-az">---</span>
-      <span class="pos-unit">°</span>
-      <span class="offset-badge hidden" id="az-offset-badge"></span>
+  <div class="hdr-pos">
+    <div class="pv">
+      <span class="pv-l">AZ</span>
+      <span class="pv-n" id="v-az">---</span><span class="pv-u">°</span>
+      <span class="off-pill hidden" id="az-offset-badge"></span>
     </div>
-    <div class="pos-item">
-      <span class="pos-label">EL</span>
-      <span class="pos-value" id="v-el">---</span>
-      <span class="pos-unit">°</span>
-      <span class="offset-badge hidden" id="el-offset-badge"></span>
+    <div class="pv">
+      <span class="pv-l">EL</span>
+      <span class="pv-n" id="v-el">---</span><span class="pv-u">°</span>
+      <span class="off-pill hidden" id="el-offset-badge"></span>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <span class="info-strip" style="padding:0">
+        <span class="is-item">Port <span class="is-val" id="footer-port">4534</span></span>
+      </span>
+      <label class="tg dng" id="block-toggle-wrap" style="margin:0">
+        <span class="tl">Block</span>
+        <input type="checkbox" id="block-toggle">
+        <span class="sl"></span>
+      </label>
     </div>
   </div>
 </div>
 
-<div class="main">
+<div class="mx">
 
-<!-- ═══ GAUGES ═══ -->
-<div class="sec">
-  <div class="gauges">
-    <div class="gauge-box">
-      <div class="g-label">Azimuth</div>
-      <svg width="180" height="90" viewBox="0 0 180 90" id="az-gauge">
-        <path d="M 15 82 A 75 75 0 0 1 165 82" fill="none" stroke="var(--surface2)" stroke-width="7" stroke-linecap="round"/>
-        <path id="az-lim-arc" d="" fill="none" stroke="rgba(34,197,94,0.3)" stroke-width="11" stroke-linecap="round" class="hidden"/>
-        <line id="az-min-line" x1="0" y1="0" x2="0" y2="0" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" class="hidden"/>
-        <line id="az-max-line" x1="0" y1="0" x2="0" y2="0" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" class="hidden"/>
-        <path id="az-arc" d="M 15 82 A 75 75 0 0 1 165 82" fill="none" stroke="var(--accent)" stroke-width="7" stroke-linecap="round" stroke-dasharray="0 236"/>
-        <text x="12" y="90" fill="var(--muted)" font-size="7" text-anchor="middle" font-family="JetBrains Mono">0°</text>
-        <text x="90" y="10" fill="var(--muted)" font-size="7" text-anchor="middle" font-family="JetBrains Mono">180°</text>
-        <text x="168" y="90" fill="var(--muted)" font-size="7" text-anchor="middle" font-family="JetBrains Mono">360°</text>
-        <circle id="az-dot" cx="15" cy="82" r="5" fill="var(--accent)"/>
-      </svg>
+<!-- ═══ GAUGES ROW ═══ -->
+<div class="dash">
+  <div class="g-panel">
+    <svg width="100" height="56" viewBox="0 0 100 56" id="az-gauge">
+      <path d="M 6 50 A 44 44 0 0 1 94 50" fill="none" stroke="var(--s2)" stroke-width="5" stroke-linecap="round"/>
+      <path id="az-lim-arc" d="" fill="none" stroke="rgba(34,197,94,0.25)" stroke-width="8" stroke-linecap="round" class="hidden"/>
+      <line id="az-min-line" x1="0" y1="0" x2="0" y2="0" stroke="var(--red)" stroke-width="2" stroke-linecap="round" class="hidden"/>
+      <line id="az-max-line" x1="0" y1="0" x2="0" y2="0" stroke="var(--red)" stroke-width="2" stroke-linecap="round" class="hidden"/>
+      <path id="az-arc" d="M 6 50 A 44 44 0 0 1 94 50" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-dasharray="0 140"/>
+      <text x="4" y="55" fill="var(--dim)" font-size="5.5" text-anchor="middle" font-family="JetBrains Mono">0</text>
+      <text x="50" y="6" fill="var(--dim)" font-size="5.5" text-anchor="middle" font-family="JetBrains Mono">180</text>
+      <text x="96" y="55" fill="var(--dim)" font-size="5.5" text-anchor="middle" font-family="JetBrains Mono">360</text>
+      <circle id="az-dot" cx="6" cy="50" r="4" fill="var(--accent)"/>
+    </svg>
+    <div class="g-info">
+      <div class="g-top"><span class="g-big" id="g-az-val">---</span><span class="g-unit">°</span></div>
+      <div class="g-sub">AZIMUTH <span id="g-az-lim" style="color:var(--green)"></span></div>
     </div>
-    <div class="gauge-box">
-      <div class="g-label">Elevation</div>
-      <svg width="60" height="90" viewBox="0 0 60 90" id="el-gauge">
-        <rect x="20" y="4" width="10" height="76" rx="5" fill="var(--surface2)"/>
-        <rect id="el-lim-rect" x="16" y="4" width="18" height="76" rx="4" fill="rgba(34,197,94,0.15)" stroke="var(--green)" stroke-width="1" class="hidden"/>
-        <line id="el-min-line" x1="14" y1="80" x2="36" y2="80" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" class="hidden"/>
-        <line id="el-max-line" x1="14" y1="4" x2="36" y2="4" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" class="hidden"/>
-        <rect id="el-fill" x="20" y="80" width="10" height="0" rx="5" fill="var(--yellow)"/>
-        <text x="42" y="84" fill="var(--muted)" font-size="7" font-family="JetBrains Mono">0°</text>
-        <text x="42" y="8" fill="var(--muted)" font-size="7" font-family="JetBrains Mono">90°</text>
-        <circle id="el-dot" cx="25" cy="80" r="4" fill="var(--yellow)"/>
-      </svg>
+  </div>
+  <div class="g-panel">
+    <svg width="30" height="56" viewBox="0 0 30 56" id="el-gauge">
+      <rect x="10" y="4" width="7" height="48" rx="3.5" fill="var(--s2)"/>
+      <rect id="el-lim-rect" x="7" y="4" width="13" height="48" rx="3" fill="rgba(34,197,94,0.12)" stroke="var(--green)" stroke-width=".7" class="hidden"/>
+      <line id="el-min-line" x1="5" y1="52" x2="22" y2="52" stroke="var(--red)" stroke-width="2" stroke-linecap="round" class="hidden"/>
+      <line id="el-max-line" x1="5" y1="4" x2="22" y2="4" stroke="var(--red)" stroke-width="2" stroke-linecap="round" class="hidden"/>
+      <rect id="el-fill" x="10" y="52" width="7" height="0" rx="3.5" fill="var(--yellow)"/>
+      <text x="24" y="55" fill="var(--dim)" font-size="5" font-family="JetBrains Mono">0</text>
+      <text x="24" y="8" fill="var(--dim)" font-size="5" font-family="JetBrains Mono">90</text>
+      <circle id="el-dot" cx="13.5" cy="52" r="3" fill="var(--yellow)"/>
+    </svg>
+    <div class="g-info">
+      <div class="g-top"><span class="g-big" id="g-el-val">---</span><span class="g-unit">°</span></div>
+      <div class="g-sub">ELEVATION <span id="g-el-lim" style="color:var(--green)"></span></div>
     </div>
   </div>
 </div>
 
 <!-- ═══ MANUAL CONTROL ═══ -->
-<div class="sec">
-  <div class="sec-header">
-    <span class="sec-title">Manual Control</span>
-    <div class="sec-right">
-      <label class="toggle danger" id="block-toggle-wrap">
-        <span class="label">Block</span>
-        <input type="checkbox" id="block-toggle">
-        <span class="slider"></span>
-      </label>
-    </div>
+<div class="ctrl">
+  <div class="dpad">
+    <button class="db u" data-dir="2">&#9650;</button>
+    <button class="db l" data-dir="8">&#9664;</button>
+    <button class="db s st" data-dir="stop">&#9632;</button>
+    <button class="db r" data-dir="16">&#9654;</button>
+    <button class="db d" data-dir="4">&#9660;</button>
   </div>
-
-  <div class="ctrl-grid">
-    <div class="dpad">
-      <button class="dpad-btn u" data-dir="2">&#9650;</button>
-      <button class="dpad-btn l" data-dir="8">&#9664;</button>
-      <button class="dpad-btn s stop" data-dir="stop">&#9632;</button>
-      <button class="dpad-btn r" data-dir="16">&#9654;</button>
-      <button class="dpad-btn d" data-dir="4">&#9660;</button>
+  <div class="c-side">
+    <div class="sp-row">
+      <span class="lb">Step</span>
+      <input type="range" id="speed-slider" min="1" max="100" value="10">
+      <span class="vl" id="speed-val">10°</span>
     </div>
-    <div class="ctrl-side">
-      <div class="speed-row">
-        <span class="lbl">Step</span>
-        <input type="range" id="speed-slider" min="1" max="100" value="10">
-        <span class="val" id="speed-val">10°</span>
-      </div>
-      <div class="action-row">
-        <input type="number" id="goto-az" step="0.1" min="0" max="360" placeholder="Az" class="num-sm">
-        <input type="number" id="goto-el" step="0.1" min="0" max="90" placeholder="El" class="num-sm">
-        <button class="btn btn-primary btn-sm" id="goto-btn">Go To</button>
-      </div>
-      <div class="action-row">
-        <input type="number" id="park-az" step="0.1" min="0" max="360" placeholder="Az" class="num-sm">
-        <input type="number" id="park-el" step="0.1" min="0" max="90" placeholder="El" class="num-sm">
-        <button class="btn btn-ghost btn-sm" id="park-set-btn">Set Park</button>
-        <button class="btn btn-ghost btn-sm" id="park-btn">Park</button>
-      </div>
+    <div class="a-row">
+      <input type="number" id="goto-az" step="0.1" min="0" max="360" placeholder="Az" class="ns">
+      <input type="number" id="goto-el" step="0.1" min="0" max="90" placeholder="El" class="ns">
+      <button class="btn bp btn-sm" id="goto-btn">Go To</button>
+      <span class="sep"></span>
+      <input type="number" id="park-az" step="0.1" min="0" max="360" placeholder="P.Az" class="ns">
+      <input type="number" id="park-el" step="0.1" min="0" max="90" placeholder="P.El" class="ns">
+      <button class="btn bt btn-sm" id="park-set-btn">Set</button>
+      <button class="btn bt btn-sm" id="park-btn">Park</button>
     </div>
   </div>
 </div>
 
-<div class="divider"></div>
-
-<!-- ═══ VIRTUAL LIMITS + CABLE GUARD ═══ -->
-<div class="two-col sec">
-
-  <!-- Virtual Limits -->
-  <div>
-    <div class="sec-header">
-      <span class="sec-title">Virtual Limits</span>
-      <div class="sec-right">
-        <label class="toggle">
+<!-- ═══ LIMITS + CABLE GUARD ═══ -->
+<div class="tc">
+  <div class="panel">
+    <div class="sh">
+      <span class="sh-t">Limits</span>
+      <div class="sh-r">
+        <label class="tg">
           <input type="checkbox" id="limits-toggle">
-          <span class="slider"></span>
-          <span class="label" id="limits-label">Off</span>
+          <span class="sl"></span>
+          <span class="tl" id="limits-label">Off</span>
         </label>
       </div>
     </div>
-
-    <div style="font-size:.65rem;color:var(--muted);font-weight:600;margin-bottom:2px">Azimuth</div>
-    <div class="lim-bar" id="az-lim-bar">
-      <div class="lim-range" id="az-range" style="left:0;width:100%"></div>
-      <div class="lim-edge hidden" id="az-min-e"><span id="az-min-lbl">0°</span></div>
-      <div class="lim-edge hidden" id="az-max-e"><span id="az-max-lbl">360°</span></div>
-      <div class="lim-pos" id="az-pos" style="left:0%"></div>
-    </div>
-
-    <div style="font-size:.65rem;color:var(--muted);font-weight:600;margin-bottom:2px">Elevation</div>
-    <div class="lim-bar" id="el-lim-bar">
-      <div class="lim-range" id="el-range" style="left:0;width:100%"></div>
-      <div class="lim-edge hidden" id="el-min-e"><span>0°</span></div>
-      <div class="lim-edge hidden" id="el-max-e"><span>90°</span></div>
-      <div class="lim-pos" id="el-pos" style="left:0%"></div>
-    </div>
-
-    <div class="capture-grid" style="margin:6px 0">
-      <button class="btn btn-ghost btn-xs capture" data-side="left">Az Min &#8592;</button>
-      <button class="btn btn-ghost btn-xs capture" data-side="right">Az Max &#8594;</button>
-      <button class="btn btn-ghost btn-xs capture" data-side="down">El Min &#8595;</button>
-      <button class="btn btn-ghost btn-xs capture" data-side="up">El Max &#8593;</button>
-    </div>
-
-    <div class="flex flex-wrap" style="gap:6px;margin-top:6px">
-      <div class="input-row">
-        <label>Az</label>
-        <input type="number" id="man-az-min" step="0.1" min="0" max="360" placeholder="min" class="num-sm">
-        <input type="number" id="man-az-max" step="0.1" min="0" max="360" placeholder="max" class="num-sm">
-        <button class="btn btn-primary btn-xs" id="apply-az">Set</button>
+    <div style="display:flex;gap:8px;align-items:stretch">
+      <div style="flex:1">
+        <div style="font-size:.55rem;color:var(--dim);font-weight:700;text-transform:uppercase">Az</div>
+        <div class="lim-bar" id="az-lim-bar">
+          <div class="lim-range" id="az-range" style="left:0;width:100%"></div>
+          <div class="lim-edge hidden" id="az-min-e"><span id="az-min-lbl">0°</span></div>
+          <div class="lim-edge hidden" id="az-max-e"><span id="az-max-lbl">360°</span></div>
+          <div class="lim-pos" id="az-pos" style="left:0%"></div>
+        </div>
+        <div style="font-size:.55rem;color:var(--dim);font-weight:700;text-transform:uppercase">El</div>
+        <div class="lim-bar" id="el-lim-bar">
+          <div class="lim-range" id="el-range" style="left:0;width:100%"></div>
+          <div class="lim-edge hidden" id="el-min-e"><span>0°</span></div>
+          <div class="lim-edge hidden" id="el-max-e"><span>90°</span></div>
+          <div class="lim-pos" id="el-pos" style="left:0%"></div>
+        </div>
       </div>
-      <div class="input-row">
+    </div>
+    <div class="cap-grid" style="margin-top:4px">
+      <button class="btn bt capture" data-side="left">Az↓</button>
+      <button class="btn bt capture" data-side="right">Az↑</button>
+      <button class="btn bt capture" data-side="down">El↓</button>
+      <button class="btn bt capture" data-side="up">El↑</button>
+    </div>
+    <div class="flex fw" style="gap:4px;margin-top:4px">
+      <div class="ir">
+        <label>Az</label>
+        <input type="number" id="man-az-min" step="0.1" min="0" max="360" placeholder="min" class="ns">
+        <input type="number" id="man-az-max" step="0.1" min="0" max="360" placeholder="max" class="ns">
+        <button class="btn bp btn-sm" id="apply-az">Set</button>
+      </div>
+      <div class="ir">
         <label>El</label>
-        <input type="number" id="man-el-min" step="0.1" min="0" max="90" placeholder="min" class="num-sm">
-        <input type="number" id="man-el-max" step="0.1" min="0" max="90" placeholder="max" class="num-sm">
-        <button class="btn btn-primary btn-xs" id="apply-el">Set</button>
-        <button class="btn btn-ghost btn-xs" id="clear-limits">Clear</button>
+        <input type="number" id="man-el-min" step="0.1" min="0" max="90" placeholder="min" class="ns">
+        <input type="number" id="man-el-max" step="0.1" min="0" max="90" placeholder="max" class="ns">
+        <button class="btn bp btn-sm" id="apply-el">Set</button>
+        <button class="btn bt btn-sm" id="clear-limits">×</button>
       </div>
     </div>
   </div>
 
-  <!-- Cable Guard -->
-  <div>
-    <div class="sec-header">
-      <span class="sec-title">Cable Guard</span>
-      <div class="sec-right">
-        <span class="cg-net-val" id="cg-net">0.0°</span>
-        <label class="toggle" style="margin-left:4px">
+  <div class="panel">
+    <div class="sh">
+      <span class="sh-t">Cable Guard</span>
+      <div class="sh-r">
+        <span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.85rem" id="cg-net">0.0°</span>
+        <label class="tg" style="margin-left:2px">
           <input type="checkbox" id="cable-toggle">
-          <span class="slider"></span>
-          <span class="label" id="cable-label">Off</span>
+          <span class="sl"></span>
+          <span class="tl" id="cable-label">Off</span>
         </label>
       </div>
     </div>
-
     <div class="cg-wrap">
       <div class="cg-track"></div>
       <div class="cg-fill pos" id="cg-fill-p" style="width:0%;left:50%"></div>
@@ -667,378 +507,268 @@ footer a:hover{text-decoration:underline}
       <div class="cg-dot" id="cg-dot" style="left:50%"></div>
     </div>
     <div class="cg-labels"><span id="cg-lo">-360°</span><span>0°</span><span id="cg-hi">+360°</span></div>
-
-    <div class="alert alert-warn hidden" id="cg-warn">Approaching limit — unwind rotor</div>
-    <div class="alert alert-danger hidden" id="cg-trip">Cable guard tripped! Unwind or reset.</div>
-
-    <div class="flex flex-wrap" style="gap:6px;margin-top:8px">
-      <div class="input-row">
+    <div class="alert alert-warn hidden" id="cg-warn">⚠ Approaching limit</div>
+    <div class="alert alert-danger hidden" id="cg-trip">⛔ Guard tripped! Reset.</div>
+    <div class="flex fw" style="gap:4px;margin-top:4px">
+      <div class="ir">
         <label>Max turns</label>
-        <input type="number" id="max-turns" step="0.1" min="0.1" max="10" value="1.0" class="num-sm">
-        <button class="btn btn-primary btn-sm" id="apply-turns">Set</button>
+        <input type="number" id="max-turns" step="0.1" min="0.1" max="10" value="1.0" class="ns">
+        <button class="btn bp btn-sm" id="apply-turns">Set</button>
       </div>
-      <button class="btn btn-green btn-sm" id="reset-cg">Reset</button>
+      <button class="btn bg btn-sm" id="reset-cg">Reset</button>
     </div>
   </div>
 </div>
 
-<div class="divider"></div>
-
-<!-- ═══ OFFSET COMPENSATION ═══ -->
-<div class="sec">
-  <div class="drawer-toggle" onclick="toggleDrawer('off-body',this)">
-    <span class="sec-title">Offset Compensation</span>
-    <div class="sec-right">
-      <label class="toggle" onclick="event.stopPropagation()">
+<!-- ═══ OFFSET ═══ -->
+<div style="margin-top:6px">
+  <div class="dr" onclick="toggleDrawer('off-body',this)">
+    <span class="sh-t">Offset</span>
+    <div class="sh-r">
+      <label class="tg" onclick="event.stopPropagation()">
         <input type="checkbox" id="off-toggle">
-        <span class="slider"></span>
-        <span class="label" id="off-toggle-label">Off</span>
+        <span class="sl"></span>
+        <span class="tl" id="off-toggle-label">Off</span>
       </label>
-      <span class="arrow">&#9660;</span>
+      <span class="aw">&#9660;</span>
     </div>
   </div>
-  <div class="drawer-body" id="off-body">
-    <div style="font-size:.65rem;color:var(--muted);font-weight:600;margin-bottom:4px">Azimuth</div>
-    <div class="offset-row" data-axis="az">
-      <button class="off-step" data-step="-20">&minus;20</button>
-      <button class="off-step" data-step="-10">&minus;10</button>
-      <button class="off-step" data-step="-5">&minus;5</button>
-      <button class="off-step" data-step="-1">&minus;1</button>
-      <span class="off-val" id="off-val-az">0°</span>
-      <button class="off-step" data-step="1">+1</button>
-      <button class="off-step" data-step="5">+5</button>
-      <button class="off-step" data-step="10">+10</button>
-      <button class="off-step" data-step="20">+20</button>
-      <button class="off-step off-zero" data-axis="az">0</button>
+  <div class="db-body" id="off-body">
+    <div style="font-size:.55rem;color:var(--dim);font-weight:700;margin-bottom:2px">AZ OFFSET</div>
+    <div class="off-row" data-axis="az">
+      <button class="os" data-step="-20">&minus;20</button>
+      <button class="os" data-step="-10">&minus;10</button>
+      <button class="os" data-step="-5">&minus;5</button>
+      <button class="os" data-step="-1">&minus;1</button>
+      <span class="ov" id="off-val-az">0°</span>
+      <button class="os" data-step="1">+1</button>
+      <button class="os" data-step="5">+5</button>
+      <button class="os" data-step="10">+10</button>
+      <button class="os" data-step="20">+20</button>
+      <button class="os oz" data-axis="az">0</button>
     </div>
-
-    <div style="font-size:.65rem;color:var(--muted);font-weight:600;margin:8px 0 4px">Elevation</div>
-    <div class="offset-row" data-axis="el">
-      <button class="off-step" data-step="-20">&minus;20</button>
-      <button class="off-step" data-step="-10">&minus;10</button>
-      <button class="off-step" data-step="-5">&minus;5</button>
-      <button class="off-step" data-step="-1">&minus;1</button>
-      <span class="off-val" id="off-val-el">0°</span>
-      <button class="off-step" data-step="1">+1</button>
-      <button class="off-step" data-step="5">+5</button>
-      <button class="off-step" data-step="10">+10</button>
-      <button class="off-step" data-step="20">+20</button>
-      <button class="off-step off-zero" data-axis="el">0</button>
+    <div style="font-size:.55rem;color:var(--dim);font-weight:700;margin:4px 0 2px">EL OFFSET</div>
+    <div class="off-row" data-axis="el">
+      <button class="os" data-step="-20">&minus;20</button>
+      <button class="os" data-step="-10">&minus;10</button>
+      <button class="os" data-step="-5">&minus;5</button>
+      <button class="os" data-step="-1">&minus;1</button>
+      <span class="ov" id="off-val-el">0°</span>
+      <button class="os" data-step="1">+1</button>
+      <button class="os" data-step="5">+5</button>
+      <button class="os" data-step="10">+10</button>
+      <button class="os" data-step="20">+20</button>
+      <button class="os oz" data-axis="el">0</button>
     </div>
-
-    <div style="margin-top:8px">
-      <button class="btn btn-ghost btn-sm" id="off-clear">Clear All</button>
-    </div>
+    <div style="margin-top:4px"><button class="btn bt btn-sm" id="off-clear">Clear All</button></div>
   </div>
 </div>
-
-<div class="divider"></div>
 
 <!-- ═══ SATELLITE TRACKING ═══ -->
-<div class="sec">
-  <div class="drawer-toggle" onclick="toggleDrawer('track-body',this)">
-    <span class="sec-title">Satellite Tracking</span>
-    <div class="sec-right">
-      <span class="tag tag-muted" id="track-status-tag">Idle</span>
-      <span class="arrow">&#9660;</span>
+<div style="margin-top:6px">
+  <div class="dr" onclick="toggleDrawer('track-body',this)">
+    <span class="sh-t">Satellite Tracking</span>
+    <div class="sh-r">
+      <span class="tag tag-m" id="track-status-tag">Idle</span>
+      <span class="aw">&#9660;</span>
     </div>
   </div>
-  <div class="drawer-body" id="track-body">
-    <div class="flex flex-wrap" style="gap:6px;margin-bottom:8px">
-      <span style="font-size:.68rem;color:var(--muted);font-weight:600">Source:</span>
-      <span style="font-size:.68rem;color:var(--text-sec)" id="tle-source-info">—</span>
-      <span id="tle-age" class="tag tag-muted">never</span>
-      <button class="btn btn-ghost btn-xs" id="tle-fetch-btn">Fetch</button>
+  <div class="db-body" id="track-body">
+    <div class="flex fw" style="gap:4px;margin-bottom:4px">
+      <span style="font-size:.6rem;color:var(--dim);font-weight:600">TLE:</span>
+      <span style="font-size:.6rem;color:var(--sub)" id="tle-source-info">—</span>
+      <span id="tle-age" class="tag tag-m">never</span>
+      <button class="btn bt btn-sm" id="tle-fetch-btn">Fetch</button>
     </div>
-
-    <input type="text" id="sat-search" placeholder="Search satellites..." style="width:100%;margin-bottom:6px">
-    <div id="sat-list" class="sat-list-wrap">
-      <div style="padding:16px;text-align:center;color:var(--muted);font-size:.72rem">Click Fetch to load satellites</div>
+    <input type="text" id="sat-search" placeholder="Search satellites..." style="width:100%;margin-bottom:4px">
+    <div id="sat-list" class="sat-wrap">
+      <div style="padding:12px;text-align:center;color:var(--dim);font-size:.68rem">Click Fetch to load satellites</div>
     </div>
-
     <div id="track-controls">
-      <button class="btn btn-primary" id="track-start-btn" disabled style="width:100%">Select a satellite</button>
-      <button class="btn btn-red hidden" id="track-stop-btn" style="width:100%">&#9632; Stop Tracking</button>
+      <button class="btn bp" id="track-start-btn" disabled style="width:100%">Select a satellite</button>
+      <button class="btn br hidden" id="track-stop-btn" style="width:100%">&#9632; Stop Tracking</button>
     </div>
-
-    <div id="track-active-status" class="hidden" style="margin-top:8px;padding:10px 12px;border-radius:var(--r-sm);background:var(--green-dim);border:1px solid var(--green-border)">
-      <div class="flex" style="gap:8px;margin-bottom:4px">
-        <span class="dot" style="width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease-in-out infinite"></span>
-        <span style="font-size:.82rem;font-weight:700;color:var(--green)" id="track-target-name">---</span>
+    <div id="track-active-status" class="hidden" style="margin-top:6px;padding:8px 10px;border-radius:var(--rs);background:var(--green2);border:1px solid var(--greenB)">
+      <div class="flex" style="gap:6px;margin-bottom:2px">
+        <span class="dt" style="width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.5s ease-in-out infinite"></span>
+        <span style="font-size:.78rem;font-weight:700;color:var(--green)" id="track-target-name">---</span>
       </div>
-      <div class="flex flex-wrap" style="gap:12px">
-        <span style="font-size:.75rem;color:var(--text-sec)">Target: <strong id="track-target-az">---°</strong> / <strong id="track-target-el">---°</strong></span>
-        <span style="font-size:.68rem;color:var(--muted)" id="track-below-horizon" class="hidden">&#9660; below horizon</span>
+      <div class="flex fw" style="gap:8px">
+        <span style="font-size:.7rem;color:var(--sub)">Target: <strong id="track-target-az">---°</strong> / <strong id="track-target-el">---°</strong></span>
+        <span style="font-size:.62rem;color:var(--dim)" id="track-below-horizon" class="hidden">&#9660; below horizon</span>
       </div>
     </div>
-
-    <div id="track-passes-area" class="hidden" style="margin-top:8px">
-      <div style="font-size:.65rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Upcoming Passes</div>
-      <div id="track-passes-list" class="sat-list-wrap">
-        <div style="padding:12px;text-align:center;color:var(--muted);font-size:.72rem">No passes computed</div>
+    <div id="track-passes-area" class="hidden" style="margin-top:6px">
+      <div style="font-size:.55rem;color:var(--dim);font-weight:700;text-transform:uppercase;margin-bottom:2px">Passes</div>
+      <div id="track-passes-list" class="sat-wrap">
+        <div style="padding:8px;text-align:center;color:var(--dim);font-size:.65rem">No passes computed</div>
       </div>
     </div>
   </div>
 </div>
 
-<div class="divider"></div>
-
-<!-- ═══ MAP ═══ -->
-<div class="sec">
-  <div class="drawer-toggle" onclick="toggleDrawer('map-body',this)">
-    <span class="sec-title">Station Map</span>
-    <span class="arrow">&#9660;</span>
+<!-- ═══ MAP + POLAR PLOT ═══ -->
+<div style="margin-top:6px">
+  <div class="dr" onclick="toggleDrawer('map-body',this)">
+    <span class="sh-t">Map &amp; Polar Plot</span>
+    <span class="aw">&#9660;</span>
   </div>
-  <div class="drawer-body" id="map-body">
-    <div id="map"></div>
+  <div class="db-body" id="map-body">
+    <div class="map-polar">
+      <div class="polar-wrap"><canvas id="polar" width="400" height="400"></canvas></div>
+      <div id="map"></div>
+    </div>
   </div>
 </div>
 
-<div class="divider"></div>
-
-<!-- ═══ SETTINGS DRAWER ═══ -->
-<div class="sec">
-  <div class="drawer-toggle" onclick="toggleDrawer('settings-body',this)">
-    <span class="sec-title">Settings</span>
-    <span class="arrow rotated">&#9660;</span>
+<!-- ═══ SETTINGS ═══ -->
+<div style="margin-top:6px">
+  <div class="dr" onclick="toggleDrawer('settings-body',this)">
+    <span class="sh-t">Settings &amp; Profiles</span>
+    <span class="aw rotated">&#9660;</span>
   </div>
-  <div class="drawer-body collapsed" id="settings-body">
-    <div class="settings-grid">
-      <!-- Backend -->
-      <div class="setting-block">
-        <div class="s-title flex" style="justify-content:space-between">
-          Backend
-          <span id="backend-tag" class="tag tag-muted">---</span>
+  <div class="db-body collapsed" id="settings-body">
+    <div class="sg">
+      <div class="sb">
+        <div class="st flex" style="justify-content:space-between">Backend <span id="backend-tag" class="tag tag-m">---</span></div>
+        <div class="flex fw" style="gap:4px">
+          <div class="ir"><label>Host</label><input type="text" id="be-host" placeholder="127.0.0.1" style="width:100%"></div>
+          <div class="ir"><label>Port</label><input type="number" id="be-port" min="1" max="65535" placeholder="4533" class="ns"></div>
         </div>
-        <div class="flex flex-wrap" style="gap:6px">
-          <div class="input-row">
-            <label>Host</label>
-            <input type="text" id="be-host" placeholder="127.0.0.1" style="width:100%">
-          </div>
-          <div class="input-row">
-            <label>Port</label>
-            <input type="number" id="be-port" min="1" max="65535" placeholder="4533" class="num-sm">
-          </div>
+        <div class="flex fw" style="gap:3px;margin-top:4px">
+          <button class="btn bp btn-sm" id="be-apply">Apply</button>
+          <button class="btn bt btn-sm" id="be-test">Test</button>
+          <button class="btn bt btn-sm" id="be-reconnect">Reconnect</button>
         </div>
-        <div class="flex flex-wrap" style="gap:6px;margin-top:8px">
-          <button class="btn btn-primary btn-xs" id="be-apply">Apply</button>
-          <button class="btn btn-ghost btn-xs" id="be-test">Test</button>
-          <button class="btn btn-ghost btn-xs" id="be-reconnect">Reconnect</button>
-        </div>
-        <div id="be-result" style="margin-top:6px;font-size:.7rem"></div>
+        <div id="be-result" style="margin-top:4px;font-size:.65rem"></div>
       </div>
-
-      <!-- Location -->
-      <div class="setting-block">
-        <div class="s-title">Station Location</div>
-        <div class="flex flex-wrap" style="gap:6px">
-          <div class="input-row">
-            <label>Lat</label>
-            <input type="number" id="loc-lat" step="any" min="-90" max="90" placeholder="38.8" class="num-sm">
-          </div>
-          <div class="input-row">
-            <label>Lng</label>
-            <input type="number" id="loc-lng" step="any" min="-180" max="180" placeholder="-9.1" class="num-sm">
-          </div>
-          <button class="btn btn-primary btn-xs" id="loc-apply">Set</button>
+      <div class="sb">
+        <div class="st">Location</div>
+        <div class="flex fw" style="gap:4px">
+          <div class="ir"><label>Lat</label><input type="number" id="loc-lat" step="any" min="-90" max="90" placeholder="38.8" class="ns"></div>
+          <div class="ir"><label>Lng</label><input type="number" id="loc-lng" step="any" min="-180" max="180" placeholder="-9.1" class="ns"></div>
+          <button class="btn bp btn-sm" id="loc-apply">Set</button>
         </div>
       </div>
-
-      <!-- Poll Rate -->
-      <div class="setting-block">
-        <div class="s-title">Poll Rate</div>
-        <div class="input-row">
+      <div class="sb">
+        <div class="st">Poll Rate</div>
+        <div class="ir">
           <label>ms</label>
-          <input type="number" id="poll-ms" min="200" max="30000" step="100" placeholder="1000" class="num-sm">
-          <button class="btn btn-primary btn-xs" id="poll-apply">Set</button>
+          <input type="number" id="poll-ms" min="200" max="30000" step="100" placeholder="1000" class="ns">
+          <button class="btn bp btn-sm" id="poll-apply">Set</button>
         </div>
       </div>
-
-      <!-- Profiles -->
-      <div class="setting-block">
-        <div class="s-title">Profiles</div>
-        <div class="flex flex-wrap" style="gap:6px;margin-bottom:8px">
-          <input type="text" id="prof-name" placeholder="Name" style="width:100px">
-          <input type="text" id="prof-desc" placeholder="Notes" style="width:110px">
-          <button class="btn btn-primary btn-xs" id="prof-save">Save</button>
+      <div class="sb">
+        <div class="st">Profiles</div>
+        <div class="flex fw" style="gap:4px;margin-bottom:4px">
+          <input type="text" id="prof-name" placeholder="Name" style="width:90px">
+          <input type="text" id="prof-desc" placeholder="Notes" style="width:100px">
+          <button class="btn bp btn-sm" id="prof-save">Save</button>
         </div>
-        <div id="prof-list">
-          <div style="color:var(--muted);font-size:.72rem">No profiles saved.</div>
-        </div>
+        <div id="prof-list"><div style="color:var(--dim);font-size:.65rem">No profiles.</div></div>
       </div>
     </div>
   </div>
 </div>
 
-<footer>
-  Proxy: <strong id="footer-port">4534</strong> &middot;
-  <a href="https://facha.dev" target="_blank" rel="noopener">CS8ACT</a>
-</footer>
-
-</div><!-- .main -->
+<footer><a href="https://facha.dev" target="_blank" rel="noopener">CS8ACT</a></footer>
+</div>
 
 <div class="toast-container" id="toasts"></div>
 
 <script>
 const API='/api';let S={};
 
-/* ─── Drawer / Collapsible ─────────────────────────── */
 function toggleDrawer(id,header){
   const body=document.getElementById(id);
-  const arrow=header.querySelector('.arrow');
+  const arrow=header.querySelector('.aw');
   if(!body)return;
   body.classList.toggle('collapsed');
   if(arrow) arrow.classList.toggle('rotated');
   if(id==='map-body'&&!body.classList.contains('collapsed')&&typeof map!=='undefined'&&map){
-    setTimeout(()=>map.invalidateSize(),350);
+    setTimeout(()=>map.invalidateSize(),300);
   }
 }
-// Legacy alias for any code that calls toggleCollapse
 function toggleCollapse(id,header){toggleDrawer(id,header)}
 
-/* ─── Fetch ──────────────────────────────────────────── */
-let _poll_ms = 1000;
-let _poll_timer = null;
+let _poll_ms=1000,_poll_timer=null;
 async function fetchStatus(){
   try{
     const r=await fetch(API+'/status');
     if(!r.ok) throw Error(r.status);
     const s=await r.json();
-    _poll_ms = Math.max(200, s.refresh_interval_ms || 1000);
+    _poll_ms=Math.max(200,s.refresh_interval_ms||1000);
     S=s;
-    document.getElementById('badge-api').className='badge on';
-    document.getElementById('badge-api').innerHTML='<span class="dot"></span> API';
+    document.getElementById('badge-api').className='pill on';
+    document.getElementById('badge-api').innerHTML='<span class="dt"></span> API';
     updateTleInfo(s.tle_sources);
     render(S);
   }catch(e){
-    document.getElementById('badge-api').className='badge err';
-    document.getElementById('badge-api').innerHTML='<span class="dot"></span> API Offline';
+    document.getElementById('badge-api').className='pill err';
+    document.getElementById('badge-api').innerHTML='<span class="dt"></span> API ✗';
   }
   if(_poll_timer) clearTimeout(_poll_timer);
-  _poll_timer = setTimeout(fetchStatus, _poll_ms);
+  _poll_timer=setTimeout(fetchStatus,_poll_ms);
 }
 fetchStatus();
-document.getElementById('sat-search').value='';
-setTimeout(refreshSatellites, 300);
+setTimeout(refreshSatellites,300);
 
 function setVal(id,v){const e=document.getElementById(id);if(e&&e!=document.activeElement&&!e.dataset.dirty)e.value=v;}
 document.addEventListener('input',e=>{if(e.target.tagName=='INPUT')e.target.dataset.dirty='1';});
 function clearDirty(...ids){ids.forEach(id=>{const e=document.getElementById(id);if(e)delete e.dataset.dirty;});}
 
-/* ─── SVG Gauge Helpers ─────────────────────────────── */
+/* ═══ GAUGES ═══ */
+// Az gauge: viewBox 0 0 100 56, center at (50, 50), radius 44
+const AZ_R=44,AZ_CX=50,AZ_CY=50;
 function setLine(id,x1,y1,x2,y2,show){
-  const el=document.getElementById(id);
-  if(!el) return;
-  if(show){
-    el.setAttribute('x1',x1);el.setAttribute('y1',y1);
-    el.setAttribute('x2',x2);el.setAttribute('y2',y2);
-    el.classList.remove('hidden');
-  }else{
-    el.classList.add('hidden');
-  }
+  const el=document.getElementById(id);if(!el)return;
+  if(show){el.setAttribute('x1',x1);el.setAttribute('y1',y1);el.setAttribute('x2',x2);el.setAttribute('y2',y2);el.classList.remove('hidden');}
+  else el.classList.add('hidden');
 }
-
-function updateAzGauge(az, s){
-  const cy=82; // updated Y center for new viewBox
+function updateAzGauge(az,s){
   if(az!=null){
     const frac=Math.max(0,Math.min(360,az))/360;
-    const totalLen=Math.PI*75;
-    const fill=frac*totalLen;
+    const totalLen=Math.PI*AZ_R;
     const arc=document.getElementById('az-arc');
-    if(arc) arc.setAttribute('stroke-dasharray',fill+' '+totalLen);
-    
-    const angle=frac*Math.PI;
-    const cx2=90-75*Math.cos(angle);
-    const cy2=cy-75*Math.sin(angle);
+    if(arc) arc.setAttribute('stroke-dasharray',frac*totalLen+' '+totalLen);
+    const a=frac*Math.PI;
     const dot=document.getElementById('az-dot');
-    if(dot){dot.setAttribute('cx',cx2);dot.setAttribute('cy',cy2);}
+    if(dot){dot.setAttribute('cx',AZ_CX-AZ_R*Math.cos(a));dot.setAttribute('cy',AZ_CY-AZ_R*Math.sin(a));}
   }
-
   const showLim=s&&s.enabled;
-  const hasMin=showLim&&s.az_min!=null;
-  const hasMax=showLim&&s.az_max!=null;
-
-  if(hasMin){
-    const f=Math.max(0,Math.min(360,s.az_min))/360;
-    const a=f*Math.PI;
-    const xIn=90-67*Math.cos(a),yIn=cy-67*Math.sin(a);
-    const xOut=90-83*Math.cos(a),yOut=cy-83*Math.sin(a);
-    setLine('az-min-line',xIn,yIn,xOut,yOut,true);
-  }else{
-    setLine('az-min-line',0,0,0,0,false);
-  }
-
-  if(hasMax){
-    const f=Math.max(0,Math.min(360,s.az_max))/360;
-    const a=f*Math.PI;
-    const xIn=90-67*Math.cos(a),yIn=cy-67*Math.sin(a);
-    const xOut=90-83*Math.cos(a),yOut=cy-83*Math.sin(a);
-    setLine('az-max-line',xIn,yIn,xOut,yOut,true);
-  }else{
-    setLine('az-max-line',0,0,0,0,false);
-  }
-
+  const hasMin=showLim&&s.az_min!=null,hasMax=showLim&&s.az_max!=null;
+  if(hasMin){const f=s.az_min/360,a=f*Math.PI;setLine('az-min-line',AZ_CX-(AZ_R-5)*Math.cos(a),AZ_CY-(AZ_R-5)*Math.sin(a),AZ_CX-(AZ_R+5)*Math.cos(a),AZ_CY-(AZ_R+5)*Math.sin(a),true);}
+  else setLine('az-min-line',0,0,0,0,false);
+  if(hasMax){const f=s.az_max/360,a=f*Math.PI;setLine('az-max-line',AZ_CX-(AZ_R-5)*Math.cos(a),AZ_CY-(AZ_R-5)*Math.sin(a),AZ_CX-(AZ_R+5)*Math.cos(a),AZ_CY-(AZ_R+5)*Math.sin(a),true);}
+  else setLine('az-max-line',0,0,0,0,false);
   const limArc=document.getElementById('az-lim-arc');
   if(hasMin&&hasMax&&s.az_min<s.az_max&&limArc){
-    const f1=Math.max(0,Math.min(360,s.az_min))/360;
-    const f2=Math.max(0,Math.min(360,s.az_max))/360;
-    const a1=f1*Math.PI,a2=f2*Math.PI;
-    const x1=90-75*Math.cos(a1),y1=cy-75*Math.sin(a1);
-    const x2=90-75*Math.cos(a2),y2=cy-75*Math.sin(a2);
-    limArc.setAttribute('d',`M ${x1} ${y1} A 75 75 0 0 1 ${x2} ${y2}`);
+    const a1=s.az_min/360*Math.PI,a2=s.az_max/360*Math.PI;
+    limArc.setAttribute('d',`M ${AZ_CX-AZ_R*Math.cos(a1)} ${AZ_CY-AZ_R*Math.sin(a1)} A ${AZ_R} ${AZ_R} 0 0 1 ${AZ_CX-AZ_R*Math.cos(a2)} ${AZ_CY-AZ_R*Math.sin(a2)}`);
     limArc.classList.remove('hidden');
-  }else if(limArc){
-    limArc.classList.add('hidden');
-  }
+  }else if(limArc) limArc.classList.add('hidden');
 }
 
-function updateElGauge(el, s){
-  const maxH=76; // updated for new viewBox
-  const baseY=80;
+// El gauge: viewBox 0 0 30 56, bar from y=4 to y=52 => height 48
+const EL_H=48,EL_BY=52;
+function updateElGauge(el,s){
   if(el!=null){
     const frac=Math.max(0,Math.min(90,el))/90;
-    const h=frac*maxH;
+    const h=frac*EL_H;
     const fill=document.getElementById('el-fill');
-    if(fill){
-      fill.setAttribute('y',baseY-h);
-      fill.setAttribute('height',h);
-    }
+    if(fill){fill.setAttribute('y',EL_BY-h);fill.setAttribute('height',h);}
     const dot=document.getElementById('el-dot');
-    if(dot) dot.setAttribute('cy',baseY-h);
+    if(dot) dot.setAttribute('cy',EL_BY-h);
   }
-
   const showLim=s&&s.enabled;
-  const hasMin=showLim&&s.el_min!=null;
-  const hasMax=showLim&&s.el_max!=null;
-
-  if(hasMin){
-    const f=Math.max(0,Math.min(90,s.el_min))/90;
-    const y=baseY-f*maxH;
-    setLine('el-min-line',14,y,36,y,true);
-  }else{
-    setLine('el-min-line',0,0,0,0,false);
-  }
-
-  if(hasMax){
-    const f=Math.max(0,Math.min(90,s.el_max))/90;
-    const y=baseY-f*maxH;
-    setLine('el-max-line',14,y,36,y,true);
-  }else{
-    setLine('el-max-line',0,0,0,0,false);
-  }
-
+  const hasMin=showLim&&s.el_min!=null,hasMax=showLim&&s.el_max!=null;
+  if(hasMin){const y=EL_BY-(s.el_min/90)*EL_H;setLine('el-min-line',5,y,22,y,true);}else setLine('el-min-line',0,0,0,0,false);
+  if(hasMax){const y=EL_BY-(s.el_max/90)*EL_H;setLine('el-max-line',5,y,22,y,true);}else setLine('el-max-line',0,0,0,0,false);
   const limRect=document.getElementById('el-lim-rect');
   if(hasMin&&hasMax&&s.el_min<s.el_max&&limRect){
-    const f1=Math.max(0,Math.min(90,s.el_min))/90;
-    const f2=Math.max(0,Math.min(90,s.el_max))/90;
-    const yMin=baseY-f1*maxH;
-    const yMax=baseY-f2*maxH;
-    limRect.setAttribute('y',yMax);
-    limRect.setAttribute('height',yMin-yMax);
-    limRect.classList.remove('hidden');
-  }else if(limRect){
-    limRect.classList.add('hidden');
-  }
+    const yMin=EL_BY-(s.el_min/90)*EL_H,yMax=EL_BY-(s.el_max/90)*EL_H;
+    limRect.setAttribute('y',yMax);limRect.setAttribute('height',yMin-yMax);limRect.classList.remove('hidden');
+  }else if(limRect) limRect.classList.add('hidden');
 }
 
 function render(s){
@@ -1049,82 +779,65 @@ function render(s){
   const elEff=elRaw!=null&&offEn?elRaw-elOff:elRaw;
   document.getElementById('v-az').textContent=azEff!=null?azEff.toFixed(1):'---';
   document.getElementById('v-el').textContent=elEff!=null?elEff.toFixed(1):'---';
+  document.getElementById('g-az-val').textContent=azEff!=null?azEff.toFixed(1):'---';
+  document.getElementById('g-el-val').textContent=elEff!=null?elEff.toFixed(1):'---';
+
+  // Gauge limit info
+  const gAzLim=document.getElementById('g-az-lim');
+  const gElLim=document.getElementById('g-el-lim');
+  if(s.enabled&&s.az_min!=null&&s.az_max!=null) gAzLim.textContent='['+s.az_min.toFixed(0)+'–'+s.az_max.toFixed(0)+']';
+  else gAzLim.textContent='';
+  if(s.enabled&&s.el_min!=null&&s.el_max!=null) gElLim.textContent='['+s.el_min.toFixed(0)+'–'+s.el_max.toFixed(0)+']';
+  else gElLim.textContent='';
 
   // Offset badges
-  const azBadge=document.getElementById('az-offset-badge');
-  const elBadge=document.getElementById('el-offset-badge');
-  if(offEn&&azOff!==0&&azRaw!=null){
-    azBadge.textContent=(azOff>0?'+':'')+azOff.toFixed(1)+'°';
-    azBadge.classList.remove('hidden');
-  }else{azBadge.classList.add('hidden')}
-  if(offEn&&elOff!==0&&elRaw!=null){
-    elBadge.textContent=(elOff>0?'+':'')+elOff.toFixed(1)+'°';
-    elBadge.classList.remove('hidden');
-  }else{elBadge.classList.add('hidden')}
+  const azBadge=document.getElementById('az-offset-badge'),elBadge=document.getElementById('el-offset-badge');
+  if(offEn&&azOff!==0&&azRaw!=null){azBadge.textContent=(azOff>0?'+':'')+azOff.toFixed(1)+'°';azBadge.classList.remove('hidden');}else azBadge.classList.add('hidden');
+  if(offEn&&elOff!==0&&elRaw!=null){elBadge.textContent=(elOff>0?'+':'')+elOff.toFixed(1)+'°';elBadge.classList.remove('hidden');}else elBadge.classList.add('hidden');
 
-  updateAzGauge(azRaw, s);
-  updateElGauge(elRaw, s);
+  updateAzGauge(azRaw,s);
+  updateElGauge(elRaw,s);
 
-  // Backend badge + tag
+  // Backend
   if(s.backend){
     const reachable=s.backend.reachable;
     const bb=document.getElementById('badge-backend');
-    if(reachable===true){
-      bb.className='badge on';
-      bb.innerHTML='<span class="dot"></span> '+s.backend.host+':'+s.backend.port;
-    }else if(reachable===false){
-      bb.className='badge err';
-      bb.innerHTML='<span class="dot"></span> '+s.backend.host+':'+s.backend.port+' (offline)';
-    }else{
-      bb.className='badge off';
-      bb.innerHTML='<span class="dot"></span> '+s.backend.host+':'+s.backend.port;
-    }
+    if(reachable===true){bb.className='pill on';bb.innerHTML='<span class="dt"></span> '+s.backend.host+':'+s.backend.port;}
+    else if(reachable===false){bb.className='pill err';bb.innerHTML='<span class="dt"></span> '+s.backend.host+':'+s.backend.port;}
+    else{bb.className='pill off';bb.innerHTML='<span class="dt"></span> '+s.backend.host+':'+s.backend.port;}
     const t=document.getElementById('backend-tag');
-    if(reachable===true){
-      t.className='tag tag-green';
-      t.textContent='Connected';
-    }else if(reachable===false){
-      t.className='tag tag-red';
-      t.textContent='Offline';
-    }else{
-      t.className='tag tag-muted';
-      t.textContent='---';
-    }
-    setVal('be-host',s.backend.host);
-    setVal('be-port',s.backend.port);
+    if(reachable===true){t.className='tag tag-g';t.textContent='Connected';}
+    else if(reachable===false){t.className='tag tag-r';t.textContent='Offline';}
+    else{t.className='tag tag-m';t.textContent='---';}
+    setVal('be-host',s.backend.host);setVal('be-port',s.backend.port);
   }
-
   if(s.refresh_interval_ms) setVal('poll-ms',s.refresh_interval_ms);
 
-  // Blocked badge
+  // Blocked
   const blocked=s.commands_blocked||false;
-  const bbk=document.getElementById('badge-blocked');
-  const bt=document.getElementById('block-toggle');
+  const bbk=document.getElementById('badge-blocked'),bt=document.getElementById('block-toggle');
   bt.checked=blocked;
-  document.getElementById('block-toggle-wrap').querySelector('.label').textContent=blocked?'Blocked':'Block';
+  document.getElementById('block-toggle-wrap').querySelector('.tl').textContent=blocked?'Blocked':'Block';
   bbk.classList.toggle('hidden',!blocked);
-  if(blocked) bbk.className='badge blocked';
+  if(blocked) bbk.className='pill warn';
 
-  // Park position
+  // Park
   if(s.park_az!=null) setVal('park-az',s.park_az);
   if(s.park_el!=null) setVal('park-el',s.park_el);
 
-  // Station location + map
+  // Location + map
   const lat=s.latitude,lng=s.longitude;
   if(lat!=null) setVal('loc-lat',lat);
   if(lng!=null) setVal('loc-lng',lng);
   updateMap(lat,lng,s.az);
-
   document.getElementById('footer-port').textContent=s.proxy_port||'4534';
 
   // Limits
   document.getElementById('limits-toggle').checked=s.enabled;
   document.getElementById('limits-label').textContent=s.enabled?'On':'Off';
-
-  const az=s.az, el=s.el;
+  const az=s.az,el=s.el;
   renderLimBar('az',s.az_min,s.az_max,az,360);
   renderLimBar('el',s.el_min,s.el_max,el,90);
-
   setVal('man-az-min',s.az_min!=null?s.az_min:'');
   setVal('man-az-max',s.az_max!=null?s.az_max:'');
   setVal('man-el-min',s.el_min!=null?s.el_min:'');
@@ -1135,664 +848,533 @@ function render(s){
   offToggle.checked=offEn;
   document.getElementById('off-toggle-label').textContent=offEn?'On':'Off';
   ['az','el'].forEach(axis=>{
-    const el=document.getElementById('off-val-'+axis);
-    if(!el) return;
-    const inp=el.querySelector('input');
-    if(inp) inp.remove();
+    const el=document.getElementById('off-val-'+axis);if(!el)return;
+    const inp=el.querySelector('input');if(inp) inp.remove();
     const off=axis==='az'?azOff:elOff;
     el.textContent=(off>0?'+':'')+Math.round(off)+'°';
   });
-  document.querySelectorAll('.offset-row').forEach(r=>{
-    r.style.opacity=offEn?'1':'0.4';
-  });
+  document.querySelectorAll('.off-row').forEach(r=>{r.style.opacity=offEn?'1':'0.35';});
 
   // Cable Guard
   const cg=s.cable_guard||{};
   document.getElementById('cable-toggle').checked=cg.enabled||false;
   document.getElementById('cable-label').textContent=cg.enabled?'On':'Off';
-
   const net=cg.net_rotation||0,mt=cg.max_turns||1,md=mt*360;
   document.getElementById('cg-net').textContent=(net>=0?'+':'')+net.toFixed(1)+'°';
   setVal('max-turns',mt);
-
   const hw=Math.min(Math.abs(net)/md*50,50);
-  if(net>=0){
-    document.getElementById('cg-fill-p').style.width=hw+'%';
-    document.getElementById('cg-fill-p').style.left='50%';
-    document.getElementById('cg-fill-n').style.width='0%';
-  }else{
-    document.getElementById('cg-fill-n').style.width=hw+'%';
-    document.getElementById('cg-fill-n').style.right='50%';
-    document.getElementById('cg-fill-p').style.width='0%';
-  }
+  if(net>=0){document.getElementById('cg-fill-p').style.width=hw+'%';document.getElementById('cg-fill-p').style.left='50%';document.getElementById('cg-fill-n').style.width='0%';}
+  else{document.getElementById('cg-fill-n').style.width=hw+'%';document.getElementById('cg-fill-n').style.right='50%';document.getElementById('cg-fill-p').style.width='0%';}
   const mp=50+Math.min(Math.max(net/md*50,-50),50);
   const d=document.getElementById('cg-dot');
   d.style.left=mp+'%';d.className='cg-dot '+(net>0?'pos':net<0?'neg':'zero');
   document.getElementById('cg-lo').textContent='-'+md.toFixed(0)+'°';
   document.getElementById('cg-hi').textContent='+'+md.toFixed(0)+'°';
-
   const tripped=cg.tripped||false,u=cg.usage_pct||0;
   document.getElementById('cg-trip').classList.toggle('hidden',!tripped);
   document.getElementById('cg-warn').classList.toggle('hidden',tripped||u<75);
+  drawPolar(s);
 }
 
 function renderLimBar(pfx,lo,hi,pos,max){
   const has=lo!=null&&hi!=null;
-  const r=document.getElementById(pfx+'-range'),e1=document.getElementById(pfx+'-min-e'),e2=document.getElementById(pfx+'-max-e');
-  const m=document.getElementById(pfx+'-pos');
+  const r=document.getElementById(pfx+'-range'),e1=document.getElementById(pfx+'-min-e'),e2=document.getElementById(pfx+'-max-e'),m=document.getElementById(pfx+'-pos');
   if(has){
     const lp=lo/max*100,hp=hi/max*100;
     r.style.left=lp+'%';r.style.width=(hp-lp)+'%';
     e1.style.left=lp+'%';e2.style.left=hp+'%';
-    e1.querySelector('span').textContent=lo.toFixed(1)+'°';
-    e2.querySelector('span').textContent=hi.toFixed(1)+'°';
+    e1.querySelector('span').textContent=lo.toFixed(1)+'°';e2.querySelector('span').textContent=hi.toFixed(1)+'°';
     e1.classList.remove('hidden');e2.classList.remove('hidden');
-  }else{
-    r.style.left='0';r.style.width='100%';
-    e1.classList.add('hidden');e2.classList.add('hidden');
-  }
+  }else{r.style.left='0';r.style.width='100%';e1.classList.add('hidden');e2.classList.add('hidden');}
   if(pos!=null) m.style.left=(pos/max*100)+'%';
 }
 
-/* ─── HTTP ───────────────────────────────────────────── */
-async function post(url,body={}){
-  try{
-    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    if(!r.ok) throw Error(String(r.status));
-    return await r.json();
-  }catch(e){throw e}
+/* ═══ POLAR PLOT (Gpredict Style) ═══ */
+function drawPolar(s){
+  const canvas=document.getElementById('polar');
+  if(!canvas) return;
+  const wrap=canvas.parentElement;
+  const sz=Math.min(wrap.clientWidth-10, wrap.clientHeight-10, 420);
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=sz*dpr;canvas.height=sz*dpr;
+  canvas.style.width=sz+'px';canvas.style.height=sz+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const cx=sz/2, cy=sz/2, maxR=sz/2-38;
+
+  function azElToXY(az,el){
+    const r=maxR*(1-Math.max(0,Math.min(90,el))/90);
+    const rad=(az-90)*Math.PI/180;
+    return [cx+r*Math.cos(rad), cy+r*Math.sin(rad)];
+  }
+
+  ctx.clearRect(0,0,sz,sz);
+
+  // Background radar sky dome
+  ctx.beginPath();ctx.arc(cx,cy,maxR,0,Math.PI*2);
+  ctx.fillStyle='#090d16';ctx.fill();
+
+  // Allowed Azimuth Virtual Limits Wedge (if enabled)
+  if(s.enabled&&s.az_min!=null&&s.az_max!=null){
+    const a1=(s.az_min-90)*Math.PI/180, a2=(s.az_max-90)*Math.PI/180;
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,maxR,a1,a2,false);
+    ctx.closePath();
+    ctx.fillStyle='rgba(34,197,94,.05)';ctx.fill();
+    ctx.beginPath();ctx.arc(cx,cy,maxR,a1,a2,false);
+    ctx.strokeStyle='rgba(34,197,94,.3)';ctx.lineWidth=1.5;ctx.stroke();
+  }
+
+  // Radial grid lines & degree labels (every 30°)
+  for(let a=0;a<360;a+=30){
+    const rad=(a-90)*Math.PI/180;
+    const isMajor=(a%90===0);
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+maxR*Math.cos(rad),cy+maxR*Math.sin(rad));
+    ctx.strokeStyle=isMajor?'rgba(255,255,255,.09)':'rgba(255,255,255,.035)';
+    ctx.lineWidth=isMajor?1:0.7;ctx.stroke();
+
+    if(!isMajor){
+      const tx=cx+(maxR+14)*Math.cos(rad), ty=cy+(maxR+14)*Math.sin(rad);
+      ctx.fillStyle='rgba(136,153,184,.5)';
+      ctx.font='500 8px "JetBrains Mono",monospace';
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(a+'°',tx,ty);
+    }
+  }
+
+  // Minor tick marks every 10°
+  for(let a=0;a<360;a+=10){
+    if(a%30!==0){
+      const rad=(a-90)*Math.PI/180;
+      const x1=cx+maxR*Math.cos(rad), y1=cy+maxR*Math.sin(rad);
+      const x2=cx+(maxR+4)*Math.cos(rad), y2=cy+(maxR+4)*Math.sin(rad);
+      ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);
+      ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=0.8;ctx.stroke();
+    }
+  }
+
+  // Elevation rings (0°, 30°, 60°)
+  [0,30,60].forEach(el=>{
+    const r=maxR*(1-el/90);
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.strokeStyle=(el===0)?'rgba(59,130,246,.35)':'rgba(255,255,255,.07)';
+    ctx.lineWidth=(el===0)?1.5:1;ctx.stroke();
+
+    if(el>0){
+      ctx.fillStyle='rgba(136,153,184,.5)';
+      ctx.font='500 8px "JetBrains Mono",monospace';
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(el+'°',cx,cy-r+2);
+      ctx.fillText(el+'°',cx,cy+r-2);
+    }
+  });
+
+  // Cardinal direction labels (N, E, S, W)
+  const cardSz=11;
+  ctx.font='700 '+cardSz+'px Inter,sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle='#3b82f6';
+  ctx.fillText('N (0°)',cx,cy-maxR-16);
+  ctx.fillStyle='rgba(136,153,184,.7)';
+  ctx.fillText('S (180°)',cx,cy+maxR+16);
+  ctx.fillText('E (90°)',cx+maxR+18,cy);
+  ctx.fillText('W (270°)',cx-maxR-18,cy);
+
+  // Satellite Pass Sky Track Curve
+  const skyPts=(_selectedPass&&_selectedPass.sky_track&&_selectedPass.sky_track.length)?_selectedPass.sky_track:((_lastExtraData&&_lastExtraData.sky_track)?_lastExtraData.sky_track:(s.sky_track||[]));
+  const passInfo=_selectedPass||((_lastExtraData&&_lastExtraData.passes&&_lastExtraData.passes.length)?_lastExtraData.passes[0]:null);
+
+  if(skyPts&&skyPts.length>1){
+    ctx.beginPath();
+    let started=false;
+    let maxPt=null, maxElVal=-1;
+
+    skyPts.forEach(([az,el])=>{
+      if(el>=0){
+        const [x,y]=azElToXY(az,el);
+        if(!started){ctx.moveTo(x,y);started=true;}
+        else ctx.lineTo(x,y);
+
+        if(el>maxElVal){maxElVal=el;maxPt=[x,y,az,el];}
+      }
+    });
+    ctx.strokeStyle='#22c55e';ctx.lineWidth=2;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+
+    // AOS and LOS indicators at pass endpoints
+    const first=skyPts[0], last=skyPts[skyPts.length-1];
+    if(first&&first[1]>=0){
+      const [ax,ay]=azElToXY(first[0],first[1]);
+      ctx.fillStyle='#22c55e';ctx.font='700 9px Inter,sans-serif';ctx.textAlign='center';
+      ctx.fillText('AOS '+first[0].toFixed(0)+'°',ax,ay-9);
+    }
+    if(last&&last[1]>=0){
+      const [lx,ly]=azElToXY(last[0],last[1]);
+      ctx.fillStyle='#ef4444';ctx.font='700 9px Inter,sans-serif';ctx.textAlign='center';
+      ctx.fillText('LOS '+last[0].toFixed(0)+'°',lx,ly-9);
+    }
+
+    // Max elevation indicator along sky track
+    if(maxPt){
+      ctx.fillStyle='#eab308';ctx.font='700 8px Inter,sans-serif';ctx.textAlign='center';
+      ctx.fillText('MAX '+maxPt[3].toFixed(0)+'°',maxPt[0],maxPt[1]-8);
+      ctx.beginPath();ctx.arc(maxPt[0],maxPt[1],2,0,Math.PI*2);
+      ctx.fillStyle='#eab308';ctx.fill();
+    }
+  }
+
+  // Active Satellite Target Marker
+  const track=s.tracking||{};
+  if(s.tracking_active&&track.computed_az!=null&&track.computed_el!=null&&track.computed_el>=0){
+    const [sx,sy]=azElToXY(track.computed_az,track.computed_el);
+    // Glowing target marker
+    ctx.beginPath();ctx.arc(sx,sy,11,0,Math.PI*2);
+    ctx.fillStyle='rgba(34,197,94,.22)';ctx.fill();
+    ctx.beginPath();ctx.arc(sx,sy,5,0,Math.PI*2);
+    ctx.fillStyle='#22c55e';ctx.fill();
+    ctx.strokeStyle='#ffffff';ctx.lineWidth=1.5;ctx.stroke();
+
+    // Satellite label
+    if(s.tracking_target){
+      ctx.fillStyle='#22c55e';ctx.font='700 10px Inter,sans-serif';ctx.textAlign='left';
+      ctx.fillText(s.tracking_target.name,sx+9,sy+3);
+    }
+  }
+
+  // Park Position Marker
+  if(s.park_az!=null&&s.park_el!=null){
+    const [px,py]=azElToXY(s.park_az,s.park_el);
+    ctx.save();ctx.translate(px,py);ctx.rotate(Math.PI/4);
+    ctx.fillStyle='rgba(136,153,184,.3)';ctx.fillRect(-4,-4,8,8);
+    ctx.strokeStyle='rgba(136,153,184,.6)';ctx.lineWidth=1;ctx.strokeRect(-4,-4,8,8);
+    ctx.restore();
+    ctx.fillStyle='rgba(136,153,184,.7)';ctx.font='700 8px Inter,sans-serif';ctx.textAlign='center';
+    ctx.fillText('PARK ('+s.park_az.toFixed(0)+'°/'+s.park_el.toFixed(0)+'°)',px,py-9);
+  }
+
+  // Antenna Rotor Position Reticle (Gpredict style)
+  const az=s.az, el=s.el;
+  if(az!=null&&el!=null){
+    const [rx,ry]=azElToXY(az,el);
+    // Outer circle
+    ctx.beginPath();ctx.arc(rx,ry,7,0,Math.PI*2);
+    ctx.strokeStyle='#3b82f6';ctx.lineWidth=2;ctx.stroke();
+    // Crosshair lines
+    const ch=11;
+    ctx.beginPath();
+    ctx.moveTo(rx-ch,ry);ctx.lineTo(rx-3,ry);
+    ctx.moveTo(rx+3,ry);ctx.lineTo(rx+ch,ry);
+    ctx.moveTo(rx,ry-ch);ctx.lineTo(rx,ry-3);
+    ctx.moveTo(rx,ry+3);ctx.lineTo(rx,ry+ch);
+    ctx.strokeStyle='#3b82f6';ctx.lineWidth=2;ctx.stroke();
+    // Center point
+    ctx.beginPath();ctx.arc(rx,ry,2,0,Math.PI*2);
+    ctx.fillStyle='#ffffff';ctx.fill();
+    // Rotor position readout label
+    ctx.fillStyle='#3b82f6';ctx.font='700 9px "JetBrains Mono",monospace';ctx.textAlign='center';
+    ctx.fillText('ANT '+az.toFixed(0)+'°/'+el.toFixed(0)+'°',rx,ry+16);
+  }
+
+  // Center Zenith Point (90°)
+  ctx.beginPath();ctx.arc(cx,cy,2.5,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,.3)';ctx.fill();
+  ctx.fillStyle='rgba(136,153,184,.4)';ctx.font='500 8px "JetBrains Mono",monospace';ctx.textAlign='center';
+  ctx.fillText('Zenith (90°)',cx,cy-5);
+
+  // HUD Telemetry Overlay (top-left of plot)
+  if(s.tracking_active&&s.tracking_target){
+    const satName=s.tracking_target.name||'';
+    const satAz=track.computed_az!=null?track.computed_az.toFixed(1)+'°':'---';
+    const satEl=track.computed_el!=null?track.computed_el.toFixed(1)+'°':'---';
+
+    ctx.fillStyle='rgba(11,16,29,.75)';
+    ctx.fillRect(8,8,125,48);
+    ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=1;
+    ctx.strokeRect(8,8,125,48);
+
+    ctx.fillStyle='#22c55e';ctx.font='700 9px Inter,sans-serif';ctx.textAlign='left';
+    ctx.fillText(satName.length>16?satName.slice(0,14)+'..':satName,13,20);
+
+    ctx.fillStyle='rgba(136,153,184,.9)';ctx.font='500 8px "JetBrains Mono",monospace';
+    ctx.fillText('AZ: '+satAz+'  EL: '+satEl,13,32);
+
+    if(passInfo){
+      ctx.fillStyle='rgba(234,179,8,.9)';
+      ctx.fillText('MAX EL: '+passInfo.max_el+'°',13,44);
+    }
+  }
 }
 
-function toast(type,msg){
-  const c=document.getElementById('toasts'),t=document.createElement('div');
-  t.className='toast toast-'+type;t.textContent=msg;
-  c.appendChild(t);setTimeout(()=>t.remove(),3000);
-}
-
+/* ═══ HTTP ═══ */
+async function post(url,body={}){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok) throw Error(r.status);return r.json();}
+function toast(type,msg){const c=document.getElementById('toasts'),t=document.createElement('div');t.className='toast toast-'+type;t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),2500);}
 function lock(btn,fn){return async function(){btn.disabled=true;try{await fn()}finally{btn.disabled=false}}}
 
-/* ─── Manual Control ─────────────────────────────────── */
-document.querySelectorAll('.dpad-btn[data-dir]').forEach(b=>{
+/* ═══ Manual Control ═══ */
+document.querySelectorAll('.db[data-dir]').forEach(b=>{
   b.addEventListener('click',lock(b,async()=>{
     const d=b.dataset.dir;
     if(d==='stop'){const r=await post(API+'/rotor/stop');toast(r.ok?'success':'error',r.ok?'Stop':'Stop failed');}
-    else{
-      const spd=document.getElementById('speed-slider').value;
-      const r=await post(API+'/rotor/move',{direction:parseInt(d),speed:parseInt(spd)});
-      toast(r.ok?'success':'error',r.ok?'Moving ('+d+')':'Move failed: '+(r.response||r.error||''));
-    }
+    else{const spd=document.getElementById('speed-slider').value;const r=await post(API+'/rotor/move',{direction:parseInt(d),speed:parseInt(spd)});toast(r.ok?'success':'error',r.ok?'Moving':'Move failed: '+(r.response||r.error||''));}
     await fetchStatus();
   }));
 });
-
-document.getElementById('speed-slider').addEventListener('input',function(){
-  document.getElementById('speed-val').textContent=this.value+'°';
-});
-
+document.getElementById('speed-slider').addEventListener('input',function(){document.getElementById('speed-val').textContent=this.value+'°';});
 document.getElementById('goto-btn').addEventListener('click',lock(document.getElementById('goto-btn'),async()=>{
-  const az=parseFloat(document.getElementById('goto-az').value);
-  const el=parseFloat(document.getElementById('goto-el').value);
-  const body={};
-  if(!isNaN(az)) body.az=az;
-  if(!isNaN(el)) body.el=el;
-  if(!body.az&&!body.el) return;
-  const r=await post(API+'/rotor/goto',body);
-  if(r.ok) toast('success','Rotor positioned');
-  else toast('error','Move failed: '+(r.response||''));
-  await fetchStatus();
+  const az=parseFloat(document.getElementById('goto-az').value),el=parseFloat(document.getElementById('goto-el').value);
+  const body={};if(!isNaN(az)) body.az=az;if(!isNaN(el)) body.el=el;if(!body.az&&!body.el) return;
+  const r=await post(API+'/rotor/goto',body);toast(r.ok?'success':'error',r.ok?'Positioned':'Failed: '+(r.response||''));await fetchStatus();
 }));
-
-document.getElementById('park-btn').addEventListener('click',lock(document.getElementById('park-btn'),async()=>{
-  const r=await post(API+'/rotor/park');
-  if(r.ok) toast('success','Park command sent');
-  else toast('error','Park failed');
-  await fetchStatus();
-}));
+document.getElementById('park-btn').addEventListener('click',lock(document.getElementById('park-btn'),async()=>{const r=await post(API+'/rotor/park');toast(r.ok?'success':'error',r.ok?'Parking':'Failed');await fetchStatus();}));
 document.getElementById('park-set-btn').addEventListener('click',lock(document.getElementById('park-set-btn'),async()=>{
-  const az=parseFloat(document.getElementById('park-az').value);
-  const el=parseFloat(document.getElementById('park-el').value);
+  const az=parseFloat(document.getElementById('park-az').value),el=parseFloat(document.getElementById('park-el').value);
   if(isNaN(az)&&isNaN(el)) return;
   const r=await post(API+'/rotor/park-position',{az:isNaN(az)?null:az,el:isNaN(el)?null:el});
-  if(r.ok) toast('success','Park position saved');
-  else toast('error','Failed to save park position');
-  clearDirty('park-az','park-el');await fetchStatus();
+  toast(r.ok?'success':'error',r.ok?'Park saved':'Failed');clearDirty('park-az','park-el');await fetchStatus();
 }));
 
-/* ─── Limits ─────────────────────────────────────────── */
-document.querySelectorAll('.capture').forEach(b=>{
-  b.addEventListener('click',lock(b,async()=>{
-    await post(API+'/limits/set-'+b.dataset.side);
-    toast('success',b.dataset.side+' limit captured');
-    await fetchStatus();
-  }));
-});
-document.getElementById('limits-toggle').addEventListener('change',async function(){
-  await post(API+'/limits/'+(this.checked?'enable':'disable'));
-  toast('success','Limits '+(this.checked?'enabled':'disabled'));
-  await fetchStatus();
-});
-document.getElementById('apply-az').addEventListener('click',lock(document.getElementById('apply-az'),async()=>{
-  const mn=parseFloat(document.getElementById('man-az-min').value),mx=parseFloat(document.getElementById('man-az-max').value);
-  await post(API+'/limits/manual',{az_min:isNaN(mn)?null:mn,az_max:isNaN(mx)?null:mx});
-  toast('success','Az limits applied');clearDirty('man-az-min','man-az-max');await fetchStatus();
-}));
-document.getElementById('apply-el').addEventListener('click',lock(document.getElementById('apply-el'),async()=>{
-  const mn=parseFloat(document.getElementById('man-el-min').value),mx=parseFloat(document.getElementById('man-el-max').value);
-  await post(API+'/limits/manual',{el_min:isNaN(mn)?null:mn,el_max:isNaN(mx)?null:mx});
-  toast('success','El limits applied');clearDirty('man-el-min','man-el-max');await fetchStatus();
-}));
-document.getElementById('clear-limits').addEventListener('click',lock(document.getElementById('clear-limits'),async()=>{
-  await post(API+'/limits/clear');toast('success','Limits cleared');await fetchStatus();
-}));
+/* ═══ Limits ═══ */
+document.querySelectorAll('.capture').forEach(b=>{b.addEventListener('click',lock(b,async()=>{await post(API+'/limits/set-'+b.dataset.side);toast('success',b.dataset.side+' captured');await fetchStatus();}));});
+document.getElementById('limits-toggle').addEventListener('change',async function(){await post(API+'/limits/'+(this.checked?'enable':'disable'));toast('success','Limits '+(this.checked?'on':'off'));await fetchStatus();});
+document.getElementById('apply-az').addEventListener('click',lock(document.getElementById('apply-az'),async()=>{const mn=parseFloat(document.getElementById('man-az-min').value),mx=parseFloat(document.getElementById('man-az-max').value);await post(API+'/limits/manual',{az_min:isNaN(mn)?null:mn,az_max:isNaN(mx)?null:mx});toast('success','Az set');clearDirty('man-az-min','man-az-max');await fetchStatus();}));
+document.getElementById('apply-el').addEventListener('click',lock(document.getElementById('apply-el'),async()=>{const mn=parseFloat(document.getElementById('man-el-min').value),mx=parseFloat(document.getElementById('man-el-max').value);await post(API+'/limits/manual',{el_min:isNaN(mn)?null:mn,el_max:isNaN(mx)?null:mx});toast('success','El set');clearDirty('man-el-min','man-el-max');await fetchStatus();}));
+document.getElementById('clear-limits').addEventListener('click',lock(document.getElementById('clear-limits'),async()=>{await post(API+'/limits/clear');toast('success','Cleared');await fetchStatus();}));
 
-/* ─── Cable Guard ───────────────────────────────────── */
-document.getElementById('cable-toggle').addEventListener('change',async function(){
-  await post(API+'/cable-guard/'+(this.checked?'enable':'disable'));
-  toast('success','Cable guard '+(this.checked?'enabled':'disabled'));
-  await fetchStatus();
-});
-document.getElementById('apply-turns').addEventListener('click',lock(document.getElementById('apply-turns'),async()=>{
-  const t=parseFloat(document.getElementById('max-turns').value);
-  if(isNaN(t)||t<=0) return;
-  await post(API+'/cable-guard/max-turns',{turns:t});
-  toast('success','Max turns set');clearDirty('max-turns');await fetchStatus();
-}));
-document.getElementById('reset-cg').addEventListener('click',lock(document.getElementById('reset-cg'),async()=>{
-  await post(API+'/cable-guard/reset');toast('success','Counter reset');await fetchStatus();
-}));
+/* ═══ Cable Guard ═══ */
+document.getElementById('cable-toggle').addEventListener('change',async function(){await post(API+'/cable-guard/'+(this.checked?'enable':'disable'));toast('success','Guard '+(this.checked?'on':'off'));await fetchStatus();});
+document.getElementById('apply-turns').addEventListener('click',lock(document.getElementById('apply-turns'),async()=>{const t=parseFloat(document.getElementById('max-turns').value);if(isNaN(t)||t<=0) return;await post(API+'/cable-guard/max-turns',{turns:t});toast('success','Turns set');clearDirty('max-turns');await fetchStatus();}));
+document.getElementById('reset-cg').addEventListener('click',lock(document.getElementById('reset-cg'),async()=>{await post(API+'/cable-guard/reset');toast('success','Reset');await fetchStatus();}));
 
-/* ─── Offset Compensation ───────────────────────────── */
-document.querySelectorAll('.off-step:not(.off-zero)').forEach(btn=>{
+/* ═══ Offset ═══ */
+document.querySelectorAll('.os:not(.oz)').forEach(btn=>{
   btn.addEventListener('click',lock(btn,async()=>{
-    const offEn=S.offset_enabled===undefined||S.offset_enabled;
-    if(!offEn) return;
-    const axis=btn.closest('.offset-row').dataset.axis;
-    const step=parseFloat(btn.dataset.step);
-    const cur=S[axis+'_offset']||0;
-    const val=Math.round(cur+step);
-    const body={};
-    body[axis+'_offset']=val;
-    const offEl=document.getElementById('off-val-'+axis);
-    if(offEl){
-      const inp=offEl.querySelector('input');
-      if(inp) inp.remove();
-      offEl.textContent=(val>0?'+':'')+val+'°';
-    }
-    await post(API+'/offset/set',body);
-    await fetchStatus();
+    const offEn=S.offset_enabled===undefined||S.offset_enabled;if(!offEn) return;
+    const axis=btn.closest('.off-row').dataset.axis;const step=parseFloat(btn.dataset.step);
+    const cur=S[axis+'_offset']||0;const val=Math.round(cur+step);const body={};body[axis+'_offset']=val;
+    const offEl=document.getElementById('off-val-'+axis);if(offEl){const inp=offEl.querySelector('input');if(inp) inp.remove();offEl.textContent=(val>0?'+':'')+val+'°';}
+    await post(API+'/offset/set',body);await fetchStatus();
   }));
 });
-document.querySelectorAll('.off-zero').forEach(btn=>{
+document.querySelectorAll('.oz').forEach(btn=>{
   btn.addEventListener('click',lock(btn,async()=>{
-    const offEn=S.offset_enabled===undefined||S.offset_enabled;
-    if(!offEn) return;
-    const axis=btn.dataset.axis;
-    const body={};
-    body[axis+'_offset']=0;
-    const offEl=document.getElementById('off-val-'+axis);
-    if(offEl){
-      const inp=offEl.querySelector('input');
-      if(inp) inp.remove();
-      offEl.textContent='0°';
-    }
-    await post(API+'/offset/set',body);
-    await fetchStatus();
+    const offEn=S.offset_enabled===undefined||S.offset_enabled;if(!offEn) return;
+    const axis=btn.dataset.axis;const body={};body[axis+'_offset']=0;
+    const offEl=document.getElementById('off-val-'+axis);if(offEl){const inp=offEl.querySelector('input');if(inp) inp.remove();offEl.textContent='0°';}
+    await post(API+'/offset/set',body);await fetchStatus();
   }));
 });
-document.querySelectorAll('.off-val').forEach(el=>{
+document.querySelectorAll('.ov').forEach(el=>{
   el.addEventListener('click',function(){
-    const offEn=S.offset_enabled===undefined||S.offset_enabled;
-    if(!offEn) return;
+    const offEn=S.offset_enabled===undefined||S.offset_enabled;if(!offEn) return;
     if(this.querySelector('input')) return;
-    const axis=this.id==='off-val-az'?'az':'el';
-    const cur=Math.round(S[axis+'_offset']||0);
-    const inp=document.createElement('input');
-    inp.type='number';
-    inp.step='1';
-    inp.value=cur;
-    inp.style.cssText='width:62px;background:var(--bg);border:1px solid var(--accent);border-radius:4px;padding:8px;color:var(--text);font-family:inherit;font-size:1.05rem;font-weight:700;text-align:center;outline:none;min-height:44px';
-    this.textContent='';
-    this.appendChild(inp);
-    inp.focus();
-    inp.select();
-    const apply = async ()=>{
-      const v=parseInt(inp.value);
-      if(!isNaN(v)){
-        this.textContent=(v>0?'+':'')+v+'°';
-        const body={};
-        body[axis+'_offset']=v;
-        await post(API+'/offset/set',body);
-        await fetchStatus();
-      }else{
-        await fetchStatus();
-      }
-    };
+    const axis=this.id==='off-val-az'?'az':'el';const cur=Math.round(S[axis+'_offset']||0);
+    const inp=document.createElement('input');inp.type='number';inp.step='1';inp.value=cur;
+    inp.style.cssText='width:56px;background:var(--bg);border:1px solid var(--accent);border-radius:4px;padding:6px;color:var(--text);font-family:inherit;font-size:.95rem;font-weight:700;text-align:center;outline:none;min-height:40px';
+    this.textContent='';this.appendChild(inp);inp.focus();inp.select();
+    const apply=async()=>{const v=parseInt(inp.value);if(!isNaN(v)){this.textContent=(v>0?'+':'')+v+'°';const body={};body[axis+'_offset']=v;await post(API+'/offset/set',body);await fetchStatus();}else await fetchStatus();};
     inp.addEventListener('blur',apply);
-    inp.addEventListener('keydown',e=>{
-      if(e.key==='Enter'){e.preventDefault();inp.blur();}
-      if(e.key==='Escape'){e.preventDefault();fetchStatus();}
-    });
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();inp.blur();}if(e.key==='Escape'){e.preventDefault();fetchStatus();}});
   });
 });
-document.getElementById('off-clear').addEventListener('click',lock(document.getElementById('off-clear'),async()=>{
-  await post(API+'/offset/clear');
-  await fetchStatus();
-  toast('success','Offset cleared');
-}));
-document.getElementById('off-toggle').addEventListener('change',async function(){
-  await post(API+'/offset/'+(this.checked?'enable':'disable'));
-  await fetchStatus();
-});
+document.getElementById('off-clear').addEventListener('click',lock(document.getElementById('off-clear'),async()=>{await post(API+'/offset/clear');await fetchStatus();toast('success','Offset cleared');}));
+document.getElementById('off-toggle').addEventListener('change',async function(){await post(API+'/offset/'+(this.checked?'enable':'disable'));await fetchStatus();});
 
-/* ─── Commands Block ────────────────────────────────── */
-document.getElementById('block-toggle').addEventListener('change',async function(){
-  await post(API+'/commands/'+(this.checked?'block':'unblock'));
-  toast('success','Inbound commands '+(this.checked?'blocked':'unblocked'));
-  await fetchStatus();
-});
+/* ═══ Commands Block ═══ */
+document.getElementById('block-toggle').addEventListener('change',async function(){await post(API+'/commands/'+(this.checked?'block':'unblock'));toast('success','Commands '+(this.checked?'blocked':'unblocked'));await fetchStatus();});
 
-/* ─── Backend ───────────────────────────────────────── */
-document.getElementById('be-apply').addEventListener('click',lock(document.getElementById('be-apply'),async()=>{
-  const h=document.getElementById('be-host').value.trim(),p=parseInt(document.getElementById('be-port').value);
-  if(!h||isNaN(p)) return;
-  await post(API+'/backend/config',{host:h,port:p});
-  await post(API+'/backend/reconnect');
-  toast('success','Backend set to '+h+':'+p);clearDirty('be-host','be-port');await fetchStatus();
-}));
+/* ═══ Backend ═══ */
+document.getElementById('be-apply').addEventListener('click',lock(document.getElementById('be-apply'),async()=>{const h=document.getElementById('be-host').value.trim(),p=parseInt(document.getElementById('be-port').value);if(!h||isNaN(p)) return;await post(API+'/backend/config',{host:h,port:p});await post(API+'/backend/reconnect');toast('success',h+':'+p);clearDirty('be-host','be-port');await fetchStatus();}));
 document.getElementById('be-test').addEventListener('click',lock(document.getElementById('be-test'),async()=>{
   const h=document.getElementById('be-host').value.trim()||'127.0.0.1',p=parseInt(document.getElementById('be-port').value)||4533;
-  const rd=document.getElementById('be-result');
-  rd.textContent='Testing...';rd.style.color='var(--muted)';
-  try{
-    const r=await post(API+'/backend/test',{host:h,port:p});
-    rd.innerHTML=r.reachable?'Reachable: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:.72rem">'+esc(r.response||'ok')+'</code>':'Error: '+r.error;
-    rd.style.color=r.reachable?'var(--green)':'var(--red)';
-  }catch(e){rd.innerHTML='Error';rd.style.color='var(--red)'}
+  const rd=document.getElementById('be-result');rd.textContent='Testing...';rd.style.color='var(--dim)';
+  try{const r=await post(API+'/backend/test',{host:h,port:p});rd.innerHTML=r.reachable?'✓ <code style="background:var(--s2);padding:1px 4px;border-radius:3px;font-size:.65rem">'+esc(r.response||'ok')+'</code>':'✗ '+r.error;rd.style.color=r.reachable?'var(--green)':'var(--red)';}
+  catch(e){rd.innerHTML='✗ Error';rd.style.color='var(--red)'}
 }));
-document.getElementById('be-reconnect').addEventListener('click',lock(document.getElementById('be-reconnect'),async()=>{
-  await post(API+'/backend/reconnect');toast('success','Reconnecting...');setTimeout(fetchStatus,500);
-}));
+document.getElementById('be-reconnect').addEventListener('click',lock(document.getElementById('be-reconnect'),async()=>{await post(API+'/backend/reconnect');toast('success','Reconnecting');setTimeout(fetchStatus,500);}));
 function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
 
-/* ─── Profiles ──────────────────────────────────────── */
+/* ═══ Profiles ═══ */
 async function refreshProfiles(){
   try{
-    const d=await post(API+'/profiles/list');
-    const list=document.getElementById('prof-list');
-    const p=d.profiles||[];
-    if(!p.length){
-      list.innerHTML='<div style="color:var(--muted);font-size:.72rem">No profiles saved.</div>';
-      return;
-    }
+    const d=await post(API+'/profiles/list');const list=document.getElementById('prof-list');const p=d.profiles||[];
+    if(!p.length){list.innerHTML='<div style="color:var(--dim);font-size:.65rem">No profiles.</div>';return;}
     list.innerHTML=p.map(prof=>{
       const meta=[prof.created_at||'',prof.description||''].filter(Boolean).join(' · ');
-      return '<div class="profile-item">'+
-        '<div class="info"><div class="name">'+esc(prof.name)+'</div>'+
-        '<div class="meta">'+esc(meta)+'</div></div>'+
-        '<div class="actions">'+
-        '<button class="profile-load-btn" data-name="'+escAttr(prof.name)+'">Load</button>'+
-        '<button class="profile-del-btn" data-name="'+escAttr(prof.name)+'">Del</button>'+
-        '</div></div>';
+      return '<div class="prof-item"><div class="info"><div class="name">'+esc(prof.name)+'</div><div class="meta">'+esc(meta)+'</div></div><div class="actions"><button class="pl-btn" data-name="'+escAttr(prof.name)+'">Load</button><button class="pd-btn" data-name="'+escAttr(prof.name)+'">Del</button></div></div>';
     }).join('');
-    list.querySelectorAll('.profile-load-btn').forEach(b=>{
-      b.addEventListener('click',lock(b,async()=>{
-        const r=await post(API+'/profiles/load',{name:b.dataset.name});
-        if(r.ok){
-          toast('success','Profile "'+b.dataset.name+'" loaded');
-          await fetchStatus();
-          await refreshProfiles();
-        } else toast('error','Load failed');
-      }));
-    });
-    list.querySelectorAll('.profile-del-btn').forEach(b=>{
-      b.addEventListener('click',lock(b,async()=>{
-        if(!confirm('Delete profile "'+b.dataset.name+'"?')) return;
-        const r=await post(API+'/profiles/delete',{name:b.dataset.name});
-        if(r.ok){toast('success','Profile deleted');await refreshProfiles();}
-        else toast('error','Delete failed');
-      }));
-    });
+    list.querySelectorAll('.pl-btn').forEach(b=>{b.addEventListener('click',lock(b,async()=>{const r=await post(API+'/profiles/load',{name:b.dataset.name});if(r.ok){toast('success','"'+b.dataset.name+'" loaded');await fetchStatus();await refreshProfiles();}else toast('error','Load failed');}));});
+    list.querySelectorAll('.pd-btn').forEach(b=>{b.addEventListener('click',lock(b,async()=>{if(!confirm('Delete "'+b.dataset.name+'"?')) return;const r=await post(API+'/profiles/delete',{name:b.dataset.name});if(r.ok){toast('success','Deleted');await refreshProfiles();}else toast('error','Failed');}));});
   }catch(e){}
 }
-
 function escAttr(s){return String(s).replace(/["']/g,'')}
-
 document.getElementById('prof-save').addEventListener('click',lock(document.getElementById('prof-save'),async()=>{
-  const name=document.getElementById('prof-name').value.trim();
-  if(!name){toast('error','Enter a profile name');return;}
+  const name=document.getElementById('prof-name').value.trim();if(!name){toast('error','Enter name');return;}
   const desc=document.getElementById('prof-desc').value.trim();
   const r=await post(API+'/profiles/save',{name,description:desc});
-  if(r.ok){
-    toast('success','Profile "'+name+'" saved');
-    document.getElementById('prof-name').value='';
-    document.getElementById('prof-desc').value='';
-    await refreshProfiles();
-  } else toast('error','Save failed');
+  if(r.ok){toast('success','"'+name+'" saved');document.getElementById('prof-name').value='';document.getElementById('prof-desc').value='';await refreshProfiles();}else toast('error','Failed');
 }));
+const _origRender=render;render=function(s){_origRender(s);refreshProfiles();};
 
-const _origRender=render;
-render=function(s){_origRender(s);refreshProfiles();};
-
-/* ─── Station Location / Map ────────────────────────── */
-let map, marker, azimuthLine;
+/* ═══ Map ═══ */
+let map,marker,azimuthLine;
 function updateMap(lat,lng,az){
-  if(!map){
-    map=L.map('map',{zoomControl:false,attributionControl:false}).setView([lat||0,lng||0],lat!=null?10:1);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(map);
-    map.attributionControl=L.control.attribution({prefix:false}).addTo(map);
-    setTimeout(function(){map.invalidateSize()},300);
-  }
+  if(!map){map=L.map('map',{zoomControl:false,attributionControl:false}).setView([lat||0,lng||0],lat!=null?10:1);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(map);map.attributionControl=L.control.attribution({prefix:false}).addTo(map);setTimeout(()=>map.invalidateSize(),300);}
   if(lat!=null&&lng!=null){
-    if(!marker){
-      marker=L.marker([lat,lng],{draggable:true}).addTo(map);
-      marker.on('dragend',async function(){
-        const p=marker.getLatLng();
-        document.getElementById('loc-lat').value=parseFloat(p.lat.toFixed(4));
-        document.getElementById('loc-lng').value=parseFloat(p.lng.toFixed(4));
-        const r=await post(API+'/location',{latitude:p.lat,longitude:p.lng});
-        if(r.ok){toast('success','Location updated');await fetchStatus();}
-      });
-    }else{
-      marker.setLatLng([lat,lng]);
-    }
-    if(!azimuthLine) azimuthLine=L.polyline([[lat,lng],[lat,lng]],{color:'#3b82f6',weight:3,opacity:0.9,dashArray:'6 6'}).addTo(map);
-    if(az!=null){
-      const R=6371,bear=az*Math.PI/180,dlat=50/R;
-      const lat1=lat*Math.PI/180,lng1=lng*Math.PI/180;
-      const lat2=Math.asin(Math.sin(lat1)*Math.cos(dlat)+Math.cos(lat1)*Math.sin(dlat)*Math.cos(bear));
-      const lng2=lng1+Math.atan2(Math.sin(bear)*Math.sin(dlat)*Math.cos(lat1),Math.cos(dlat)-Math.sin(lat1)*Math.sin(lat2));
-      azimuthLine.setLatLngs([[lat,lng],[lat2*180/Math.PI,lng2*180/Math.PI]]);
-    }
+    if(!marker){marker=L.marker([lat,lng],{draggable:true}).addTo(map);marker.on('dragend',async function(){const p=marker.getLatLng();document.getElementById('loc-lat').value=parseFloat(p.lat.toFixed(4));document.getElementById('loc-lng').value=parseFloat(p.lng.toFixed(4));const r=await post(API+'/location',{latitude:p.lat,longitude:p.lng});if(r.ok){toast('success','Location set');await fetchStatus();}});}
+    else marker.setLatLng([lat,lng]);
+    if(!azimuthLine) azimuthLine=L.polyline([[lat,lng],[lat,lng]],{color:'#3b82f6',weight:3,opacity:.9,dashArray:'6 6'}).addTo(map);
+    if(az!=null){const R=6371,bear=az*Math.PI/180,dlat=50/R,lat1=lat*Math.PI/180,lng1=lng*Math.PI/180;const lat2=Math.asin(Math.sin(lat1)*Math.cos(dlat)+Math.cos(lat1)*Math.sin(dlat)*Math.cos(bear));const lng2=lng1+Math.atan2(Math.sin(bear)*Math.sin(dlat)*Math.cos(lat1),Math.cos(dlat)-Math.sin(lat1)*Math.sin(lat2));azimuthLine.setLatLngs([[lat,lng],[lat2*180/Math.PI,lng2*180/Math.PI]]);}
   }
 }
+document.getElementById('loc-apply').addEventListener('click',lock(document.getElementById('loc-apply'),async()=>{const lat=parseFloat(document.getElementById('loc-lat').value),lng=parseFloat(document.getElementById('loc-lng').value);if(isNaN(lat)||isNaN(lng)){toast('error','Invalid');return;}const r=await post(API+'/location',{latitude:lat,longitude:lng});if(r.ok){toast('success','Location saved');clearDirty('loc-lat','loc-lng');await fetchStatus();}else toast('error','Failed');}));
+document.getElementById('poll-apply').addEventListener('click',lock(document.getElementById('poll-apply'),async()=>{const ms=parseInt(document.getElementById('poll-ms').value);if(isNaN(ms)||ms<200) return;await post(API+'/refresh-interval',{ms});_poll_ms=ms;toast('success',ms+'ms');clearDirty('poll-ms');if(_poll_timer) clearTimeout(_poll_timer);_poll_timer=setTimeout(fetchStatus,_poll_ms);}));
 
-document.getElementById('loc-apply').addEventListener('click',lock(document.getElementById('loc-apply'),async()=>{
-  const lat=parseFloat(document.getElementById('loc-lat').value);
-  const lng=parseFloat(document.getElementById('loc-lng').value);
-  if(isNaN(lat)||isNaN(lng)){toast('error','Enter valid lat/lng');return;}
-  const r=await post(API+'/location',{latitude:lat,longitude:lng});
-  if(r.ok){toast('success','Location saved');clearDirty('loc-lat','loc-lng');await fetchStatus();}
-  else toast('error','Failed to save location');
-}));
-
-document.getElementById('poll-apply').addEventListener('click',lock(document.getElementById('poll-apply'),async()=>{
-  const ms=parseInt(document.getElementById('poll-ms').value);
-  if(isNaN(ms)||ms<200) return;
-  await post(API+'/refresh-interval',{ms});
-  _poll_ms=ms;
-  toast('success','Poll rate: '+ms+'ms');
-  clearDirty('poll-ms');
-  if(_poll_timer) clearTimeout(_poll_timer);
-  _poll_timer = setTimeout(fetchStatus, _poll_ms);
-}));
-
-/* ─── Satellite Tracking ────────────────────────────── */
-let _satellites=[];
-let _satellitesLoading=false;
-let _selectedNorad=null;
-
-document.getElementById('tle-fetch-btn').addEventListener('click',lock(document.getElementById('tle-fetch-btn'),async()=>{
-  const btn=document.getElementById('tle-fetch-btn');
-  btn.textContent='Fetching...';
-  try{
-    const r=await post(API+'/tracking/fetch',{force:true});
-    if(r.ok){
-      toast('success',r.count+' satellites loaded');
-      await refreshSatellites();
-      await fetchStatus();
-    }else toast('error','TLE fetch failed: '+(r.error||''));
-  }catch(e){toast('error','Fetch error');}
-  finally{btn.textContent='Fetch';}
-}));
-
-async function refreshSatellites(){
-  if(_satellitesLoading) return;
-  _satellitesLoading=true;
-  try{
-    const r=await post(API+'/tracking/satellites',{});
-    if(r.ok&&r.satellites) _satellites=r.satellites;
-    else _satellites=[];
-  }catch(e){_satellites=[];}
-  _satellitesLoading=false;
-  renderSatelliteList('');
-}
-
+/* ═══ Satellite Tracking ═══ */
+let _satellites=[],_satellitesLoading=false,_selectedNorad=null;
+document.getElementById('tle-fetch-btn').addEventListener('click',lock(document.getElementById('tle-fetch-btn'),async()=>{const btn=document.getElementById('tle-fetch-btn');btn.textContent='...';try{const r=await post(API+'/tracking/fetch',{force:true});if(r.ok){toast('success',r.count+' sats');await refreshSatellites();await fetchStatus();}else toast('error','Failed');}catch(e){toast('error','Error');}finally{btn.textContent='Fetch';}}));
+async function refreshSatellites(){if(_satellitesLoading) return;_satellitesLoading=true;try{const r=await post(API+'/tracking/satellites',{});if(r.ok&&r.satellites) _satellites=r.satellites;else _satellites=[];}catch(e){_satellites=[];}_satellitesLoading=false;renderSatelliteList('');}
 function renderSatelliteList(filter){
-  const list=document.getElementById('sat-list');
-  const q=(filter||'').toLowerCase().trim();
+  const list=document.getElementById('sat-list');const q=(filter||'').toLowerCase().trim();
   let sats=q?_satellites.filter(s=>s.name.toLowerCase().includes(q)):_satellites;
-  if(!sats.length){
-    list.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted);font-size:.72rem">'+
-      (q?'No matching satellites':'Click Fetch to load satellites')+'</div>';
-    return;
-  }
+  if(!sats.length){list.innerHTML='<div style="padding:10px;text-align:center;color:var(--dim);font-size:.65rem">'+(q?'No match':'Click Fetch')+'</div>';return;}
   list.innerHTML=sats.map(s=>{
     const sel=_selectedNorad===s.norad_id?' selected':'';
-    return '<div class="sat-item'+sel+'" data-norad="'+s.norad_id+'" style="display:flex;align-items:center;gap:8px;padding:10px 12px;min-height:48px;border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--fast);-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none">'+
-      '<span style="flex:1;font-size:.82rem;font-weight:600">'+esc(s.name)+'</span>'+
-      '<span style="font-size:.65rem;color:var(--muted)">#'+s.norad_id+'</span>'+
-      '</div>';
+    return '<div class="sat-item'+sel+'" data-norad="'+s.norad_id+'" style="display:flex;align-items:center;gap:6px;padding:8px 10px;min-height:42px;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none"><span style="flex:1;font-size:.78rem;font-weight:600">'+esc(s.name)+'</span><span style="font-size:.58rem;color:var(--dim)">#'+s.norad_id+'</span></div>';
   }).join('');
-  list.querySelectorAll('.sat-item').forEach(el=>{
-    el.addEventListener('click',function(){
-      _selectedNorad=parseInt(this.dataset.norad);
-      renderSatelliteList(document.getElementById('sat-search').value);
-      const btn=document.getElementById('track-start-btn');
-      btn.disabled=false;
-      btn.textContent='Track '+(this.querySelector('span')||{}).textContent||'Satellite';
-      document.getElementById('track-active-status').classList.add('hidden');
-    });
+  list.querySelectorAll('.sat-item').forEach(el=>{el.addEventListener('click',function(){_selectedNorad=parseInt(this.dataset.norad);renderSatelliteList(document.getElementById('sat-search').value);const btn=document.getElementById('track-start-btn');btn.disabled=false;btn.textContent='Track '+(this.querySelector('span')||{}).textContent||'Satellite';document.getElementById('track-active-status').classList.add('hidden');});});
+}
+document.getElementById('sat-search').addEventListener('input',function(){renderSatelliteList(this.value);});
+document.getElementById('track-start-btn').addEventListener('click',lock(document.getElementById('track-start-btn'),async()=>{if(!_selectedNorad) return;const r=await post(API+'/tracking/start',{norad_id:_selectedNorad});if(r.ok){toast('success','Tracking '+r.satellite);await fetchStatus();}else toast('error',r.error||'Failed');}));
+document.getElementById('track-stop-btn').addEventListener('click',lock(document.getElementById('track-stop-btn'),async()=>{const r=await post(API+'/tracking/stop');if(r.ok){toast('success','Stopped');await fetchStatus();}else toast('error','Failed');}));
+
+function updateTleInfo(tle){
+  if(!tle) return;const tleAge=document.getElementById('tle-age'),info=document.getElementById('tle-source-info');
+  const sources=tle.sources||[];
+  if(sources.length){const src=sources[0];if(tleAge){tleAge.textContent=src.age_display||'never';tleAge.className='tag '+(src.stale?'tag-r':src.downloaded?'tag-g':'tag-m');}const srcLabel=(src.url||'').split('/').filter(Boolean).pop()||'unknown';if(info) info.textContent=srcLabel+' ('+tle.satellite_count+')';}
+  else{if(tleAge){tleAge.textContent=tle.downloaded?'cached':'no data';tleAge.className='tag tag-m';}if(info) info.textContent=tle.downloaded?tle.satellite_count+' sats':'no source';}
+}
+const _trackRender=render;let _extraTimer=null,_satTrackLine=null,_satMarker=null,_lastExtraData=null,_trackingActive=false;
+function clearSatMap(){if(_satTrackLine){_satTrackLine.remove();_satTrackLine=null;}if(_satMarker){_satMarker.remove();_satMarker=null;}}
+let _selectedPass=null,_passesList=[],_cdTimer=null;
+function pad2(n){return n<10?'0'+n:n;}
+function updatePassCountdowns(){
+  const now=new Date().getTime();
+  document.querySelectorAll('.pass-cd').forEach(el=>{
+    const aos=new Date(el.dataset.aos).getTime(),los=new Date(el.dataset.los).getTime();
+    if(isNaN(aos)||isNaN(los)) return;
+    if(now<aos){
+      const diff=Math.floor((aos-now)/1000);
+      const h=Math.floor(diff/3600),m=Math.floor((diff%3600)/60),s=diff%60;
+      el.textContent='in '+(h>0?h+'h '+pad2(m)+'m':m+'m '+pad2(s)+'s');
+      el.className='tag tag-m pass-cd';
+    }else if(now>=aos&&now<=los){
+      const diff=Math.floor((los-now)/1000);
+      const m=Math.floor(diff/60),s=diff%60;
+      el.textContent='● ACTIVE ('+m+'m '+pad2(s)+'s)';
+      el.className='tag tag-g pass-cd';
+    }else{
+      el.textContent='Ended';
+      el.className='tag tag-m pass-cd';
+    }
   });
 }
-
-document.getElementById('sat-search').addEventListener('input',function(){
-  renderSatelliteList(this.value);
-});
-
-document.getElementById('track-start-btn').addEventListener('click',lock(document.getElementById('track-start-btn'),async()=>{
-  if(!_selectedNorad) return;
-  const r=await post(API+'/tracking/start',{norad_id:_selectedNorad});
-  if(r.ok){
-    toast('success','Tracking '+r.satellite);
-    await fetchStatus();
-  }else toast('error','Failed: '+(r.error||''));
-}));
-
-document.getElementById('track-stop-btn').addEventListener('click',lock(document.getElementById('track-stop-btn'),async()=>{
-  const r=await post(API+'/tracking/stop');
-  if(r.ok){
-    toast('success','Tracking stopped');
-    await fetchStatus();
-  }else toast('error','Stop failed');
-}));
-
-// Tracking UI update
-function updateTleInfo(tle){
-  if(!tle) return;
-  const tleAge=document.getElementById('tle-age');
-  const info=document.getElementById('tle-source-info');
-  const sources=tle.sources||[];
-  if(sources.length){
-    const src=sources[0];
-    if(tleAge) tleAge.textContent=src.age_display||'never';
-    if(tleAge) tleAge.className='tag '+(src.stale?'tag-red':src.downloaded?'tag-green':'tag-muted');
-    const srcLabel=(src.url||'').split('/').filter(Boolean).pop()||'unknown';
-    if(info) info.textContent=srcLabel+' ('+tle.satellite_count+' sats)';
-  }else{
-    if(tleAge) tleAge.textContent=tle.downloaded?'cached':'no data';
-    if(tleAge) tleAge.className='tag tag-muted';
-    if(info) info.textContent=tle.downloaded?tle.satellite_count+' satellites':'no TLE source';
-  }
-}
-
-const _trackRender=render;
-let _extraTimer=null;
-let _satTrackLine=null;
-let _satOrbitLine=null;
-let _satMarker=null;
-let _lastExtraData=null;
-let _trackingActive=false;
-
-function clearSatMap(){
-  if(_satTrackLine){_satTrackLine.remove();_satTrackLine=null;}
-  if(_satOrbitLine){_satOrbitLine.remove();_satOrbitLine=null;}
-  if(_satMarker){_satMarker.remove();_satMarker=null;}
-}
+if(!_cdTimer) _cdTimer=setInterval(updatePassCountdowns,1000);
 
 function renderPasses(passes){
-  const list=document.getElementById('track-passes-list');
-  const area=document.getElementById('track-passes-area');
-  if(!passes||!passes.length){
-    area.classList.add('hidden');
-    return;
-  }
+  _passesList=passes||[];
+  const list=document.getElementById('track-passes-list'),area=document.getElementById('track-passes-area');
+  if(!_passesList.length){area.classList.add('hidden');return;}
   area.classList.remove('hidden');
-  list.innerHTML=passes.map(p=>{
-    const aosDate=new Date(p.aos);
-    const losDate=new Date(p.los);
+
+  if(!_selectedPass&&_passesList.length) _selectedPass=_passesList[0];
+  else if(_selectedPass){
+    const match=_passesList.find(p=>p.id===_selectedPass.id);
+    if(match) _selectedPass=match;
+  }
+
+  list.innerHTML=_passesList.map(p=>{
+    const aosDate=new Date(p.aos),losDate=new Date(p.los);
     const dateStr=aosDate.toLocaleDateString(undefined,{month:'short',day:'numeric'});
     const aosStr=aosDate.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
     const losStr=losDate.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
-    return '<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;min-height:44px;border-bottom:1px solid var(--border);font-size:.72rem">'+
-      '<span style="font-weight:600;min-width:55px;color:var(--text)">'+dateStr+'</span>'+
-      '<span style="min-width:80px;color:var(--text-sec)">'+aosStr+' → '+losStr+'</span>'+
-      '<span style="min-width:50px;color:var(--accent);font-weight:600">'+p.max_el+'°</span>'+
-      '<span style="color:var(--muted);font-size:.65rem">'+p.duration_min+'m</span>'+
-      '</div>';
+    const isSel=_selectedPass&&_selectedPass.id===p.id?' selected':'';
+    return '<div class="pass-item'+isSel+'" data-pass-id="'+p.id+'" style="display:flex;align-items:center;gap:4px;padding:6px 8px;min-height:36px;border-bottom:1px solid var(--border);font-size:.65rem;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none"><span style="font-weight:700;min-width:42px;color:var(--text);pointer-events:none">'+dateStr+'</span><span style="min-width:70px;color:var(--sub);font-size:.62rem;pointer-events:none">'+aosStr+'→'+losStr+'</span><span style="min-width:35px;color:var(--accent);font-weight:700;pointer-events:none">'+p.max_el+'°</span><span class="tag tag-m pass-cd" data-aos="'+p.aos+'" data-los="'+p.los+'" style="margin-left:auto;font-family:\'JetBrains Mono\',monospace;font-size:.58rem;pointer-events:none">--</span></div>';
   }).join('');
-}
 
-function fetchExtraData(){
-  if(!_trackingActive){
-    clearSatMap();
-    return;
+  list.querySelectorAll('.pass-item').forEach(el=>{
+    el.onclick=function(e){
+      e.preventDefault();
+      const pid=parseInt(this.getAttribute('data-pass-id'));
+      const found=_passesList.find(p=>p.id===pid);
+      if(found){
+        _selectedPass=found;
+        renderPasses(_passesList);
+        if(S) drawPolar(S);
+        if(_selectedPass.ground_track&&_selectedPass.ground_track.length){
+          const segs=splitGroundTrack(_selectedPass.ground_track);
+          if(!_satTrackLine&&map) _satTrackLine=L.polyline([],{color:'#22c55e',weight:2,opacity:.7,dashArray:'4 8'}).addTo(map);
+          if(_satTrackLine) _satTrackLine.setLatLngs(segs);
+        }
+      }
+    };
+  });
+  updatePassCountdowns();
+}
+function splitGroundTrack(pts){
+  if(!pts||!pts.length) return [];
+  const segs=[[]];
+  for(let i=0;i<pts.length;i++){
+    if(i>0){
+      const dLng=Math.abs(pts[i][1]-pts[i-1][1]);
+      const dLat=Math.abs(pts[i][0]-pts[i-1][0]);
+      if(dLng>90||dLat>40) segs.push([]);
+    }
+    segs[segs.length-1].push(pts[i]);
   }
+  return segs.filter(s=>s.length>0);
+}
+function fetchExtraData(){
+  if(!_trackingActive){clearSatMap();return;}
   fetch(API+'/tracking/status?extra=1').then(r=>r.json()).then(data=>{
     _lastExtraData=data;
-    if(data.ground_track&&data.ground_track.length){
-      if(!_satTrackLine&&map){
-        _satTrackLine=L.polyline([],{color:'#22c55e',weight:2,opacity:0.7,dashArray:'4 8'}).addTo(map);
-      }
-      if(_satTrackLine){
-        _satTrackLine.setLatLngs(data.ground_track);
-      }
-    }else if(!_trackingActive){
-      clearSatMap();
-    }
-    if(data.orbit&&data.orbit.length){
-      if(!_satOrbitLine&&map){
-        _satOrbitLine=L.polyline([],{color:'rgba(34,197,94,0.35)',weight:1.5,opacity:0.5}).addTo(map);
-      }
-      if(_satOrbitLine){
-        _satOrbitLine.setLatLngs(data.orbit);
-      }
-    }else if(_satOrbitLine){
-      _satOrbitLine.remove();
-      _satOrbitLine=null;
-    }
     if(data.passes) renderPasses(data.passes);
-  }).catch(()=>{if(!_trackingActive)clearSatMap();});
+    const activeGround=(_selectedPass&&_selectedPass.ground_track&&_selectedPass.ground_track.length)?_selectedPass.ground_track:data.ground_track;
+    if(activeGround&&activeGround.length){
+      const segs=splitGroundTrack(activeGround);
+      if(!_satTrackLine&&map) _satTrackLine=L.polyline([],{color:'#22c55e',weight:2,opacity:.7,dashArray:'4 8'}).addTo(map);
+      if(_satTrackLine) _satTrackLine.setLatLngs(segs);
+      const cur=activeGround[0];
+      if(cur&&map){if(!_satMarker) _satMarker=L.circleMarker([cur[0],cur[1]],{radius:5,color:'#22c55e',fillColor:'#22c55e',fillOpacity:1,weight:2}).addTo(map);else _satMarker.setLatLng([cur[0],cur[1]]);}
+    }else clearSatMap();
+    if(S) drawPolar(S);
+  }).catch(()=>clearSatMap());
 }
-
 render=function(s){
   try{_trackRender(s);}catch(e){}
-
-  const track=s.tracking||{};
-  const tle=s.tle_sources||{};
-  const active=s.tracking_active||false;
-  const target=s.tracking_target||null;
-
-  // Tracking tag
+  const track=s.tracking||{},tle=s.tle_sources||{},active=s.tracking_active||false,target=s.tracking_target||null;
   const tag=document.getElementById('track-status-tag');
+  if(active&&target){tag.className='tag tag-g';tag.textContent='Tracking';}else if(active){tag.className='tag tag-y';tag.textContent='Active';}else{tag.className='tag tag-m';tag.textContent='Idle';}
+  const tleAge=document.getElementById('tle-age'),sources=tle.sources||[];
+  if(sources.length){const src=sources[0];tleAge.textContent=src.age_display||'never';tleAge.className='tag '+(src.stale?'tag-r':src.downloaded?'tag-g':'tag-m');document.getElementById('tle-source-info').textContent=((src.url||'').split('/').filter(Boolean).pop()||'?')+' ('+tle.satellite_count+')';}
+  else{tleAge.textContent=tle.downloaded?'cached':'no data';tleAge.className='tag tag-m';document.getElementById('tle-source-info').textContent=tle.downloaded?tle.satellite_count+' sats':'no source';}
+  _trackingActive=!!active;const trkBadge=document.getElementById('badge-tracking');
+  if(active){trkBadge.className='pill warn';trkBadge.innerHTML='<span class="dt"></span> '+(target?target.name:'Tracking');trkBadge.classList.remove('hidden');}else trkBadge.className='pill off hidden';
+  const statusDiv=document.getElementById('track-active-status'),startBtn=document.getElementById('track-start-btn'),stopBtn=document.getElementById('track-stop-btn');
   if(active&&target){
-    tag.className='tag tag-green';
-    tag.textContent='Tracking';
-  }else if(active){
-    tag.className='tag tag-yellow';
-    tag.textContent='Active';
-  }else{
-    tag.className='tag tag-muted';
-    tag.textContent='Idle';
-  }
-
-  // TLE age / source info
-  const tleAge=document.getElementById('tle-age');
-  const sources=tle.sources||[];
-  if(sources.length){
-    const src=sources[0];
-    tleAge.textContent=src.age_display||'never';
-    tleAge.className='tag '+(src.stale?'tag-red':src.downloaded?'tag-green':'tag-muted');
-    const srcLabel = (src.url||'').split('/').filter(Boolean).pop() || 'unknown';
-    document.getElementById('tle-source-info').textContent=srcLabel+' ('+tle.satellite_count+' sats)';
-  }else{
-    tleAge.textContent=tle.downloaded?'cached':'no data';
-    tleAge.className='tag tag-muted';
-    document.getElementById('tle-source-info').textContent=tle.downloaded?tle.satellite_count+' satellites':'no TLE source';
-  }
-
-  // Tracking badge
-  _trackingActive=!!active;
-  const trkBadge=document.getElementById('badge-tracking');
-  if(active){
-    trkBadge.className='badge blocked';
-    trkBadge.innerHTML='<span class="dot"></span> '+(target?target.name:'Tracking');
-    trkBadge.classList.remove('hidden');
-  }else{
-    trkBadge.className='badge off hidden';
-  }
-
-  // Tracking status panel
-  const statusDiv=document.getElementById('track-active-status');
-  const startBtn=document.getElementById('track-start-btn');
-  const stopBtn=document.getElementById('track-stop-btn');
-  if(active&&target){
-    startBtn.classList.add('hidden');
-    stopBtn.classList.remove('hidden');
-    statusDiv.classList.remove('hidden');
+    startBtn.classList.add('hidden');stopBtn.classList.remove('hidden');statusDiv.classList.remove('hidden');
     document.getElementById('track-target-name').textContent=target.name;
-    const az=track.computed_az!=null?track.computed_az.toFixed(1):'---';
-    const el=track.computed_el!=null?track.computed_el.toFixed(1):'---';
-    document.getElementById('track-target-az').textContent=az+'°';
-    document.getElementById('track-target-el').textContent=el+'°';
-    const bh=document.getElementById('track-below-horizon');
-    bh.classList.toggle('hidden',!track.below_horizon);
-
-    // Update satellite marker position on every poll
-    if(track.sat_lat!=null&&track.sat_lng!=null&&map){
-      if(!_satMarker){
-        var satIcon=L.divIcon({
-          className:'',
-          html:'<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6"/><path d="M12 22l4-4-4-4 4-4-4-4"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/></svg>',
-          iconSize:[24,24],
-          iconAnchor:[12,12]
-        });
-        _satMarker=L.marker([track.sat_lat,track.sat_lng],{icon:satIcon}).addTo(map);
-      }else{
-        _satMarker.setLatLng([track.sat_lat,track.sat_lng]);
-      }
-    }
-
-    if(!_extraTimer){
-      fetchExtraData();
-      _extraTimer=setInterval(fetchExtraData,30000);
-    }
+    document.getElementById('track-target-az').textContent=(track.computed_az!=null?track.computed_az.toFixed(1):'---')+'°';
+    document.getElementById('track-target-el').textContent=(track.computed_el!=null?track.computed_el.toFixed(1):'---')+'°';
+    document.getElementById('track-below-horizon').classList.toggle('hidden',!track.below_horizon);
+    if(!_extraTimer){fetchExtraData();_extraTimer=setInterval(fetchExtraData,30000);}
   }else{
-    startBtn.classList.remove('hidden');
-    stopBtn.classList.add('hidden');
-    statusDiv.classList.add('hidden');
-    document.getElementById('track-passes-area').classList.add('hidden');
-    if(!_selectedNorad){
-      startBtn.disabled=true;
-      startBtn.textContent='Select a satellite';
-    }else{
-      startBtn.disabled=false;
-      const sat=_satellites.find(s=>s.norad_id===_selectedNorad);
-      startBtn.textContent='Track '+(sat?sat.name:'Satellite');
-    }
-    if(_extraTimer){clearInterval(_extraTimer);_extraTimer=null;}
-    clearSatMap();
+    startBtn.classList.remove('hidden');stopBtn.classList.add('hidden');statusDiv.classList.add('hidden');document.getElementById('track-passes-area').classList.add('hidden');
+    if(!_selectedNorad){startBtn.disabled=true;startBtn.textContent='Select a satellite';}
+    else{startBtn.disabled=false;const sat=_satellites.find(s=>s.norad_id===_selectedNorad);startBtn.textContent='Track '+(sat?sat.name:'Satellite');}
+    if(_extraTimer){clearInterval(_extraTimer);_extraTimer=null;}clearSatMap();
   }
 };
+window.addEventListener('resize',()=>{if(S&&S.az!=null) drawPolar(S);});
 </script>
 </body>
 </html>

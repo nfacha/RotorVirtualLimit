@@ -393,19 +393,6 @@ def main():
     else:
         log.info("No TLE cache — use Fetch button in the UI to download")
 
-    # Resume tracking if limits indicate it was active before restart
-    if limits.tracking_active and limits.tracking_target:
-        norad_id = limits.tracking_target.get("norad_id")
-        if norad_id is not None:
-            sat = tracker.find_satellite(norad_id)
-            if sat:
-                tracker.start(sat)
-                log.info("Auto-resumed tracking %s from saved state", sat.name)
-            else:
-                limits.set_tracking_active(False)
-                limits.set_tracking_target(None)
-                log.info("Cleared stale tracking state — satellite %d not in cache", norad_id)
-
     start_http_server(limits, static_dir, args.http_port, tracker=tracker)
 
     run_proxy(limits)

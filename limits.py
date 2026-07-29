@@ -73,8 +73,8 @@ class RotorLimits:
             self.el_offset = d.get("el_offset", 0.0)
             self.offset_enabled = d.get("offset_enabled", True)
             self.tracking_sources = d.get("tracking_sources", self.tracking_sources)
-            self.tracking_target = d.get("tracking_target")
-            self.tracking_active = d.get("tracking_active", False)
+            # tracking_target and tracking_active are intentionally not
+            # restored from disk — tracking always starts disabled on restart
             self.park_az = d.get("park_az")
             self.park_el = d.get("park_el")
             self.latitude = d.get("latitude")
@@ -114,8 +114,6 @@ class RotorLimits:
                 "reference_az": self.cable_guard_reference_az,
             },
             "tracking_sources": self.tracking_sources,
-            "tracking_target": self.tracking_target,
-            "tracking_active": self.tracking_active,
         }
         with open(self.config_path, "w") as f:
             json.dump(d, f, indent=2)
