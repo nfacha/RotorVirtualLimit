@@ -6,3 +6,5 @@ __pycache__/
 test_limits.json
 virtual_limits.json
 profiles/
+log_proxy.txt
+tle_cache.json

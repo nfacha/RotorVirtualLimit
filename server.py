@@ -11,6 +11,7 @@ log = logging.getLogger("server")
 
 _api_limits = None
 _static_dir = None
+_tracker = None
 
 
 class APIHandler(BaseHTTPRequestHandler):
@@ -41,8 +42,11 @@ class APIHandler(BaseHTTPRequestHandler):
 
         if path == "/api/status":
             self._refresh_position()
-            self._send_json(_api_limits.get_status())
-            return
+            status = _api_limits.get_status()
+            if _tracker:
+                status["tracking"] = _tracker.get_tracking_status(include_extra=False)
+                status["tle_sources"] = _tracker.get_fetch_status()
+            return self._send_json(status)
 
         if path == "/api/rotor/park-position":
             self._send_json({
@@ -58,6 +62,19 @@ class APIHandler(BaseHTTPRequestHandler):
                 "latitude": _api_limits.latitude,
                 "longitude": _api_limits.longitude,
             })
+            return
+
+        if path == "/api/tracking/status":
+            from urllib.parse import parse_qs
+            qs = parse_qs(urlparse(self.path).query)
+            extra = qs.get("extra", [""])[0] in ("1", "true")
+            status = _tracker.get_tracking_status(include_extra=extra) if _tracker else {"active": False, "satellite": None}
+            self._send_json(status)
+            return
+
+        if path == "/api/tracking/sources":
+            status = _tracker.get_fetch_status() if _tracker else {"sources": [], "satellite_count": 0}
+            self._send_json(status)
             return
 
         self.send_error(404)
@@ -115,6 +132,11 @@ class APIHandler(BaseHTTPRequestHandler):
             "/api/offset/clear": lambda: self._offset_clear(),
             "/api/offset/enable": lambda: self._offset_enable(),
             "/api/offset/disable": lambda: self._offset_disable(),
+            "/api/tracking/fetch": lambda: self._tracking_fetch(data),
+            "/api/tracking/start": lambda: self._tracking_start(data),
+            "/api/tracking/stop": lambda: self._tracking_stop(),
+            "/api/tracking/satellites": lambda: self._tracking_satellites(data),
+            "/api/tracking/passes": lambda: self._tracking_preview_passes(data),
         }
 
         handler = routes.get(path)
@@ -407,6 +429,77 @@ class APIHandler(BaseHTTPRequestHandler):
         ok = _api_limits.delete_profile(name)
         self._send_json({"ok": ok})
 
+    def _tracking_fetch(self, data):
+        if not _tracker:
+            self._send_json({"ok": False, "error": "tracker not available"})
+            return
+        force = data.get("force", True)
+        count = _tracker.fetch(force=force)
+        self._send_json({"ok": True, "count": count})
+
+    def _tracking_start(self, data):
+        if not _tracker:
+            self._send_json({"ok": False, "error": "tracker not available"})
+            return
+        norad_id = data.get("norad_id")
+        if norad_id is None:
+            self._send_json({"ok": False, "error": "norad_id required"})
+            return
+        sat = _tracker.find_satellite(norad_id)
+        if not sat:
+            self._send_json({"ok": False, "error": "satellite not found"})
+            return
+        if _api_limits.latitude is None or _api_limits.longitude is None:
+            self._send_json({"ok": False, "error": "set station location first"})
+            return
+        _tracker.start(sat)
+        _api_limits.set_tracking_target(sat.to_dict())
+        _api_limits.set_tracking_active(True)
+        self._send_json({"ok": True, "satellite": sat.name})
+
+    def _tracking_stop(self):
+        if _tracker:
+            _tracker.stop()
+            _api_limits.set_tracking_target(None)
+            _api_limits.set_tracking_active(False)
+        self._send_json({"ok": True})
+
+    def _tracking_satellites(self, data):
+        if not _tracker:
+            self._send_json({"ok": False, "error": "tracker not available"})
+            return
+        search = data.get("search", "")
+        sats = _tracker.get_satellites(search=search)
+        self._send_json({"ok": True, "satellites": sats})
+
+    def _tracking_preview_passes(self, data):
+        if not _tracker:
+            self._send_json({"ok": False, "error": "tracker not available"})
+            return
+        norad_id = data.get("norad_id")
+        if norad_id is None:
+            self._send_json({"ok": False, "error": "norad_id required"})
+            return
+        sat = _tracker.find_satellite(norad_id)
+        if not sat:
+            self._send_json({"ok": False, "error": "satellite not found"})
+            return
+        obs_lat = _api_limits.latitude
+        obs_lon = _api_limits.longitude
+        if obs_lat is None or obs_lon is None:
+            self._send_json({"ok": False, "error": "set station location first"})
+            return
+        passes = _tracker.compute_upcoming_passes(sat, obs_lat, obs_lon)
+        sky_track = _tracker.compute_sky_track(sat, obs_lat, obs_lon)
+        ground_track = _tracker.compute_ground_track(sat)
+        self._send_json({
+            "ok": True,
+            "satellite": sat.name,
+            "passes": passes,
+            "sky_track": sky_track,
+            "ground_track": ground_track
+        })
+
     def _serve_static(self, name):
         for base in (_static_dir, os.path.join(os.getcwd(), "static")):
             path = os.path.join(base, name)
@@ -422,10 +515,11 @@ class APIHandler(BaseHTTPRequestHandler):
         self.send_error(404, f"static/{name} not found")
 
 
-def start_http_server(limits, static_dir: str, port: int = 8080):
-    global _api_limits, _static_dir
+def start_http_server(limits, static_dir: str, port: int = 8080, tracker=None):
+    global _api_limits, _static_dir, _tracker
     _api_limits = limits
     _static_dir = static_dir
+    _tracker = tracker
 
     server = HTTPServer(("0.0.0.0", port), APIHandler)
     print(f"  Web UI    -> http://localhost:{port}")

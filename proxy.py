@@ -6,8 +6,11 @@ import socket
 import threading
 import time
 
+import os
+
 from limits import RotorLimits
 from server import start_http_server
+from tracker import SatelliteTracker
 
 log = logging.getLogger("proxy")
 logging.basicConfig(
@@ -383,7 +386,14 @@ def main():
         limits.set_cable_guard_enabled(True)
 
     static_dir = os.path.join(os.path.dirname(__file__), "static")
-    start_http_server(limits, static_dir, args.http_port)
+    config_dir = os.path.dirname(os.path.abspath(args.config))
+    tracker = SatelliteTracker(limits, config_dir)
+    if tracker.satellites:
+        log.info("TLE cache loaded: %d satellites", len(tracker.satellites))
+    else:
+        log.info("No TLE cache — use Fetch button in the UI to download")
+
+    start_http_server(limits, static_dir, args.http_port, tracker=tracker)
 
     run_proxy(limits)
 
