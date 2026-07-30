@@ -84,8 +84,18 @@ body{
 .pv-u{font-size:.6rem;color:var(--dim)}
 .off-pill{font-size:.55rem;font-weight:700;color:var(--yellow);background:var(--yellow2);border:1px solid var(--yellowB);padding:0 5px;border-radius:99px;margin-left:1px}
 
+.help-txt{font-size:.58rem;color:var(--dim);margin-top:2px;line-height:1.2;font-weight:400}
+
 /* ═══ MAIN ═══ */
-.mx{max-width:960px;margin:0 auto;padding:8px 10px calc(8px + var(--sb))}
+.mx{width:100%;max-width:100%;padding:8px 12px calc(8px + var(--sb))}
+.app-layout{display:flex;flex-direction:column;gap:8px}
+@media(min-width:1024px){
+  .app-layout{display:grid;grid-template-columns:400px 1fr;gap:10px;align-items:start}
+  .layout-left,.layout-right{display:flex;flex-direction:column;gap:8px}
+}
+@media(min-width:1440px){
+  .app-layout{grid-template-columns:440px 1fr;gap:12px}
+}
 
 /* ═══ DASHBOARD ROW — gauges + control side by side ═══ */
 .dash{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
@@ -344,20 +354,22 @@ footer a{color:var(--accent);text-decoration:none;font-weight:600}
   </div>
   <div class="hdr-pos">
     <div class="pv">
+  <div class="hdr-pos">
+    <div class="pv" title="Azimuth: Horizontal compass angle (0° North, 90° East, 180° South, 270° West)">
       <span class="pv-l">AZ</span>
       <span class="pv-n" id="v-az">---</span><span class="pv-u">°</span>
       <span class="off-pill hidden" id="az-offset-badge"></span>
     </div>
-    <div class="pv">
+    <div class="pv" title="Elevation: Vertical angle above horizon (0° Horizon, 90° Zenith Directly Overhead)">
       <span class="pv-l">EL</span>
       <span class="pv-n" id="v-el">---</span><span class="pv-u">°</span>
       <span class="off-pill hidden" id="el-offset-badge"></span>
     </div>
     <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-      <span class="info-strip" style="padding:0">
+      <span class="info-strip" style="padding:0" title="Rotctld Hamlib Server Port (Emulation Port)">
         <span class="is-item">Port <span class="is-val" id="footer-port">4534</span></span>
       </span>
-      <label class="tg dng" id="block-toggle-wrap" style="margin:0">
+      <label class="tg dng" id="block-toggle-wrap" style="margin:0" title="Emergency Safety Switch: Blocks all incoming rotor movement commands">
         <span class="tl">Block</span>
         <input type="checkbox" id="block-toggle">
         <span class="sl"></span>
@@ -368,307 +380,332 @@ footer a{color:var(--accent);text-decoration:none;font-weight:600}
 
 <div class="mx">
 
-<!-- ═══ GAUGES ROW ═══ -->
-<div class="dash">
-  <div class="g-panel">
-    <svg width="100" height="56" viewBox="0 0 100 56" id="az-gauge">
-      <path d="M 6 50 A 44 44 0 0 1 94 50" fill="none" stroke="var(--s2)" stroke-width="5" stroke-linecap="round"/>
-      <path id="az-lim-arc" d="" fill="none" stroke="rgba(34,197,94,0.25)" stroke-width="8" stroke-linecap="round" class="hidden"/>
-      <line id="az-min-line" x1="0" y1="0" x2="0" y2="0" stroke="var(--red)" stroke-width="2" stroke-linecap="round" class="hidden"/>
-      <line id="az-max-line" x1="0" y1="0" x2="0" y2="0" stroke="var(--red)" stroke-width="2" stroke-linecap="round" class="hidden"/>
-      <path id="az-arc" d="M 6 50 A 44 44 0 0 1 94 50" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-dasharray="0 140"/>
-      <text x="4" y="55" fill="var(--dim)" font-size="5.5" text-anchor="middle" font-family="JetBrains Mono">0</text>
-      <text x="50" y="6" fill="var(--dim)" font-size="5.5" text-anchor="middle" font-family="JetBrains Mono">180</text>
-      <text x="96" y="55" fill="var(--dim)" font-size="5.5" text-anchor="middle" font-family="JetBrains Mono">360</text>
-      <circle id="az-dot" cx="6" cy="50" r="4" fill="var(--accent)"/>
-    </svg>
-    <div class="g-info">
-      <div class="g-top"><span class="g-big" id="g-az-val">---</span><span class="g-unit">°</span></div>
-      <div class="g-sub">AZIMUTH <span id="g-az-lim" style="color:var(--green)"></span></div>
-    </div>
-  </div>
-  <div class="g-panel">
-    <svg width="30" height="56" viewBox="0 0 30 56" id="el-gauge">
-      <rect x="10" y="4" width="7" height="48" rx="3.5" fill="var(--s2)"/>
-      <rect id="el-lim-rect" x="7" y="4" width="13" height="48" rx="3" fill="rgba(34,197,94,0.12)" stroke="var(--green)" stroke-width=".7" class="hidden"/>
-      <line id="el-min-line" x1="5" y1="52" x2="22" y2="52" stroke="var(--red)" stroke-width="2" stroke-linecap="round" class="hidden"/>
-      <line id="el-max-line" x1="5" y1="4" x2="22" y2="4" stroke="var(--red)" stroke-width="2" stroke-linecap="round" class="hidden"/>
-      <rect id="el-fill" x="10" y="52" width="7" height="0" rx="3.5" fill="var(--yellow)"/>
-      <text x="24" y="55" fill="var(--dim)" font-size="5" font-family="JetBrains Mono">0</text>
-      <text x="24" y="8" fill="var(--dim)" font-size="5" font-family="JetBrains Mono">90</text>
-      <circle id="el-dot" cx="13.5" cy="52" r="3" fill="var(--yellow)"/>
-    </svg>
-    <div class="g-info">
-      <div class="g-top"><span class="g-big" id="g-el-val">---</span><span class="g-unit">°</span></div>
-      <div class="g-sub">ELEVATION <span id="g-el-lim" style="color:var(--green)"></span></div>
-    </div>
-  </div>
-</div>
+<div class="app-layout">
 
-<!-- ═══ MANUAL CONTROL ═══ -->
-<div class="ctrl">
-  <div class="dpad">
-    <button class="db u" data-dir="2">&#9650;</button>
-    <button class="db l" data-dir="8">&#9664;</button>
-    <button class="db s st" data-dir="stop">&#9632;</button>
-    <button class="db r" data-dir="16">&#9654;</button>
-    <button class="db d" data-dir="4">&#9660;</button>
-  </div>
-  <div class="c-side">
-    <div class="sp-row">
-      <span class="lb">Step</span>
-      <input type="range" id="speed-slider" min="1" max="100" value="10">
-      <span class="vl" id="speed-val">10°</span>
-    </div>
-    <div class="a-row">
-      <input type="number" id="goto-az" step="0.1" min="0" max="360" placeholder="Az" class="ns">
-      <input type="number" id="goto-el" step="0.1" min="0" max="90" placeholder="El" class="ns">
-      <button class="btn bp btn-sm" id="goto-btn">Go To</button>
-      <span class="sep"></span>
-      <input type="number" id="park-az" step="0.1" min="0" max="360" placeholder="P.Az" class="ns">
-      <input type="number" id="park-el" step="0.1" min="0" max="90" placeholder="P.El" class="ns">
-      <button class="btn bt btn-sm" id="park-set-btn">Set</button>
-      <button class="btn bt btn-sm" id="park-btn">Park</button>
-    </div>
-  </div>
-</div>
+  <!-- LEFT COLUMN: Real-Time Controls, Gauges & Limits -->
+  <div class="layout-left">
 
-<!-- ═══ LIMITS + CABLE GUARD ═══ -->
-<div class="tc">
-  <div class="panel">
-    <div class="sh">
-      <span class="sh-t">Limits</span>
-      <div class="sh-r">
-        <label class="tg">
-          <input type="checkbox" id="limits-toggle">
-          <span class="sl"></span>
-          <span class="tl" id="limits-label">Off</span>
-        </label>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:stretch">
-      <div style="flex:1">
-        <div style="font-size:.55rem;color:var(--dim);font-weight:700;text-transform:uppercase">Az</div>
-        <div class="lim-bar" id="az-lim-bar">
-          <div class="lim-range" id="az-range" style="left:0;width:100%"></div>
-          <div class="lim-edge hidden" id="az-min-e"><span id="az-min-lbl">0°</span></div>
-          <div class="lim-edge hidden" id="az-max-e"><span id="az-max-lbl">360°</span></div>
-          <div class="lim-pos" id="az-pos" style="left:0%"></div>
+    <!-- ═══ GAUGES ROW ═══ -->
+    <div class="dash">
+      <div class="g-panel">
+        <svg width="100" height="56" viewBox="0 0 100 56" id="az-gauge">
+          <path d="M 6 50 A 44 44 0 0 1 94 50" fill="none" stroke="var(--s2)" stroke-width="5" stroke-linecap="round"/>
+          <path id="az-lim-arc" d="" fill="none" stroke="rgba(34,197,94,0.25)" stroke-width="8" stroke-linecap="round" class="hidden"/>
+          <line id="az-min-line" x1="0" y1="0" x2="0" y2="0" stroke="var(--red)" stroke-width="2" stroke-linecap="round" class="hidden"/>
+          <line id="az-max-line" x1="0" y1="0" x2="0" y2="0" stroke="var(--red)" stroke-width="2" stroke-linecap="round" class="hidden"/>
+          <path id="az-arc" d="M 6 50 A 44 44 0 0 1 94 50" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-dasharray="0 140"/>
+          <text x="4" y="55" fill="var(--dim)" font-size="5.5" text-anchor="middle" font-family="JetBrains Mono">0</text>
+          <text x="50" y="6" fill="var(--dim)" font-size="5.5" text-anchor="middle" font-family="JetBrains Mono">180</text>
+          <text x="96" y="55" fill="var(--dim)" font-size="5.5" text-anchor="middle" font-family="JetBrains Mono">360</text>
+          <circle id="az-dot" cx="6" cy="50" r="4" fill="var(--accent)"/>
+        </svg>
+        <div class="g-info">
+          <div class="g-top"><span class="g-big" id="g-az-val">---</span><span class="g-unit">°</span></div>
+          <div class="g-sub">AZIMUTH <span id="g-az-lim" style="color:var(--green)"></span></div>
+          <div class="help-txt">Horizontal heading (0°–360°)</div>
         </div>
-        <div style="font-size:.55rem;color:var(--dim);font-weight:700;text-transform:uppercase">El</div>
-        <div class="lim-bar" id="el-lim-bar">
-          <div class="lim-range" id="el-range" style="left:0;width:100%"></div>
-          <div class="lim-edge hidden" id="el-min-e"><span>0°</span></div>
-          <div class="lim-edge hidden" id="el-max-e"><span>90°</span></div>
-          <div class="lim-pos" id="el-pos" style="left:0%"></div>
+      </div>
+      <div class="g-panel">
+        <svg width="30" height="56" viewBox="0 0 30 56" id="el-gauge">
+          <rect x="10" y="4" width="7" height="48" rx="3.5" fill="var(--s2)"/>
+          <rect id="el-lim-rect" x="7" y="4" width="13" height="48" rx="3" fill="rgba(34,197,94,0.12)" stroke="var(--green)" stroke-width=".7" class="hidden"/>
+          <line id="el-min-line" x1="5" y1="52" x2="22" y2="52" stroke="var(--red)" stroke-width="2" stroke-linecap="round" class="hidden"/>
+          <line id="el-max-line" x1="5" y1="4" x2="22" y2="4" stroke="var(--red)" stroke-width="2" stroke-linecap="round" class="hidden"/>
+          <rect id="el-fill" x="10" y="52" width="7" height="0" rx="3.5" fill="var(--yellow)"/>
+          <text x="24" y="55" fill="var(--dim)" font-size="5" font-family="JetBrains Mono">0</text>
+          <text x="24" y="8" fill="var(--dim)" font-size="5" font-family="JetBrains Mono">90</text>
+          <circle id="el-dot" cx="13.5" cy="52" r="3" fill="var(--yellow)"/>
+        </svg>
+        <div class="g-info">
+          <div class="g-top"><span class="g-big" id="g-el-val">---</span><span class="g-unit">°</span></div>
+          <div class="g-sub">ELEVATION <span id="g-el-lim" style="color:var(--green)"></span></div>
+          <div class="help-txt">Vertical tilt (0°–90°)</div>
         </div>
       </div>
     </div>
-    <div class="cap-grid" style="margin-top:4px">
-      <button class="btn bt capture" data-side="left">Az↓</button>
-      <button class="btn bt capture" data-side="right">Az↑</button>
-      <button class="btn bt capture" data-side="down">El↓</button>
-      <button class="btn bt capture" data-side="up">El↑</button>
-    </div>
-    <div class="flex fw" style="gap:4px;margin-top:4px">
-      <div class="ir">
-        <label>Az</label>
-        <input type="number" id="man-az-min" step="0.1" min="0" max="360" placeholder="min" class="ns">
-        <input type="number" id="man-az-max" step="0.1" min="0" max="360" placeholder="max" class="ns">
-        <button class="btn bp btn-sm" id="apply-az">Set</button>
-      </div>
-      <div class="ir">
-        <label>El</label>
-        <input type="number" id="man-el-min" step="0.1" min="0" max="90" placeholder="min" class="ns">
-        <input type="number" id="man-el-max" step="0.1" min="0" max="90" placeholder="max" class="ns">
-        <button class="btn bp btn-sm" id="apply-el">Set</button>
-        <button class="btn bt btn-sm" id="clear-limits">×</button>
-      </div>
-    </div>
-  </div>
 
-  <div class="panel">
-    <div class="sh">
-      <span class="sh-t">Cable Guard</span>
-      <div class="sh-r">
-        <span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.85rem" id="cg-net">0.0°</span>
-        <label class="tg" style="margin-left:2px">
-          <input type="checkbox" id="cable-toggle">
-          <span class="sl"></span>
-          <span class="tl" id="cable-label">Off</span>
-        </label>
+    <!-- ═══ MANUAL CONTROL ═══ -->
+    <div class="ctrl">
+      <div class="dpad">
+        <button class="db u" data-dir="2" title="Elevate Up">&#9650;</button>
+        <button class="db l" data-dir="8" title="Rotate Left">&#9664;</button>
+        <button class="db s st" data-dir="stop" title="Stop Rotor">&#9632;</button>
+        <button class="db r" data-dir="16" title="Rotate Right">&#9654;</button>
+        <button class="db d" data-dir="4" title="Elevate Down">&#9660;</button>
       </div>
-    </div>
-    <div class="cg-wrap">
-      <div class="cg-track"></div>
-      <div class="cg-fill pos" id="cg-fill-p" style="width:0%;left:50%"></div>
-      <div class="cg-fill neg" id="cg-fill-n" style="width:0%;right:50%"></div>
-      <div class="cg-dot zero" style="left:50%"></div>
-      <div class="cg-dot" id="cg-dot" style="left:50%"></div>
-    </div>
-    <div class="cg-labels"><span id="cg-lo">-360°</span><span>0°</span><span id="cg-hi">+360°</span></div>
-    <div class="alert alert-warn hidden" id="cg-warn">⚠ Approaching limit</div>
-    <div class="alert alert-danger hidden" id="cg-trip">⛔ Guard tripped! Reset.</div>
-    <div class="flex fw" style="gap:4px;margin-top:4px">
-      <div class="ir">
-        <label>Max turns</label>
-        <input type="number" id="max-turns" step="0.1" min="0.1" max="10" value="1.0" class="ns">
-        <button class="btn bp btn-sm" id="apply-turns">Set</button>
-      </div>
-      <button class="btn bg btn-sm" id="reset-cg">Reset</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ OFFSET ═══ -->
-<div style="margin-top:6px">
-  <div class="dr" onclick="toggleDrawer('off-body',this)">
-    <span class="sh-t">Offset</span>
-    <div class="sh-r">
-      <label class="tg" onclick="event.stopPropagation()">
-        <input type="checkbox" id="off-toggle">
-        <span class="sl"></span>
-        <span class="tl" id="off-toggle-label">Off</span>
-      </label>
-      <span class="aw">&#9660;</span>
-    </div>
-  </div>
-  <div class="db-body" id="off-body">
-    <div style="font-size:.55rem;color:var(--dim);font-weight:700;margin-bottom:2px">AZ OFFSET</div>
-    <div class="off-row" data-axis="az">
-      <button class="os" data-step="-20">&minus;20</button>
-      <button class="os" data-step="-10">&minus;10</button>
-      <button class="os" data-step="-5">&minus;5</button>
-      <button class="os" data-step="-1">&minus;1</button>
-      <span class="ov" id="off-val-az">0°</span>
-      <button class="os" data-step="1">+1</button>
-      <button class="os" data-step="5">+5</button>
-      <button class="os" data-step="10">+10</button>
-      <button class="os" data-step="20">+20</button>
-      <button class="os oz" data-axis="az">0</button>
-    </div>
-    <div style="font-size:.55rem;color:var(--dim);font-weight:700;margin:4px 0 2px">EL OFFSET</div>
-    <div class="off-row" data-axis="el">
-      <button class="os" data-step="-20">&minus;20</button>
-      <button class="os" data-step="-10">&minus;10</button>
-      <button class="os" data-step="-5">&minus;5</button>
-      <button class="os" data-step="-1">&minus;1</button>
-      <span class="ov" id="off-val-el">0°</span>
-      <button class="os" data-step="1">+1</button>
-      <button class="os" data-step="5">+5</button>
-      <button class="os" data-step="10">+10</button>
-      <button class="os" data-step="20">+20</button>
-      <button class="os oz" data-axis="el">0</button>
-    </div>
-    <div style="margin-top:4px"><button class="btn bt btn-sm" id="off-clear">Clear All</button></div>
-  </div>
-</div>
-
-<!-- ═══ SATELLITE TRACKING ═══ -->
-<div style="margin-top:6px">
-  <div class="dr" onclick="toggleDrawer('track-body',this)">
-    <span class="sh-t">Satellite Tracking</span>
-    <div class="sh-r">
-      <span class="tag tag-m" id="track-status-tag">Idle</span>
-      <span class="aw">&#9660;</span>
-    </div>
-  </div>
-  <div class="db-body" id="track-body">
-    <div class="flex fw" style="gap:4px;margin-bottom:4px">
-      <span style="font-size:.6rem;color:var(--dim);font-weight:600">TLE:</span>
-      <span style="font-size:.6rem;color:var(--sub)" id="tle-source-info">—</span>
-      <span id="tle-age" class="tag tag-m">never</span>
-      <button class="btn bt btn-sm" id="tle-fetch-btn">Fetch</button>
-    </div>
-    <input type="text" id="sat-search" placeholder="Search satellites..." style="width:100%;margin-bottom:4px">
-    <div id="sat-list" class="sat-wrap">
-      <div style="padding:12px;text-align:center;color:var(--dim);font-size:.68rem">Click Fetch to load satellites</div>
-    </div>
-    <div id="track-controls">
-      <button class="btn bp" id="track-start-btn" disabled style="width:100%">Select a satellite</button>
-      <button class="btn br hidden" id="track-stop-btn" style="width:100%">&#9632; Stop Tracking</button>
-    </div>
-    <div id="track-active-status" class="hidden" style="margin-top:6px;padding:8px 10px;border-radius:var(--rs);background:var(--green2);border:1px solid var(--greenB)">
-      <div class="flex" style="gap:6px;margin-bottom:2px">
-        <span class="dt" style="width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.5s ease-in-out infinite"></span>
-        <span style="font-size:.78rem;font-weight:700;color:var(--green)" id="track-target-name">---</span>
-      </div>
-      <div class="flex fw" style="gap:8px">
-        <span style="font-size:.7rem;color:var(--sub)">Target: <strong id="track-target-az">---°</strong> / <strong id="track-target-el">---°</strong></span>
-        <span style="font-size:.62rem;color:var(--dim)" id="track-below-horizon" class="hidden">&#9660; below horizon</span>
-      </div>
-    </div>
-    <div id="track-passes-area" class="hidden" style="margin-top:6px">
-      <div style="font-size:.55rem;color:var(--dim);font-weight:700;text-transform:uppercase;margin-bottom:2px">Passes</div>
-      <div id="track-passes-list" class="sat-wrap">
-        <div style="padding:8px;text-align:center;color:var(--dim);font-size:.65rem">No passes computed</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ MAP + POLAR PLOT ═══ -->
-<div style="margin-top:6px">
-  <div class="dr" onclick="toggleDrawer('map-body',this)">
-    <span class="sh-t">Map &amp; Polar Plot</span>
-    <span class="aw">&#9660;</span>
-  </div>
-  <div class="db-body" id="map-body">
-    <div class="map-polar">
-      <div class="polar-wrap"><canvas id="polar" width="400" height="400"></canvas></div>
-      <div id="map"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ SETTINGS ═══ -->
-<div style="margin-top:6px">
-  <div class="dr" onclick="toggleDrawer('settings-body',this)">
-    <span class="sh-t">Settings &amp; Profiles</span>
-    <span class="aw rotated">&#9660;</span>
-  </div>
-  <div class="db-body collapsed" id="settings-body">
-    <div class="sg">
-      <div class="sb">
-        <div class="st flex" style="justify-content:space-between">Backend <span id="backend-tag" class="tag tag-m">---</span></div>
-        <div class="flex fw" style="gap:4px">
-          <div class="ir"><label>Host</label><input type="text" id="be-host" placeholder="127.0.0.1" style="width:100%"></div>
-          <div class="ir"><label>Port</label><input type="number" id="be-port" min="1" max="65535" placeholder="4533" class="ns"></div>
+      <div class="c-side">
+        <div class="sp-row">
+          <span class="lb">Step</span>
+          <input type="range" id="speed-slider" min="1" max="100" value="10">
+          <span class="vl" id="speed-val">10°</span>
         </div>
-        <div class="flex fw" style="gap:3px;margin-top:4px">
-          <button class="btn bp btn-sm" id="be-apply">Apply</button>
-          <button class="btn bt btn-sm" id="be-test">Test</button>
-          <button class="btn bt btn-sm" id="be-reconnect">Reconnect</button>
+        <div class="a-row">
+          <input type="number" id="goto-az" step="0.1" min="0" max="360" placeholder="Az°" class="ns">
+          <input type="number" id="goto-el" step="0.1" min="0" max="90" placeholder="El°" class="ns">
+          <button class="btn bp btn-sm" id="goto-btn">Go To</button>
+          <span class="sep"></span>
+          <input type="number" id="park-az" step="0.1" min="0" max="360" placeholder="P.Az" class="ns">
+          <input type="number" id="park-el" step="0.1" min="0" max="90" placeholder="P.El" class="ns">
+          <button class="btn bt btn-sm" id="park-set-btn">Set</button>
+          <button class="btn bt btn-sm" id="park-btn">Park</button>
         </div>
-        <div id="be-result" style="margin-top:4px;font-size:.65rem"></div>
+        <div class="help-txt" style="margin-top:4px">Tap D-pad to steer, or enter target Az/El to Go To or Park.</div>
       </div>
-      <div class="sb">
-        <div class="st">Location</div>
-        <div class="flex fw" style="gap:4px">
-          <div class="ir"><label>Lat</label><input type="number" id="loc-lat" step="any" min="-90" max="90" placeholder="38.8" class="ns"></div>
-          <div class="ir"><label>Lng</label><input type="number" id="loc-lng" step="any" min="-180" max="180" placeholder="-9.1" class="ns"></div>
-          <button class="btn bp btn-sm" id="loc-apply">Set</button>
+    </div>
+
+    <!-- ═══ LIMITS + CABLE GUARD ═══ -->
+    <div class="tc">
+      <div class="panel">
+        <div class="sh">
+          <span class="sh-t">Virtual Limits</span>
+          <div class="sh-r">
+            <label class="tg">
+              <input type="checkbox" id="limits-toggle">
+              <span class="sl"></span>
+              <span class="tl" id="limits-label">Off</span>
+            </label>
+          </div>
+        </div>
+        <div class="help-txt" style="margin-bottom:4px">Soft motion boundaries preventing physical over-rotation.</div>
+        <div style="display:flex;gap:8px;align-items:stretch">
+          <div style="flex:1">
+            <div style="font-size:.55rem;color:var(--dim);font-weight:700;text-transform:uppercase">Azimuth Limits</div>
+            <div class="lim-bar" id="az-lim-bar">
+              <div class="lim-range" id="az-range" style="left:0;width:100%"></div>
+              <div class="lim-edge hidden" id="az-min-e"><span id="az-min-lbl">0°</span></div>
+              <div class="lim-edge hidden" id="az-max-e"><span id="az-max-lbl">360°</span></div>
+              <div class="lim-pos" id="az-pos" style="left:0%"></div>
+            </div>
+            <div style="font-size:.55rem;color:var(--dim);font-weight:700;text-transform:uppercase">Elevation Limits</div>
+            <div class="lim-bar" id="el-lim-bar">
+              <div class="lim-range" id="el-range" style="left:0;width:100%"></div>
+              <div class="lim-edge hidden" id="el-min-e"><span>0°</span></div>
+              <div class="lim-edge hidden" id="el-max-e"><span>90°</span></div>
+              <div class="lim-pos" id="el-pos" style="left:0%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="cap-grid" style="margin-top:4px">
+          <button class="btn bt capture" data-side="left">Az↓ (Min)</button>
+          <button class="btn bt capture" data-side="right">Az↑ (Max)</button>
+          <button class="btn bt capture" data-side="down">El↓ (Min)</button>
+          <button class="btn bt capture" data-side="up">El↑ (Max)</button>
+        </div>
+        <div class="flex fw" style="gap:4px;margin-top:4px">
+          <div class="ir">
+            <label>Az</label>
+            <input type="number" id="man-az-min" step="0.1" min="0" max="360" placeholder="min" class="ns">
+            <input type="number" id="man-az-max" step="0.1" min="0" max="360" placeholder="max" class="ns">
+            <button class="btn bp btn-sm" id="apply-az">Set</button>
+          </div>
+          <div class="ir">
+            <label>El</label>
+            <input type="number" id="man-el-min" step="0.1" min="0" max="90" placeholder="min" class="ns">
+            <input type="number" id="man-el-max" step="0.1" min="0" max="90" placeholder="max" class="ns">
+            <button class="btn bp btn-sm" id="apply-el">Set</button>
+            <button class="btn bt btn-sm" id="clear-limits">×</button>
+          </div>
         </div>
       </div>
-      <div class="sb">
-        <div class="st">Poll Rate</div>
-        <div class="ir">
-          <label>ms</label>
-          <input type="number" id="poll-ms" min="200" max="30000" step="100" placeholder="1000" class="ns">
-          <button class="btn bp btn-sm" id="poll-apply">Set</button>
+
+      <div class="panel">
+        <div class="sh">
+          <span class="sh-t">Cable Guard</span>
+          <div class="sh-r">
+            <span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:.85rem" id="cg-net">0.0°</span>
+            <label class="tg" style="margin-left:2px">
+              <input type="checkbox" id="cable-toggle">
+              <span class="sl"></span>
+              <span class="tl" id="cable-label">Off</span>
+            </label>
+          </div>
+        </div>
+        <div class="help-txt" style="margin-bottom:4px">Coax wrap protection tracking total rotation.</div>
+        <div class="cg-wrap">
+          <div class="cg-track"></div>
+          <div class="cg-fill pos" id="cg-fill-p" style="width:0%;left:50%"></div>
+          <div class="cg-fill neg" id="cg-fill-n" style="width:0%;right:50%"></div>
+          <div class="cg-dot zero" style="left:50%"></div>
+          <div class="cg-dot" id="cg-dot" style="left:50%"></div>
+        </div>
+        <div class="cg-labels"><span id="cg-lo">-360°</span><span>0°</span><span id="cg-hi">+360°</span></div>
+        <div class="alert alert-warn hidden" id="cg-warn">⚠ Approaching cable limit</div>
+        <div class="alert alert-danger hidden" id="cg-trip">⛔ Guard tripped! Reset turns.</div>
+        <div class="flex fw" style="gap:4px;margin-top:4px">
+          <div class="ir">
+            <label>Max turns</label>
+            <input type="number" id="max-turns" step="0.1" min="0.1" max="10" value="1.0" class="ns">
+            <button class="btn bp btn-sm" id="apply-turns">Set</button>
+          </div>
+          <button class="btn bg btn-sm" id="reset-cg">Reset</button>
         </div>
       </div>
-      <div class="sb">
-        <div class="st">Profiles</div>
+    </div>
+
+    <!-- ═══ OFFSET ═══ -->
+    <div style="margin-top:2px">
+      <div class="dr" onclick="toggleDrawer('off-body',this)">
+        <span class="sh-t">Offset Calibration</span>
+        <div class="sh-r">
+          <label class="tg" onclick="event.stopPropagation()">
+            <input type="checkbox" id="off-toggle">
+            <span class="sl"></span>
+            <span class="tl" id="off-toggle-label">Off</span>
+          </label>
+          <span class="aw">&#9660;</span>
+        </div>
+      </div>
+      <div class="db-body" id="off-body">
+        <div class="help-txt" style="margin-bottom:6px">Trim antenna alignment without moving hardware.</div>
+        <div style="font-size:.55rem;color:var(--dim);font-weight:700;margin-bottom:2px">AZIMUTH OFFSET (°)</div>
+        <div class="off-row" data-axis="az">
+          <button class="os" data-step="-20">&minus;20</button>
+          <button class="os" data-step="-10">&minus;10</button>
+          <button class="os" data-step="-5">&minus;5</button>
+          <button class="os" data-step="-1">&minus;1</button>
+          <span class="ov" id="off-val-az">0°</span>
+          <button class="os" data-step="1">+1</button>
+          <button class="os" data-step="5">+5</button>
+          <button class="os" data-step="10">+10</button>
+          <button class="os" data-step="20">+20</button>
+          <button class="os oz" data-axis="az">0</button>
+        </div>
+        <div style="font-size:.55rem;color:var(--dim);font-weight:700;margin:4px 0 2px">ELEVATION OFFSET (°)</div>
+        <div class="off-row" data-axis="el">
+          <button class="os" data-step="-20">&minus;20</button>
+          <button class="os" data-step="-10">&minus;10</button>
+          <button class="os" data-step="-5">&minus;5</button>
+          <button class="os" data-step="-1">&minus;1</button>
+          <span class="ov" id="off-val-el">0°</span>
+          <button class="os" data-step="1">+1</button>
+          <button class="os" data-step="5">+5</button>
+          <button class="os" data-step="10">+10</button>
+          <button class="os" data-step="20">+20</button>
+          <button class="os oz" data-axis="el">0</button>
+        </div>
+        <div style="margin-top:4px"><button class="btn bt btn-sm" id="off-clear">Clear All</button></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT COLUMN: Visual Map, Polar Plot, Satellite Tracking & Settings -->
+  <div class="layout-right">
+
+    <!-- ═══ MAP + POLAR PLOT ═══ -->
+    <div style="margin-top:0">
+      <div class="dr" onclick="toggleDrawer('map-body',this)">
+        <span class="sh-t">Map &amp; Polar Plot</span>
+        <span class="aw">&#9660;</span>
+      </div>
+      <div class="db-body" id="map-body">
+        <div class="help-txt" style="margin-bottom:6px">Center = Zenith (90°) · Ring = Horizon (0°) · Yellow = Max El · Green (+) = Antenna</div>
+        <div class="map-polar">
+          <div class="polar-wrap"><canvas id="polar" width="400" height="400"></canvas></div>
+          <div id="map"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SATELLITE TRACKING ═══ -->
+    <div style="margin-top:2px">
+      <div class="dr" onclick="toggleDrawer('track-body',this)">
+        <span class="sh-t">Satellite Tracking &amp; Passes</span>
+        <div class="sh-r">
+          <span class="tag tag-m" id="track-status-tag">Idle</span>
+          <span class="aw">&#9660;</span>
+        </div>
+      </div>
+      <div class="db-body" id="track-body">
         <div class="flex fw" style="gap:4px;margin-bottom:4px">
-          <input type="text" id="prof-name" placeholder="Name" style="width:90px">
-          <input type="text" id="prof-desc" placeholder="Notes" style="width:100px">
-          <button class="btn bp btn-sm" id="prof-save">Save</button>
+          <span style="font-size:.6rem;color:var(--dim);font-weight:600">TLE:</span>
+          <span style="font-size:.6rem;color:var(--sub)" id="tle-source-info">—</span>
+          <span id="tle-age" class="tag tag-m">never</span>
+          <button class="btn bt btn-sm" id="tle-fetch-btn">Fetch TLE</button>
         </div>
-        <div id="prof-list"><div style="color:var(--dim);font-size:.65rem">No profiles.</div></div>
+        <input type="text" id="sat-search" autocomplete="off" value="" placeholder="Search satellites..." style="width:100%;margin-bottom:4px">
+        <div id="sat-list" class="sat-wrap">
+          <div style="padding:12px;text-align:center;color:var(--dim);font-size:.68rem">Click Fetch TLE to load satellites</div>
+        </div>
+        <div id="track-controls">
+          <button class="btn bp" id="track-start-btn" disabled style="width:100%">Select a satellite</button>
+          <button class="btn br hidden" id="track-stop-btn" style="width:100%">&#9632; Stop Tracking</button>
+        </div>
+        <div id="track-active-status" class="hidden" style="margin-top:6px;padding:8px 10px;border-radius:var(--rs);background:var(--green2);border:1px solid var(--greenB)">
+          <div class="flex" style="gap:6px;margin-bottom:2px">
+            <span class="dt" style="width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.5s ease-in-out infinite"></span>
+            <span style="font-size:.78rem;font-weight:700;color:var(--green)" id="track-target-name">---</span>
+          </div>
+          <div class="flex fw" style="gap:8px">
+            <span style="font-size:.7rem;color:var(--sub)">Target: <strong id="track-target-az">---°</strong> / <strong id="track-target-el">---°</strong></span>
+            <span style="font-size:.62rem;color:var(--dim)" id="track-below-horizon" class="hidden">&#9660; below horizon</span>
+          </div>
+        </div>
+        <div id="track-passes-area" class="hidden" style="margin-top:6px">
+          <div style="font-size:.55rem;color:var(--dim);font-weight:700;text-transform:uppercase;margin-bottom:2px">Upcoming Passes</div>
+          <div id="track-passes-list" class="sat-wrap">
+            <div style="padding:8px;text-align:center;color:var(--dim);font-size:.65rem">No passes computed</div>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- ═══ SETTINGS ═══ -->
+    <div style="margin-top:2px">
+      <div class="dr" onclick="toggleDrawer('settings-body',this)">
+        <span class="sh-t">Settings &amp; Profiles</span>
+        <span class="aw rotated">&#9660;</span>
+      </div>
+      <div class="db-body collapsed" id="settings-body">
+        <div class="sg">
+          <div class="sb">
+            <div class="st flex" style="justify-content:space-between">Backend Server <span id="backend-tag" class="tag tag-m">---</span></div>
+            <div class="help-txt" style="margin-bottom:4px">Rotctld host IP and port.</div>
+            <div class="flex fw" style="gap:4px">
+              <div class="ir"><label>Host</label><input type="text" id="be-host" placeholder="127.0.0.1" style="width:100%"></div>
+              <div class="ir"><label>Port</label><input type="number" id="be-port" min="1" max="65535" placeholder="4533" class="ns"></div>
+            </div>
+            <div class="flex fw" style="gap:3px;margin-top:4px">
+              <button class="btn bp btn-sm" id="be-apply">Apply</button>
+              <button class="btn bt btn-sm" id="be-test">Test</button>
+              <button class="btn bt btn-sm" id="be-reconnect">Reconnect</button>
+            </div>
+            <div id="be-result" style="margin-top:4px;font-size:.65rem"></div>
+          </div>
+          <div class="sb">
+            <div class="st">Station Location</div>
+            <div class="help-txt" style="margin-bottom:4px">GPS coordinates (Lat/Lng) for pass predictions.</div>
+            <div class="flex fw" style="gap:4px">
+              <div class="ir"><label>Lat</label><input type="number" id="loc-lat" step="any" min="-90" max="90" placeholder="38.8" class="ns"></div>
+              <div class="ir"><label>Lng</label><input type="number" id="loc-lng" step="any" min="-180" max="180" placeholder="-9.1" class="ns"></div>
+              <button class="btn bp btn-sm" id="loc-apply">Set</button>
+            </div>
+          </div>
+          <div class="sb">
+            <div class="st">Polling Rate</div>
+            <div class="help-txt" style="margin-bottom:4px">Web UI refresh interval (ms).</div>
+            <div class="ir">
+              <label>ms</label>
+              <input type="number" id="poll-ms" min="200" max="30000" step="100" placeholder="1000" class="ns">
+              <button class="btn bp btn-sm" id="poll-apply">Set</button>
+            </div>
+          </div>
+          <div class="sb">
+            <div class="st">Profiles</div>
+            <div class="help-txt" style="margin-bottom:4px">Preset configuration profiles.</div>
+            <div class="flex fw" style="gap:4px;margin-bottom:4px">
+              <input type="text" id="prof-name" placeholder="Name" style="width:90px">
+              <input type="text" id="prof-desc" placeholder="Notes" style="width:100px">
+              <button class="btn bp btn-sm" id="prof-save">Save</button>
+            </div>
+            <div id="prof-list"><div style="color:var(--dim);font-size:.65rem">No profiles.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
+
 </div>
 
 <footer><a href="https://facha.dev" target="_blank" rel="noopener">CS8ACT</a></footer>
@@ -1232,7 +1269,8 @@ document.getElementById('poll-apply').addEventListener('click',lock(document.get
 /* ═══ Satellite Tracking ═══ */
 let _satellites=[],_satellitesLoading=false,_selectedNorad=null;
 document.getElementById('tle-fetch-btn').addEventListener('click',lock(document.getElementById('tle-fetch-btn'),async()=>{const btn=document.getElementById('tle-fetch-btn');btn.textContent='...';try{const r=await post(API+'/tracking/fetch',{force:true});if(r.ok){toast('success',r.count+' sats');await refreshSatellites();await fetchStatus();}else toast('error','Failed');}catch(e){toast('error','Error');}finally{btn.textContent='Fetch';}}));
-async function refreshSatellites(){if(_satellitesLoading) return;_satellitesLoading=true;try{const r=await post(API+'/tracking/satellites',{});if(r.ok&&r.satellites) _satellites=r.satellites;else _satellites=[];}catch(e){_satellites=[];}_satellitesLoading=false;renderSatelliteList('');}
+async function refreshSatellites(){if(_satellitesLoading) return;_satellitesLoading=true;const sinp=document.getElementById('sat-search');if(sinp) sinp.value='';try{const r=await post(API+'/tracking/satellites',{});if(r.ok&&r.satellites) _satellites=r.satellites;else _satellites=[];}catch(e){_satellites=[];}_satellitesLoading=false;renderSatelliteList('');}
+window.addEventListener('DOMContentLoaded',function(){const sinp=document.getElementById('sat-search');if(sinp) sinp.value='';});
 function renderSatelliteList(filter){
   const list=document.getElementById('sat-list');const q=(filter||'').toLowerCase().trim();
   let sats=q?_satellites.filter(s=>s.name.toLowerCase().includes(q)):_satellites;
@@ -1241,7 +1279,38 @@ function renderSatelliteList(filter){
     const sel=_selectedNorad===s.norad_id?' selected':'';
     return '<div class="sat-item'+sel+'" data-norad="'+s.norad_id+'" style="display:flex;align-items:center;gap:6px;padding:8px 10px;min-height:42px;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none"><span style="flex:1;font-size:.78rem;font-weight:600">'+esc(s.name)+'</span><span style="font-size:.58rem;color:var(--dim)">#'+s.norad_id+'</span></div>';
   }).join('');
-  list.querySelectorAll('.sat-item').forEach(el=>{el.addEventListener('click',function(){_selectedNorad=parseInt(this.dataset.norad);renderSatelliteList(document.getElementById('sat-search').value);const btn=document.getElementById('track-start-btn');btn.disabled=false;btn.textContent='Track '+(this.querySelector('span')||{}).textContent||'Satellite';document.getElementById('track-active-status').classList.add('hidden');});});
+  list.querySelectorAll('.sat-item').forEach(el=>{
+    el.addEventListener('click',async function(){
+      _selectedNorad=parseInt(this.dataset.norad);
+      renderSatelliteList(document.getElementById('sat-search').value);
+      const btn=document.getElementById('track-start-btn');
+      btn.disabled=false;
+      btn.textContent='Track '+(this.querySelector('span')||{}).textContent||'Satellite';
+      
+      const pArea=document.getElementById('track-passes-area');
+      const pList=document.getElementById('track-passes-list');
+      pArea.classList.remove('hidden');
+      pList.innerHTML='<div style="padding:8px;text-align:center;color:var(--dim);font-size:.65rem">Calculating passes...</div>';
+      try{
+        const res=await post(API+'/tracking/passes',{norad_id:_selectedNorad});
+        if(res.ok&&res.passes){
+          _lastExtraData=res;
+          _selectedPass=res.passes.length?res.passes[0]:null;
+          renderPasses(res.passes);
+          if(S) drawPolar(S);
+          if(_selectedPass&&_selectedPass.ground_track&&_selectedPass.ground_track.length){
+            const segs=splitGroundTrack(_selectedPass.ground_track);
+            if(!_satTrackLine&&map) _satTrackLine=L.polyline([],{color:'#22c55e',weight:2,opacity:.7,dashArray:'4 8'}).addTo(map);
+            if(_satTrackLine) _satTrackLine.setLatLngs(segs);
+          }
+        }else{
+          pList.innerHTML='<div style="padding:8px;text-align:center;color:var(--dim);font-size:.65rem">'+(res.error||'No passes found')+'</div>';
+        }
+      }catch(e){
+        pList.innerHTML='<div style="padding:8px;text-align:center;color:var(--dim);font-size:.65rem">Error loading passes</div>';
+      }
+    });
+  });
 }
 document.getElementById('sat-search').addEventListener('input',function(){renderSatelliteList(this.value);});
 document.getElementById('track-start-btn').addEventListener('click',lock(document.getElementById('track-start-btn'),async()=>{if(!_selectedNorad) return;const r=await post(API+'/tracking/start',{norad_id:_selectedNorad});if(r.ok){toast('success','Tracking '+r.satellite);await fetchStatus();}else toast('error',r.error||'Failed');}));
@@ -1324,11 +1393,7 @@ function splitGroundTrack(pts){
   if(!pts||!pts.length) return [];
   const segs=[[]];
   for(let i=0;i<pts.length;i++){
-    if(i>0){
-      const dLng=Math.abs(pts[i][1]-pts[i-1][1]);
-      const dLat=Math.abs(pts[i][0]-pts[i-1][0]);
-      if(dLng>90||dLat>40) segs.push([]);
-    }
+    if(i>0&&Math.abs(pts[i][1]-pts[i-1][1])>180) segs.push([]);
     segs[segs.length-1].push(pts[i]);
   }
   return segs.filter(s=>s.length>0);
@@ -1366,12 +1431,17 @@ render=function(s){
     document.getElementById('track-target-az').textContent=(track.computed_az!=null?track.computed_az.toFixed(1):'---')+'°';
     document.getElementById('track-target-el').textContent=(track.computed_el!=null?track.computed_el.toFixed(1):'---')+'°';
     document.getElementById('track-below-horizon').classList.toggle('hidden',!track.below_horizon);
+    document.getElementById('track-passes-area').classList.remove('hidden');
     if(!_extraTimer){fetchExtraData();_extraTimer=setInterval(fetchExtraData,30000);}
   }else{
-    startBtn.classList.remove('hidden');stopBtn.classList.add('hidden');statusDiv.classList.add('hidden');document.getElementById('track-passes-area').classList.add('hidden');
+    startBtn.classList.remove('hidden');stopBtn.classList.add('hidden');statusDiv.classList.add('hidden');
+    if(!_selectedNorad&&!_passesList.length){
+      document.getElementById('track-passes-area').classList.add('hidden');
+    }
     if(!_selectedNorad){startBtn.disabled=true;startBtn.textContent='Select a satellite';}
     else{startBtn.disabled=false;const sat=_satellites.find(s=>s.norad_id===_selectedNorad);startBtn.textContent='Track '+(sat?sat.name:'Satellite');}
-    if(_extraTimer){clearInterval(_extraTimer);_extraTimer=null;}clearSatMap();
+    if(_extraTimer){clearInterval(_extraTimer);_extraTimer=null;}
+    if(!_selectedPass) clearSatMap();
   }
 };
 window.addEventListener('resize',()=>{if(S&&S.az!=null) drawPolar(S);});

@@ -136,6 +136,7 @@ class APIHandler(BaseHTTPRequestHandler):
             "/api/tracking/start": lambda: self._tracking_start(data),
             "/api/tracking/stop": lambda: self._tracking_stop(),
             "/api/tracking/satellites": lambda: self._tracking_satellites(data),
+            "/api/tracking/passes": lambda: self._tracking_preview_passes(data),
         }
 
         handler = routes.get(path)
@@ -470,6 +471,34 @@ class APIHandler(BaseHTTPRequestHandler):
         search = data.get("search", "")
         sats = _tracker.get_satellites(search=search)
         self._send_json({"ok": True, "satellites": sats})
+
+    def _tracking_preview_passes(self, data):
+        if not _tracker:
+            self._send_json({"ok": False, "error": "tracker not available"})
+            return
+        norad_id = data.get("norad_id")
+        if norad_id is None:
+            self._send_json({"ok": False, "error": "norad_id required"})
+            return
+        sat = _tracker.find_satellite(norad_id)
+        if not sat:
+            self._send_json({"ok": False, "error": "satellite not found"})
+            return
+        obs_lat = _api_limits.latitude
+        obs_lon = _api_limits.longitude
+        if obs_lat is None or obs_lon is None:
+            self._send_json({"ok": False, "error": "set station location first"})
+            return
+        passes = _tracker.compute_upcoming_passes(sat, obs_lat, obs_lon)
+        sky_track = _tracker.compute_sky_track(sat, obs_lat, obs_lon)
+        ground_track = _tracker.compute_ground_track(sat)
+        self._send_json({
+            "ok": True,
+            "satellite": sat.name,
+            "passes": passes,
+            "sky_track": sky_track,
+            "ground_track": ground_track
+        })
 
     def _serve_static(self, name):
         for base in (_static_dir, os.path.join(os.getcwd(), "static")):

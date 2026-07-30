@@ -709,19 +709,19 @@ class SatelliteTracker:
         epoch_jd = sat.epoch_jd
         now = datetime.now(timezone.utc)
         now_ts = (now.timestamp() - (epoch_jd - 2440587.5) * 86400) / 60.0
-        period_min = int(1.0 / sat.mean_motion * MIN_PER_DAY) if (sat and sat.mean_motion) else 95
-        # Center around current time (-half to +half) leaving open gap between start and end
-        half = int(period_min / 2) - 3
+        # Single clean orbit segment (-30 min past to +30 min future)
         points = []
-        for i in range(-half, half + 1):
-            tsince = now_ts + i
+        t = -30.0
+        while t <= 30.0:
+            tsince = now_ts + t
             x, y, z = sgp4.propagate(tsince)
             dt = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + tsince * 60, tz=timezone.utc)
             try:
                 lat, lon, alt = _teme_to_geodetic(x, y, z, dt=dt)
                 points.append([round(math.degrees(lat), 4), round(math.degrees(lon), 4)])
             except Exception:
-                continue
+                pass
+            t += 1.0
         return points
 
     def compute_orbit(self, sat=None):
@@ -796,6 +796,8 @@ class SatelliteTracker:
                         pass_ground = []
                         t_aos = (aos_time.timestamp() - (epoch_jd - 2440587.5) * 86400) / 60.0
                         t_los = (los_time.timestamp() - (epoch_jd - 2440587.5) * 86400) / 60.0
+                        
+                        # 1. Sky track for Polar Plot (from AOS to LOS)
                         t_sub = t_aos
                         while t_sub <= t_los:
                             x_s, y_s, z_s = sgp4.propagate(t_sub)
@@ -806,12 +808,19 @@ class SatelliteTracker:
                                     pass_sky.append([round(az_s, 1), round(el_s, 1)])
                             except Exception:
                                 pass
+                            t_sub += 10.0 / 60.0
+
+                        # 2. Pass Ground Track for Map (single smooth track from AOS to LOS)
+                        t_g = t_aos
+                        while t_g <= t_los:
+                            x_g, y_g, z_g = sgp4.propagate(t_g)
+                            dt_g = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + t_g * 60, tz=timezone.utc)
                             try:
-                                lat_g, lon_g, _ = _teme_to_geodetic(x_s, y_s, z_s, dt=dt_sub)
+                                lat_g, lon_g, _ = _teme_to_geodetic(x_g, y_g, z_g, dt=dt_g)
                                 pass_ground.append([round(math.degrees(lat_g), 4), round(math.degrees(lon_g), 4)])
                             except Exception:
                                 pass
-                            t_sub += 10.0 / 60.0
+                            t_g += 10.0 / 60.0
 
                         passes.append({
                             "id": len(passes),
