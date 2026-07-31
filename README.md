@@ -272,10 +272,10 @@ All API endpoints return standard JSON responses. POST payloads must be formatte
 
 | Endpoint | Method | Payload | Description |
 |----------|--------|---------|-------------|
-| `/api/tracking/fetch` | `POST` | `{"source": string}` | Trigger TLE update from Celestrak / custom URL |
+| `/api/tracking/fetch` | `POST` | `{"force": bool}` | Trigger TLE update from Celestrak / custom URL |
 | `/api/tracking/satellites` | `POST` | `{"query": string}` | Search available satellites in TLE cache |
 | `/api/tracking/passes` | `POST` | `{"satellite": string, "hours": int}` | Predict upcoming passes for a satellite |
-| `/api/tracking/start` | `POST` | `{"satellite": string, "auto_steer": bool}` | Begin tracking a satellite |
+| `/api/tracking/start` | `POST` | `{"norad_id": int, "auto_steer": bool}` | Begin tracking a satellite by NORAD ID or name |
 | `/api/tracking/stop` | `POST` | — | Stop satellite tracking |
 | `/api/tracking/status` | `GET` | `?extra=1` | Get current tracking state, target position, and pass details |
 | `/api/tracking/sources` | `GET` | — | List available TLE sources and satellite counts |
@@ -287,8 +287,8 @@ All API endpoints return standard JSON responses. POST payloads must be formatte
 | `/api/commands/block` | `POST` | — | Block external TCP client commands |
 | `/api/commands/unblock` | `POST` | — | Allow external TCP client commands |
 | `/api/refresh-interval` | `POST` | `{"ms": int}` | Set Web UI refresh poll interval (min `200` ms) |
-| `/api/location` | `GET` | — | Get saved ground station latitude/longitude |
-| `/api/location` | `POST` | `{"latitude": float, "longitude": float}` | Set ground station latitude/longitude |
+| `/api/location` | `GET` | — | Get saved ground station location parameters |
+| `/api/location` | `POST` | `{"latitude": float, "longitude": float, "altitude": float}` | Set ground station latitude/longitude/altitude (MSL) |
 
 ### Backend Configuration
 
@@ -307,14 +307,44 @@ All API endpoints return standard JSON responses. POST payloads must be formatte
 | `/api/profiles/load` | `POST` | `{"name": string}` | Load configuration from a profile |
 | `/api/profiles/delete` | `POST` | `{"name": string}` | Delete a saved profile |
 
+> 📖 **Full REST API Documentation:** See [docs/API.md](docs/API.md) for detailed JSON schemas, error response codes, and query parameter specifications.
+
+---
+
+## Documentation & Protocol Reference
+
+Detailed documentation modules are available in the [`docs/`](docs/) directory:
+
+- 📖 **[REST API Reference](docs/API.md)** – Comprehensive API endpoint reference, payload parameters, error formats, and curl examples.
+- 🔌 **[Hamlib TCP Proxy Protocol](docs/HAMLIB_PROTOCOL.md)** – Detailed specification of intercepted Hamlib ASCII commands (`P`, `p`, `S`, `K`, `M`, `q`), return status codes (`RPRT 0`, `RPRT -15`), and CLI diagnostic tools (`rotctl`, `nc`).
+- ⚙️ **[Configuration & Storage Reference](docs/CONFIGURATION.md)** – JSON schema reference for `virtual_limits.json`, `profiles/*.json`, and satellite `tle_cache.json`.
+
 ---
 
 ## Configuration Files
 
 The proxy automatically maintains state across restarts:
-- **`virtual_limits.json`**: Primary runtime configuration file storing limits, cable guard counters, offsets, park coordinates, location, and backend configuration.
+- **`virtual_limits.json`**: Primary runtime configuration file storing limits, cable guard counters, offsets, park coordinates, location, and backend configuration. (See [docs/CONFIGURATION.md](docs/CONFIGURATION.md)).
 - **`tle_cache.json`**: Cached TLE orbital data downloaded from Celestrak.
 - **`profiles/*.json`**: Individual named profile presets saved by the user.
+
+---
+
+## Troubleshooting & CLI Diagnostics
+
+You can test TCP proxy connection and virtual limit enforcement using standard CLI tools:
+
+```bash
+# Query position through proxy
+rotctl -m 2 -r 127.0.0.1:4534 p
+
+# Move rotator to Azimuth 180°, Elevation 45°
+rotctl -m 2 -r 127.0.0.1:4534 P 180.0 45.0
+
+# Verify limit enforcement (attempt move outside permitted boundaries)
+rotctl -m 2 -r 127.0.0.1:4534 P 30.0 10.0
+# Returns: Command line returned error -15
+```
 
 ---
 
@@ -338,3 +368,4 @@ python test_proxy.py
 ## License
 
 This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**. See the [LICENSE](LICENSE) file for details.
+
