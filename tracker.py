@@ -450,8 +450,7 @@ def teme_to_az_el(x, y, z, obs_lat_deg, obs_lon_deg, obs_alt_km, dt=None):
 # ── TLE Source Config ─────────────────────────────────
 
 DEFAULT_TLE_SOURCES = [
-    {"url": "https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=tle", "enabled": True},
-    {"url": "https://celestrak.org/NORAD/elements/amateur.txt", "enabled": True},
+    {"url": "http://www.amsat.org/amsat/ftp/keps/current/nasabare.txt", "enabled": True},
 ]
 
 # ── SatelliteTracker ──────────────────────────────────
