@@ -474,6 +474,9 @@ class SatelliteTracker:
         self.computed_el = None
         self._sat_lat = None
         self._sat_lng = None
+        self.is_prepositioning = False
+        self.preposition_aos_az = None
+        self.preposition_time_to_aos = None
         self._sgp4 = None
         self._epoch_jd = None
         self._last_fetch_time = None
@@ -678,6 +681,9 @@ class SatelliteTracker:
         self.computed_el = None
         self._sat_lat = None
         self._sat_lng = None
+        self.is_prepositioning = False
+        self.preposition_aos_az = None
+        self.preposition_time_to_aos = None
         self.limits.set_commands_blocked(False)
         log.info("Stopped tracking")
 
@@ -692,6 +698,37 @@ class SatelliteTracker:
             s.close()
         except Exception as e:
             log.debug("tracking send failed: %s", e)
+
+    def _find_next_aos(self, now_ts, obs_lat, obs_lon, obs_alt):
+        with self._lock:
+            sgp4 = self._sgp4
+            epoch_jd = self._epoch_jd
+        if not sgp4 or epoch_jd is None:
+            return None, None
+
+        for m in range(0, 1440):
+            t_check = now_ts + m
+            x, y, z = sgp4.propagate(t_check)
+            dt_c = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + t_check * 60, tz=timezone.utc)
+            try:
+                az_c, el_c, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, obs_alt, dt=dt_c)
+                if el_c >= 0:
+                    t_start = max(now_ts, t_check - 1.0)
+                    t_ref = t_start
+                    while t_ref <= t_check:
+                        x_r, y_r, z_r = sgp4.propagate(t_ref)
+                        dt_r = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + t_ref * 60, tz=timezone.utc)
+                        try:
+                            az_r, el_r, _ = teme_to_az_el(x_r, y_r, z_r, obs_lat, obs_lon, obs_alt, dt=dt_r)
+                            if el_r >= 0:
+                                return t_ref, az_r
+                        except Exception:
+                            pass
+                        t_ref += 5.0 / 60.0
+                    return t_check, az_c
+            except Exception:
+                continue
+        return None, None
 
     def _tracking_loop(self):
         while not self._stop_event.is_set():
@@ -717,7 +754,34 @@ class SatelliteTracker:
                         self._sat_lng = round(math.degrees(sat_lon_rad), 4)
 
                     if el >= 0:
+                        with self._lock:
+                            self.is_prepositioning = False
+                            self.preposition_aos_az = None
+                            self.preposition_time_to_aos = None
                         self._send_goto(az, el)
+                    else:
+                        aos_ts, aos_az = self._find_next_aos(tsince, obs_lat, obs_lon, obs_alt)
+                        if aos_ts is not None and aos_az is not None:
+                            with self._lock:
+                                epoch_jd = self._epoch_jd
+                            aos_dt = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + aos_ts * 60, tz=timezone.utc)
+                            time_to_aos = (aos_dt - now).total_seconds()
+                            if 0 < time_to_aos <= 300:
+                                with self._lock:
+                                    self.is_prepositioning = True
+                                    self.preposition_aos_az = round(aos_az, 1)
+                                    self.preposition_time_to_aos = int(time_to_aos)
+                                self._send_goto(aos_az, 0.0)
+                            else:
+                                with self._lock:
+                                    self.is_prepositioning = False
+                                    self.preposition_aos_az = None
+                                    self.preposition_time_to_aos = None
+                        else:
+                            with self._lock:
+                                self.is_prepositioning = False
+                                self.preposition_aos_az = None
+                                self.preposition_time_to_aos = None
             except Exception as e:
                 log.debug("tracking loop error: %s", e)
 
@@ -973,6 +1037,9 @@ class SatelliteTracker:
                 "sat_lat": self._sat_lat,
                 "sat_lng": self._sat_lng,
                 "below_horizon": self.computed_el is not None and self.computed_el < 0,
+                "is_prepositioning": self.is_prepositioning,
+                "preposition_aos_az": self.preposition_aos_az,
+                "preposition_time_to_aos": self.preposition_time_to_aos,
             }
             sat = self.target
             obs_lat = self.limits.latitude

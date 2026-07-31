@@ -645,6 +645,7 @@ footer a:hover{text-decoration:underline}
           <div class="flex fw" style="gap:8px">
             <span style="font-size:.7rem;color:var(--sub)">Target: <strong id="track-target-az">---°</strong> / <strong id="track-target-el">---°</strong></span>
             <span style="font-size:.62rem;color:var(--dim)" id="track-below-horizon" class="hidden">&#9660; below horizon</span>
+            <span style="font-size:.62rem;color:var(--yellow);font-weight:700" id="track-prepositioning" class="hidden">&#9650; Pre-positioning at AOS</span>
           </div>
         </div>
         <div id="track-passes-area" class="hidden" style="margin-top:6px">
@@ -1431,7 +1432,15 @@ render=function(s){
   try{_trackRender(s);}catch(e){}
   const track=s.tracking||{},tle=s.tle_sources||{},active=s.tracking_active||false,target=s.tracking_target||null;
   const tag=document.getElementById('track-status-tag');
-  if(active&&target){tag.className='tag tag-g';tag.textContent='Tracking';}else if(active){tag.className='tag tag-y';tag.textContent='Active';}else{tag.className='tag tag-m';tag.textContent='Idle';}
+  if(active&&target){
+    if(track.is_prepositioning){
+      tag.className='tag tag-y';
+      const m=Math.floor((track.preposition_time_to_aos||0)/60),sec=(track.preposition_time_to_aos||0)%60;
+      tag.textContent='AOS Wait ('+m+'m'+sec+'s)';
+    }else{
+      tag.className='tag tag-g';tag.textContent='Tracking';
+    }
+  }else if(active){tag.className='tag tag-y';tag.textContent='Active';}else{tag.className='tag tag-m';tag.textContent='Idle';}
   const tleAge=document.getElementById('tle-age'),sources=tle.sources||[];
   if(sources.length){const src=sources[0];tleAge.textContent=src.age_display||'never';tleAge.className='tag '+(src.stale?'tag-r':src.downloaded?'tag-g':'tag-m');document.getElementById('tle-source-info').textContent=((src.url||'').split('/').filter(Boolean).pop()||'?')+' ('+tle.satellite_count+')';}
   else{tleAge.textContent=tle.downloaded?'cached':'no data';tleAge.className='tag tag-m';document.getElementById('tle-source-info').textContent=tle.downloaded?tle.satellite_count+' sats':'no source';}
@@ -1443,7 +1452,16 @@ render=function(s){
     document.getElementById('track-target-name').textContent=target.name;
     document.getElementById('track-target-az').textContent=(track.computed_az!=null?track.computed_az.toFixed(1):'---')+'°';
     document.getElementById('track-target-el').textContent=(track.computed_el!=null?track.computed_el.toFixed(1):'---')+'°';
-    document.getElementById('track-below-horizon').classList.toggle('hidden',!track.below_horizon);
+    const prepEl=document.getElementById('track-prepositioning');
+    if(prepEl){
+      if(track.is_prepositioning&&track.preposition_aos_az!=null){
+        prepEl.textContent='▲ Pre-positioned at AOS '+track.preposition_aos_az+'°';
+        prepEl.classList.remove('hidden');
+      }else{
+        prepEl.classList.add('hidden');
+      }
+    }
+    document.getElementById('track-below-horizon').classList.toggle('hidden',!track.below_horizon||!!track.is_prepositioning);
     document.getElementById('track-passes-area').classList.remove('hidden');
     if(!_extraTimer){fetchExtraData();_extraTimer=setInterval(fetchExtraData,30000);}
   }else{
