@@ -329,7 +329,7 @@ class SGP4:
         sin2u = math.sin(2.0 * u)
 
         dr = q0_ms4 * xi * (2.0 / 3.0) / (r * r) * (3.0 * theta * theta - 1.0)
-        du = -q0_ms4 * xi * 0.5 * 7.0 * theta * theta - 1.0 / (r * r) * sin2u
+        du = -q0_ms4 * xi * 0.5 * (7.0 * theta * theta - 1.0) / (r * r) * sin2u
         draan = q0_ms4 * xi * 3.0 * theta / (r * r) * cos2u
         di = q0_ms4 * xi * 1.5 * theta * sin_i0 / (r * r) * cos2u
 
@@ -450,12 +450,13 @@ def teme_to_az_el(x, y, z, obs_lat_deg, obs_lon_deg, obs_alt_km, dt=None):
 # ── TLE Source Config ─────────────────────────────────
 
 DEFAULT_TLE_SOURCES = [
-    {"url": "http://www.amsat.org/amsat/ftp/keps/current/nasabare.txt", "enabled": True},
+    {"url": "https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=tle", "enabled": True},
+    {"url": "https://celestrak.org/NORAD/elements/amateur.txt", "enabled": True},
 ]
 
 # ── SatelliteTracker ──────────────────────────────────
 
-CACHE_AGE_MAX = 24 * 3600  # 24 hours in seconds
+CACHE_AGE_MAX = 2 * 3600  # 2 hours — ISS TLE degrades quickly
 
 
 class SatelliteTracker:
@@ -572,32 +573,53 @@ class SatelliteTracker:
                 except (ValueError, TypeError):
                     pass
 
-            url = self.sources[0]["url"] if self.sources else ""
-            if not url:
+            enabled_sources = [s for s in self.sources if s.get("enabled", True) and s.get("url")]
+            if not enabled_sources:
                 self._last_fetch_error = "No TLE sources configured"
                 return 0
 
-            try:
-                req = Request(url, headers={"User-Agent": "rotor-vls/1.0"})
-                with urlopen(req, timeout=30) as resp:
-                    raw = resp.read().decode()
-            except URLError as e:
-                self._last_fetch_error = str(e)
-                log.warning("TLE fetch failed: %s", e)
-                return len(self.satellites)
-            except Exception as e:
-                self._last_fetch_error = str(e)
-                log.warning("TLE fetch error: %s", e)
+            # Fetch from all enabled sources and merge, newest epoch wins per NORAD ID
+            merged: dict[int, TleSatellite] = {}
+            combined_raw = ""
+            any_success = False
+            last_error = None
+
+            for src in enabled_sources:
+                url = src["url"]
+                try:
+                    req = Request(url, headers={"User-Agent": "rotor-vls/1.0"})
+                    with urlopen(req, timeout=30) as resp:
+                        raw = resp.read().decode()
+                    groups = parse_tle_groups(raw)
+                    for g in groups:
+                        try:
+                            sat = TleSatellite(g)
+                            existing = merged.get(sat.norad_id)
+                            # Keep the one with the newer epoch
+                            if existing is None or sat.epoch_jd > existing.epoch_jd:
+                                merged[sat.norad_id] = sat
+                        except Exception:
+                            pass
+                    combined_raw += raw + "\n"
+                    any_success = True
+                    log.info("Fetched %d TLEs from %s", len(groups), url)
+                except URLError as e:
+                    last_error = str(e)
+                    log.warning("TLE fetch failed (%s): %s", url, e)
+                except Exception as e:
+                    last_error = str(e)
+                    log.warning("TLE fetch error (%s): %s", url, e)
+
+            if not any_success:
+                self._last_fetch_error = last_error
                 return len(self.satellites)
 
-            groups = parse_tle_groups(raw)
-            sats = [TleSatellite(g) for g in groups]
-            sats.sort(key=lambda s: s.name.lower())
+            sats = sorted(merged.values(), key=lambda s: s.name.lower())
             self.satellites = sats
             self._last_fetch_time = datetime.now(timezone.utc).isoformat()
             self._last_fetch_error = None
-            self._save_cache(raw)
-            log.info("Fetched %d satellites from %s", len(sats), url)
+            self._save_cache(combined_raw)
+            log.info("TLE merge complete: %d unique satellites", len(sats))
             return len(sats)
 
     def find_satellite(self, norad_id):
@@ -684,8 +706,9 @@ class SatelliteTracker:
                 obs_lat = self.limits.latitude
                 obs_lon = self.limits.longitude
                 if obs_lat is not None and obs_lon is not None:
+                    obs_alt = self.limits.altitude if self.limits.altitude is not None else 0.0
                     now = datetime.now(timezone.utc)
-                    az, el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, 0.0, dt=now)
+                    az, el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, obs_alt, dt=now)
 
                     sat_lat_rad, sat_lon_rad, _ = _teme_to_geodetic(x, y, z, dt=now)
                     with self._lock:
@@ -761,6 +784,7 @@ class SatelliteTracker:
         epoch_jd = sat.epoch_jd
         now = datetime.now(timezone.utc)
         now_ts = (now.timestamp() - (epoch_jd - 2440587.5) * 86400) / 60.0
+        obs_alt = self.limits.altitude if self.limits.altitude is not None else 0.0
 
         passes = []
         in_pass = False
@@ -775,7 +799,7 @@ class SatelliteTracker:
             x, y, z = sgp4.propagate(tsince)
             dt = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + tsince * 60, tz=timezone.utc)
             try:
-                az, el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, 0, dt=dt)
+                az, el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, obs_alt, dt=dt)
             except Exception:
                 continue
 
@@ -803,7 +827,7 @@ class SatelliteTracker:
                             x_s, y_s, z_s = sgp4.propagate(t_sub)
                             dt_sub = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + t_sub * 60, tz=timezone.utc)
                             try:
-                                az_s, el_s, _ = teme_to_az_el(x_s, y_s, z_s, obs_lat, obs_lon, 0, dt=dt_sub)
+                                az_s, el_s, _ = teme_to_az_el(x_s, y_s, z_s, obs_lat, obs_lon, obs_alt, dt=dt_sub)
                                 if el_s >= 0:
                                     pass_sky.append([round(az_s, 1), round(el_s, 1)])
                             except Exception:
@@ -856,6 +880,7 @@ class SatelliteTracker:
         epoch_jd = sat.epoch_jd
         now = datetime.now(timezone.utc)
         now_ts = (now.timestamp() - (epoch_jd - 2440587.5) * 86400) / 60.0
+        obs_alt = self.limits.altitude if self.limits.altitude is not None else 0.0
 
         pass_start_ts = None
         pass_end_ts = None
@@ -864,7 +889,7 @@ class SatelliteTracker:
         x, y, z = sgp4.propagate(now_ts)
         now_dt = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + now_ts * 60, tz=timezone.utc)
         try:
-            _, cur_el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, 0, dt=now_dt)
+            _, cur_el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, obs_alt, dt=now_dt)
         except Exception:
             cur_el = -90.0
 
@@ -876,7 +901,7 @@ class SatelliteTracker:
                 x, y, z = sgp4.propagate(t)
                 dt = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + t * 60, tz=timezone.utc)
                 try:
-                    _, el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, 0, dt=dt)
+                    _, el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, obs_alt, dt=dt)
                     if el < 0:
                         pass_start_ts = t
                         break
@@ -892,7 +917,7 @@ class SatelliteTracker:
                 x, y, z = sgp4.propagate(t)
                 dt = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + t * 60, tz=timezone.utc)
                 try:
-                    _, el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, 0, dt=dt)
+                    _, el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, obs_alt, dt=dt)
                     if el < 0:
                         pass_end_ts = t
                         break
@@ -908,7 +933,7 @@ class SatelliteTracker:
                 x, y, z = sgp4.propagate(t)
                 dt = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + t * 60, tz=timezone.utc)
                 try:
-                    _, el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, 0, dt=dt)
+                    _, el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, obs_alt, dt=dt)
                 except Exception:
                     continue
 
@@ -930,7 +955,7 @@ class SatelliteTracker:
             x, y, z = sgp4.propagate(t)
             dt = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + t * 60, tz=timezone.utc)
             try:
-                az, el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, 0, dt=dt)
+                az, el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, obs_alt, dt=dt)
                 if el >= 0:
                     sky_points.append([round(az, 1), round(el, 1)])
             except Exception:

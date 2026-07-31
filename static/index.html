@@ -674,10 +674,11 @@ footer a{color:var(--accent);text-decoration:none;font-weight:600}
           </div>
           <div class="sb">
             <div class="st">Station Location</div>
-            <div class="help-txt" style="margin-bottom:4px">GPS coordinates (Lat/Lng) for pass predictions.</div>
+            <div class="help-txt" style="margin-bottom:4px">GPS coordinates and altitude for pass predictions.</div>
             <div class="flex fw" style="gap:4px">
               <div class="ir"><label>Lat</label><input type="number" id="loc-lat" step="any" min="-90" max="90" placeholder="38.8" class="ns"></div>
               <div class="ir"><label>Lng</label><input type="number" id="loc-lng" step="any" min="-180" max="180" placeholder="-9.1" class="ns"></div>
+              <div class="ir"><label>Alt&nbsp;(m)</label><input type="number" id="loc-alt" step="1" min="0" max="8849" placeholder="0" class="ns"></div>
               <button class="btn bp btn-sm" id="loc-apply">Set</button>
             </div>
           </div>
@@ -866,6 +867,7 @@ function render(s){
   const lat=s.latitude,lng=s.longitude;
   if(lat!=null) setVal('loc-lat',lat);
   if(lng!=null) setVal('loc-lng',lng);
+  if(s.altitude!=null) setVal('loc-alt', Math.round(s.altitude * 1000));
   updateMap(lat,lng,s.az);
   document.getElementById('footer-port').textContent=s.proxy_port||'4534';
 
@@ -1263,7 +1265,7 @@ function updateMap(lat,lng,az){
     if(az!=null){const R=6371,bear=az*Math.PI/180,dlat=50/R,lat1=lat*Math.PI/180,lng1=lng*Math.PI/180;const lat2=Math.asin(Math.sin(lat1)*Math.cos(dlat)+Math.cos(lat1)*Math.sin(dlat)*Math.cos(bear));const lng2=lng1+Math.atan2(Math.sin(bear)*Math.sin(dlat)*Math.cos(lat1),Math.cos(dlat)-Math.sin(lat1)*Math.sin(lat2));azimuthLine.setLatLngs([[lat,lng],[lat2*180/Math.PI,lng2*180/Math.PI]]);}
   }
 }
-document.getElementById('loc-apply').addEventListener('click',lock(document.getElementById('loc-apply'),async()=>{const lat=parseFloat(document.getElementById('loc-lat').value),lng=parseFloat(document.getElementById('loc-lng').value);if(isNaN(lat)||isNaN(lng)){toast('error','Invalid');return;}const r=await post(API+'/location',{latitude:lat,longitude:lng});if(r.ok){toast('success','Location saved');clearDirty('loc-lat','loc-lng');await fetchStatus();}else toast('error','Failed');}));
+document.getElementById('loc-apply').addEventListener('click',lock(document.getElementById('loc-apply'),async()=>{const lat=parseFloat(document.getElementById('loc-lat').value),lng=parseFloat(document.getElementById('loc-lng').value);if(isNaN(lat)||isNaN(lng)){toast('error','Invalid');return;}const altM=parseFloat(document.getElementById('loc-alt').value);const body={latitude:lat,longitude:lng};if(!isNaN(altM)) body.altitude=altM/1000;const r=await post(API+'/location',body);if(r.ok){toast('success','Location saved');clearDirty('loc-lat','loc-lng','loc-alt');await fetchStatus();}else toast('error','Failed');}));
 document.getElementById('poll-apply').addEventListener('click',lock(document.getElementById('poll-apply'),async()=>{const ms=parseInt(document.getElementById('poll-ms').value);if(isNaN(ms)||ms<200) return;await post(API+'/refresh-interval',{ms});_poll_ms=ms;toast('success',ms+'ms');clearDirty('poll-ms');if(_poll_timer) clearTimeout(_poll_timer);_poll_timer=setTimeout(fetchStatus,_poll_ms);}));
 
 /* ═══ Satellite Tracking ═══ */
