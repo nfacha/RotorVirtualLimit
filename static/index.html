@@ -335,8 +335,13 @@ input[type=text]{width:120px;font-family:inherit}
 .info-strip .is-item{display:flex;align-items:center;gap:3px}
 .info-strip .is-val{color:var(--sub);font-weight:600;font-family:'JetBrains Mono',monospace}
 
-footer{text-align:center;padding:6px 0;color:var(--dim);font-size:.58rem}
+.pill.gh-link{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.15);color:var(--text);text-decoration:none;transition:background .15s ease}
+.pill.gh-link:hover{background:rgba(255,255,255,.12);color:#fff}
+.badge-azores{display:inline-flex;align-items:center;gap:3px;background:rgba(218,41,28,.1);border:1px solid rgba(218,41,28,.3);color:#f87171;padding:1px 6px;border-radius:99px;font-size:.58rem;font-weight:600}
+
+footer{display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 0;color:var(--dim);font-size:.58rem;flex-wrap:wrap}
 footer a{color:var(--accent);text-decoration:none;font-weight:600}
+footer a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -346,6 +351,7 @@ footer a{color:var(--accent);text-decoration:none;font-weight:600}
   <div class="hdr-top">
     <span class="hdr-name">Rotor Controller</span>
     <div class="hdr-badges">
+      <a href="https://github.com/nfacha/RotorVirtualLimit" target="_blank" rel="noopener" class="pill gh-link" title="GitHub Repository"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> GitHub</a>
       <div class="pill off" id="badge-api"><span class="dt"></span> API</div>
       <div class="pill off" id="badge-backend"><span class="dt"></span> Backend</div>
       <div class="pill off hidden" id="badge-blocked"><span class="dt"></span> Blocked</div>
@@ -709,7 +715,12 @@ footer a{color:var(--accent);text-decoration:none;font-weight:600}
 
 </div>
 
-<footer><a href="https://facha.dev" target="_blank" rel="noopener">CS8ACT</a></footer>
+<footer>
+  <a href="https://facha.dev" target="_blank" rel="noopener">CS8ACT</a>
+  <span>•</span>
+  <a href="https://github.com/nfacha/RotorVirtualLimit" target="_blank" rel="noopener">GitHub</a>
+  <span class="badge-azores">Made with ❤️ in Azores/Portugal</span>
+</footer>
 </div>
 
 <div class="toast-container" id="toasts"></div>

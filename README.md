@@ -4,6 +4,8 @@
 ![Dependencies](https://img.shields.io/badge/Dependencies-Zero%20(stdlib)-brightgreen?style=for-the-badge)
 ![Hardware](https://img.shields.io/badge/Tested%20On-AntRunner%20%7C%20RPi%203B%2B-red?style=for-the-badge&logo=raspberrypi&logoColor=white)
 ![Backend](https://img.shields.io/badge/Backend-Hamlib%20rotctld-blue?style=for-the-badge)
+[![GitHub Repository](https://img.shields.io/badge/GitHub-nfacha%2FRotorVirtualLimit-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/nfacha/RotorVirtualLimit)
+![Made with <3 in Azores/Portugal](https://img.shields.io/badge/Made%20with%20%E2%9D%A4%EF%B8%8F%20in-Azores%2FPortugal-da291c?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-AGPL%20v3-blue?style=for-the-badge)
 
 A transparent TCP proxy and Web UI control server that sits between satellite tracking software (e.g., Gpredict, SatPC32, SDR#) and `rotctld` ([Hamlib](https://hamlib.github.io/)) to enforce virtual azimuth/elevation limit switches, a cable tangling guard, position calibration offsets, satellite tracking, and remote command kill-switches.
