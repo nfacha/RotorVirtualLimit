@@ -61,6 +61,7 @@ class APIHandler(BaseHTTPRequestHandler):
                 "ok": True,
                 "latitude": _api_limits.latitude,
                 "longitude": _api_limits.longitude,
+                "altitude": _api_limits.altitude,
             })
             return
 
@@ -338,10 +339,11 @@ class APIHandler(BaseHTTPRequestHandler):
     def _location_set(self, data):
         lat = data.get("latitude")
         lng = data.get("longitude")
+        alt = data.get("altitude")
         if lat is None and lng is None:
             self._send_json({"ok": False, "error": "latitude or longitude required"}, 400)
             return
-        _api_limits.set_location(lat, lng)
+        _api_limits.set_location(lat, lng, alt)
         self._send_json({"ok": True})
 
     def _offset_set(self, data):

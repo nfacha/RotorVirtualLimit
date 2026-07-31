@@ -335,8 +335,13 @@ input[type=text]{width:120px;font-family:inherit}
 .info-strip .is-item{display:flex;align-items:center;gap:3px}
 .info-strip .is-val{color:var(--sub);font-weight:600;font-family:'JetBrains Mono',monospace}
 
-footer{text-align:center;padding:6px 0;color:var(--dim);font-size:.58rem}
+.pill.gh-link{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.15);color:var(--text);text-decoration:none;transition:background .15s ease}
+.pill.gh-link:hover{background:rgba(255,255,255,.12);color:#fff}
+.badge-azores{display:inline-flex;align-items:center;gap:3px;background:rgba(218,41,28,.1);border:1px solid rgba(218,41,28,.3);color:#f87171;padding:1px 6px;border-radius:99px;font-size:.58rem;font-weight:600}
+
+footer{display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 0;color:var(--dim);font-size:.58rem;flex-wrap:wrap}
 footer a{color:var(--accent);text-decoration:none;font-weight:600}
+footer a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -346,6 +351,7 @@ footer a{color:var(--accent);text-decoration:none;font-weight:600}
   <div class="hdr-top">
     <span class="hdr-name">Rotor Controller</span>
     <div class="hdr-badges">
+      <a href="https://github.com/nfacha/RotorVirtualLimit" target="_blank" rel="noopener" class="pill gh-link" title="GitHub Repository"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> GitHub</a>
       <div class="pill off" id="badge-api"><span class="dt"></span> API</div>
       <div class="pill off" id="badge-backend"><span class="dt"></span> Backend</div>
       <div class="pill off hidden" id="badge-blocked"><span class="dt"></span> Blocked</div>
@@ -674,10 +680,11 @@ footer a{color:var(--accent);text-decoration:none;font-weight:600}
           </div>
           <div class="sb">
             <div class="st">Station Location</div>
-            <div class="help-txt" style="margin-bottom:4px">GPS coordinates (Lat/Lng) for pass predictions.</div>
+            <div class="help-txt" style="margin-bottom:4px">GPS coordinates and altitude for pass predictions.</div>
             <div class="flex fw" style="gap:4px">
               <div class="ir"><label>Lat</label><input type="number" id="loc-lat" step="any" min="-90" max="90" placeholder="38.8" class="ns"></div>
               <div class="ir"><label>Lng</label><input type="number" id="loc-lng" step="any" min="-180" max="180" placeholder="-9.1" class="ns"></div>
+              <div class="ir"><label>Alt&nbsp;(m)</label><input type="number" id="loc-alt" step="1" min="0" max="8849" placeholder="0" class="ns"></div>
               <button class="btn bp btn-sm" id="loc-apply">Set</button>
             </div>
           </div>
@@ -708,7 +715,12 @@ footer a{color:var(--accent);text-decoration:none;font-weight:600}
 
 </div>
 
-<footer><a href="https://facha.dev" target="_blank" rel="noopener">CS8ACT</a></footer>
+<footer>
+  <a href="https://facha.dev" target="_blank" rel="noopener">CS8ACT</a>
+  <span>•</span>
+  <a href="https://github.com/nfacha/RotorVirtualLimit" target="_blank" rel="noopener">GitHub</a>
+  <span class="badge-azores">Made with ❤️ in Azores/Portugal</span>
+</footer>
 </div>
 
 <div class="toast-container" id="toasts"></div>
@@ -866,6 +878,7 @@ function render(s){
   const lat=s.latitude,lng=s.longitude;
   if(lat!=null) setVal('loc-lat',lat);
   if(lng!=null) setVal('loc-lng',lng);
+  if(s.altitude!=null) setVal('loc-alt', Math.round(s.altitude * 1000));
   updateMap(lat,lng,s.az);
   document.getElementById('footer-port').textContent=s.proxy_port||'4534';
 
@@ -1263,7 +1276,7 @@ function updateMap(lat,lng,az){
     if(az!=null){const R=6371,bear=az*Math.PI/180,dlat=50/R,lat1=lat*Math.PI/180,lng1=lng*Math.PI/180;const lat2=Math.asin(Math.sin(lat1)*Math.cos(dlat)+Math.cos(lat1)*Math.sin(dlat)*Math.cos(bear));const lng2=lng1+Math.atan2(Math.sin(bear)*Math.sin(dlat)*Math.cos(lat1),Math.cos(dlat)-Math.sin(lat1)*Math.sin(lat2));azimuthLine.setLatLngs([[lat,lng],[lat2*180/Math.PI,lng2*180/Math.PI]]);}
   }
 }
-document.getElementById('loc-apply').addEventListener('click',lock(document.getElementById('loc-apply'),async()=>{const lat=parseFloat(document.getElementById('loc-lat').value),lng=parseFloat(document.getElementById('loc-lng').value);if(isNaN(lat)||isNaN(lng)){toast('error','Invalid');return;}const r=await post(API+'/location',{latitude:lat,longitude:lng});if(r.ok){toast('success','Location saved');clearDirty('loc-lat','loc-lng');await fetchStatus();}else toast('error','Failed');}));
+document.getElementById('loc-apply').addEventListener('click',lock(document.getElementById('loc-apply'),async()=>{const lat=parseFloat(document.getElementById('loc-lat').value),lng=parseFloat(document.getElementById('loc-lng').value);if(isNaN(lat)||isNaN(lng)){toast('error','Invalid');return;}const altM=parseFloat(document.getElementById('loc-alt').value);const body={latitude:lat,longitude:lng};if(!isNaN(altM)) body.altitude=altM/1000;const r=await post(API+'/location',body);if(r.ok){toast('success','Location saved');clearDirty('loc-lat','loc-lng','loc-alt');await fetchStatus();}else toast('error','Failed');}));
 document.getElementById('poll-apply').addEventListener('click',lock(document.getElementById('poll-apply'),async()=>{const ms=parseInt(document.getElementById('poll-ms').value);if(isNaN(ms)||ms<200) return;await post(API+'/refresh-interval',{ms});_poll_ms=ms;toast('success',ms+'ms');clearDirty('poll-ms');if(_poll_timer) clearTimeout(_poll_timer);_poll_timer=setTimeout(fetchStatus,_poll_ms);}));
 
 /* ═══ Satellite Tracking ═══ */

@@ -30,6 +30,7 @@ class RotorLimits:
         self.park_el = None
         self.latitude = None
         self.longitude = None
+        self.altitude = None  # km above sea level
 
         self.commands_blocked = False
         self.refresh_interval_ms = 1000
@@ -39,7 +40,8 @@ class RotorLimits:
         self.offset_enabled = True
 
         self.tracking_sources = [
-            {"url": "https://celestrak.org/NORAD/elements/amateur.txt", "enabled": True}
+            {"url": "https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=tle", "enabled": True},
+            {"url": "https://celestrak.org/NORAD/elements/amateur.txt", "enabled": True},
         ]
         self.tracking_target = None
         self.tracking_active = False
@@ -79,6 +81,7 @@ class RotorLimits:
             self.park_el = d.get("park_el")
             self.latitude = d.get("latitude")
             self.longitude = d.get("longitude")
+            self.altitude = d.get("altitude")
             cg = d.get("cable_guard", {})
             self.cable_guard_enabled = cg.get("enabled", False)
             self.cable_guard_max_turns = cg.get("max_turns", 1.0)
@@ -104,6 +107,7 @@ class RotorLimits:
             "park_el": self.park_el,
             "latitude": self.latitude,
             "longitude": self.longitude,
+            "altitude": self.altitude,
             "az_offset": self.az_offset,
             "el_offset": self.el_offset,
             "offset_enabled": self.offset_enabled,
@@ -152,6 +156,7 @@ class RotorLimits:
             "park_el": self.park_el,
             "latitude": self.latitude,
             "longitude": self.longitude,
+            "altitude": self.altitude,
                 "proxy_port": self.proxy_port,
                 "commands_blocked": self.commands_blocked,
                 "refresh_interval_ms": self.refresh_interval_ms,
@@ -283,10 +288,11 @@ class RotorLimits:
             self.park_el = float(el) if el is not None else None
             self.save()
 
-    def set_location(self, lat, lng):
+    def set_location(self, lat, lng, alt=None):
         with self.lock:
             self.latitude = float(lat) if lat is not None else None
             self.longitude = float(lng) if lng is not None else None
+            self.altitude = float(alt) if alt is not None else self.altitude
             self.save()
 
     def set_enabled(self, enabled):
@@ -371,6 +377,7 @@ class RotorLimits:
             "park_el": self.park_el,
             "latitude": self.latitude,
             "longitude": self.longitude,
+            "altitude": self.altitude,
             "backend": {
                 "host": self.backend_host,
                 "port": self.backend_port,
@@ -400,6 +407,7 @@ class RotorLimits:
         self.park_el = data.get("park_el")
         self.latitude = data.get("latitude")
         self.longitude = data.get("longitude")
+        self.altitude = data.get("altitude")
         self.refresh_interval_ms = data.get("refresh_interval_ms", 1000)
 
         be = data.get("backend", {})
