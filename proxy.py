@@ -40,6 +40,7 @@ class Backend:
     def __init__(self, limits):
         self.limits = limits
         self.sock = None
+        self.version = limits.get_backend_version()
 
     def _connect(self, host, port):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -55,8 +56,12 @@ class Backend:
 
     def ensure_connected(self):
         """Connect to backend only if not already connected."""
-        if self.sock is not None:
+        cur_version = self.limits.get_backend_version()
+        if self.sock is not None and self.version == cur_version:
             return True
+        if self.sock is not None:
+            self.close()
+        self.version = cur_version
         host = self.limits.backend_host
         port = self.limits.backend_port
         try:
@@ -103,10 +108,11 @@ class Backend:
             self.close()
             return None
 
-    def recv_until(self, min_newlines=1, timeout=2.0):
-        """Read until we have min_newlines or timeout/error."""
+    def recv_until(self, min_newlines=2, timeout=1.0):
+        """Read until we have min_newlines or timeout/error, or valid position string."""
         if not self.sock:
             return None
+        from limits import parse_position_resp
         data = b""
         self.sock.settimeout(timeout)
         try:
@@ -116,10 +122,13 @@ class Backend:
                     self.close()
                     break
                 data += chunk
+                text = data.decode(errors="ignore")
+                az, el = parse_position_resp(text)
+                if az is not None and el is not None:
+                    break
                 if data.count(b"\n") >= min_newlines:
                     break
         except socket.timeout:
-            # Timeout is not fatal — return whatever we have so far
             pass
         except Exception as e:
             log.error("  -> backend recv_until err: %s", e)
@@ -277,30 +286,27 @@ class ClientHandler(threading.Thread):
     def _get_pos(self, line):
         resp = self._backend_exchange(
             line + "\n",
-            recv_fn=lambda: self.backend.recv_until(3),
+            recv_fn=lambda: self.backend.recv_until(2, timeout=1.0),
         )
         if resp is None:
             self._respond("RPRT -4\n")
             return
 
-        lines = resp.strip().split("\n")
-        if len(lines) >= 2 and not (lines[0].startswith("RPRT") if lines else False):
-            try:
-                raw_az = float(lines[0].strip())
-                raw_el = float(lines[1].strip())
-                self.limits.update_position(raw_az, raw_el)
-                if self.limits.offset_enabled:
-                    # Subtract offset so client sees commanded position
-                    adj_az = raw_az - self.limits.az_offset
-                    adj_el = raw_el - self.limits.el_offset
-                    rest = "\n".join(lines[2:]) if len(lines) > 2 else ""
-                    adj_resp = f"{adj_az:.1f}\n{adj_el:.1f}"
-                    if rest.strip():
-                        adj_resp += "\n" + rest
-                    self._respond(adj_resp + "\n")
-                    return
-            except ValueError:
-                pass
+        from limits import parse_position_resp
+        raw_az, raw_el = parse_position_resp(resp)
+        if raw_az is not None and raw_el is not None:
+            self.limits.update_position(raw_az, raw_el)
+            if self.limits.offset_enabled:
+                # Subtract offset so client sees commanded position
+                adj_az = raw_az - self.limits.az_offset
+                adj_el = raw_el - self.limits.el_offset
+                lines = [l.strip() for l in resp.strip().splitlines() if l.strip()]
+                rest = "\n".join(lines[2:]) if len(lines) > 2 else ""
+                adj_resp = f"{adj_az:.1f}\n{adj_el:.1f}"
+                if rest.strip():
+                    adj_resp += "\n" + rest
+                self._respond(adj_resp + "\n")
+                return
 
         self._respond(resp)
 

@@ -153,44 +153,66 @@ class APIHandler(BaseHTTPRequestHandler):
         host = data.get("host", _api_limits.backend_host)
         port = data.get("port", _api_limits.backend_port)
         _api_limits.set_backend(host, port)
+        self._refresh_position()
         self._send_json({"ok": True})
 
     def _backend_reconnect(self):
         _api_limits.set_backend(_api_limits.backend_host, _api_limits.backend_port)
-        import socket as sck
-        try:
-            s = sck.socket(sck.AF_INET, sck.SOCK_STREAM)
-            s.settimeout(5)
-            s.connect((_api_limits.backend_host, _api_limits.backend_port))
-            s.close()
-            _api_limits.set_backend_reachable(True)
+        self._refresh_position()
+        reachable = _api_limits.get_status().get("backend", {}).get("reachable", False)
+        if reachable:
             self._send_json({"ok": True})
-        except Exception:
-            _api_limits.set_backend_reachable(False)
+        else:
             self._send_json({"ok": False, "error": "connection failed"})
 
     def _backend_test(self, data):
         host = data.get("host", _api_limits.backend_host)
         port = data.get("port", _api_limits.backend_port)
         import socket as sck
+        from limits import parse_position_resp
+        s = None
         try:
             s = sck.socket(sck.AF_INET, sck.SOCK_STREAM)
             s.settimeout(3)
             s.connect((host, port))
             s.sendall(b"p\n")
-            r = s.recv(4096).decode()
-            s.close()
-            ok = bool(r.strip())
+            r = b""
+            s.settimeout(1.0)
+            while True:
+                try:
+                    c = s.recv(4096)
+                    if not c:
+                        break
+                    r += c
+                    text = r.decode(errors="ignore")
+                    az, el = parse_position_resp(text)
+                    if az is not None and el is not None:
+                        break
+                except sck.timeout:
+                    break
+            text = r.decode(errors="ignore").strip()
+            ok = bool(text)
             _api_limits.set_backend_reachable(True)
-            self._send_json({"ok": ok, "reachable": True, "response": r.strip()[:80]})
+            az, el = parse_position_resp(text)
+            if az is not None and el is not None:
+                _api_limits.update_position(az, el)
+            display_text = text.replace("\n", " ")[:80]
+            self._send_json({"ok": ok, "reachable": True, "response": display_text})
         except Exception as e:
             _api_limits.set_backend_reachable(False)
             self._send_json({"ok": False, "reachable": False, "error": str(e)})
+        finally:
+            if s:
+                try:
+                    s.close()
+                except Exception:
+                    pass
 
     def _backend_send(self, cmd):
         import socket as sck
         host = _api_limits.backend_host
         port = _api_limits.backend_port
+        s = None
         try:
             s = sck.socket(sck.AF_INET, sck.SOCK_STREAM)
             s.settimeout(3)
@@ -207,37 +229,55 @@ class APIHandler(BaseHTTPRequestHandler):
                     resp += c
                 except sck.timeout:
                     break
-            s.close()
             return resp.decode().strip()
         except Exception as e:
             _api_limits.set_backend_reachable(False)
             return f"RPRT -4"
+        finally:
+            if s:
+                try:
+                    s.close()
+                except Exception:
+                    pass
 
     def _refresh_position(self):
         import socket as sck
+        from limits import parse_position_resp
         host = _api_limits.backend_host
         port = _api_limits.backend_port
+        s = None
         try:
             s = sck.socket(sck.AF_INET, sck.SOCK_STREAM)
-            s.settimeout(3)
+            s.settimeout(2.0)
             s.connect((host, port))
+            _api_limits.set_backend_reachable(True)
             s.sendall(b"p\n")
             resp = b""
+            s.settimeout(1.0)
             while True:
-                c = s.recv(4096)
-                if not c:
+                try:
+                    c = s.recv(4096)
+                    if not c:
+                        break
+                    resp += c
+                    text = resp.decode(errors="ignore")
+                    az, el = parse_position_resp(text)
+                    if az is not None and el is not None:
+                        break
+                except sck.timeout:
                     break
-                resp += c
-                if resp.count(b"\n") >= 2:
-                    break
-            s.close()
-            lines = resp.decode().strip().split("\n")
-            if len(lines) >= 2:
-                az = float(lines[0].strip())
-                el = float(lines[1].strip())
+            az, el = parse_position_resp(resp.decode(errors="ignore"))
+            if az is not None and el is not None:
                 _api_limits.update_position(az, el)
         except Exception:
-            pass
+            _api_limits.set_backend_reachable(False)
+        finally:
+            if s:
+                try:
+                    s.close()
+                except Exception:
+                    pass
+
 
     def _rotor_goto(self, data):
         az = data.get("az")

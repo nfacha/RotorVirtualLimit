@@ -3,6 +3,52 @@ import os
 import threading
 
 
+def parse_position_resp(resp_str):
+    """
+    Parses (az, el) floats from a rotctld 'p' / 'get_pos' response string.
+    Supports:
+      - 2-line format: "180.0\n45.0\n"
+      - 1-line space-separated format: "180.0 45.0\n"
+      - Multi-line format with extra status: "180.0\n45.0\nRPRT 0\n"
+    Returns (az, el) tuple or (None, None) if parsing fails.
+    """
+    if not resp_str:
+        return None, None
+    lines = [line.strip() for line in resp_str.strip().splitlines() if line.strip()]
+    if not lines:
+        return None, None
+
+    # Filter out RPRT or protocol echoes
+    filtered = [l for l in lines if not l.startswith("RPRT") and not l.startswith("\\") and not l.startswith("get_pos") and not l.startswith("p")]
+
+    target_lines = filtered if len(filtered) >= 2 else lines
+    if len(target_lines) >= 2:
+        try:
+            return float(target_lines[0]), float(target_lines[1])
+        except ValueError:
+            pass
+
+    target_line = filtered[0] if filtered else lines[0]
+    tokens = target_line.split()
+    if len(tokens) >= 2:
+        try:
+            return float(tokens[0]), float(tokens[1])
+        except ValueError:
+            pass
+
+    all_tokens = resp_str.replace("\n", " ").split()
+    float_tokens = []
+    for tok in all_tokens:
+        try:
+            float_tokens.append(float(tok))
+            if len(float_tokens) == 2:
+                return float_tokens[0], float_tokens[1]
+        except ValueError:
+            continue
+
+    return None, None
+
+
 class RotorLimits:
     def __init__(self, config_path="virtual_limits.json"):
         self.config_path = config_path
