@@ -55,7 +55,7 @@ The primary configuration file `virtual_limits.json` is created automatically on
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `az_min` | `float` / `null` | `null` | Minimum permitted Azimuth boundary (degrees `0` to `360`). |
+| `az_min` | `float` / `null` | `null` | Minimum permitted Azimuth boundary (degrees `0` to `360`). When `az_min > az_max`, defines a zero-crossing limit sector (e.g. 270° to 80°). |
 | `az_max` | `float` / `null` | `null` | Maximum permitted Azimuth boundary (degrees `0` to `360`). |
 | `el_min` | `float` / `null` | `null` | Minimum permitted Elevation boundary (degrees `0` to `90`). |
 | `el_max` | `float` / `null` | `null` | Maximum permitted Elevation boundary (degrees `0` to `90`). |

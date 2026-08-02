@@ -199,6 +199,33 @@ def main():
         resp = tcp_send("127.0.0.1", PROXY_PORT, "P 350 80")
         check("Allow after clear", resp == "RPRT 0", f"got {resp!r}")
 
+        # ── Test 6b: Zero-crossing (wrapping) limits ──
+        print("\n── Zero-crossing limits ──")
+        r = http_post("/api/limits/manual", {"az_min": 270, "az_max": 80})
+        check("Set zero-crossing limits API", r.get("ok") is True)
+
+        resp = tcp_send("127.0.0.1", PROXY_PORT, "P 300 30")
+        check("Allow az in wrapping range (300)", resp == "RPRT 0", f"got {resp!r}")
+
+        resp = tcp_send("127.0.0.1", PROXY_PORT, "P 50 30")
+        check("Allow az in wrapping range (50)", resp == "RPRT 0", f"got {resp!r}")
+
+        resp = tcp_send("127.0.0.1", PROXY_PORT, "P 0 30")
+        check("Allow az at 0 degrees", resp == "RPRT 0", f"got {resp!r}")
+
+        resp = tcp_send("127.0.0.1", PROXY_PORT, "P 180 30")
+        check("Reject az in forbidden sector (180)", resp == "RPRT -15", f"got {resp!r}")
+
+        resp = tcp_send("127.0.0.1", PROXY_PORT, "P 100 30")
+        check("Reject az in forbidden sector (100)", resp == "RPRT -15", f"got {resp!r}")
+
+        # Test move across 0 degrees
+        http_post("/api/rotor/goto", {"az": 0, "el": 0})
+        r = http_post("/api/rotor/move", {"direction": 8, "speed": 10})
+        check("Move left from 0° wraps across 360°", r.get("ok") is True)
+
+        http_post("/api/limits/clear")
+
         # ── Test 7: Cable guard ──
         print("\n── Cable guard ──")
         # Use a small limit (0.25 turns = 90°) for clear test behavior

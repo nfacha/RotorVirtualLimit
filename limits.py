@@ -184,14 +184,30 @@ class RotorLimits:
     def check_position(self, az, el):
         with self.lock:
             if self.enabled:
-                if self.az_min is not None and az < self.az_min:
-                    return False, "Virtual azimuth left limit reached"
-                if self.az_max is not None and az > self.az_max:
-                    return False, "Virtual azimuth right limit reached"
-                if self.el_min is not None and el < self.el_min:
-                    return False, "Virtual elevation down limit reached"
-                if self.el_max is not None and el > self.el_max:
-                    return False, "Virtual elevation up limit reached"
+                if az is not None:
+                    norm_az = az % 360
+                    if self.az_min is not None and self.az_max is not None:
+                        if self.az_min <= self.az_max:
+                            if norm_az < self.az_min and not (az == 360 and self.az_max == 360):
+                                return False, "Virtual azimuth left limit reached"
+                            if norm_az > self.az_max:
+                                return False, "Virtual azimuth right limit reached"
+                        else:
+                            # Wrapping / Zero-crossing range (e.g. az_min=270, az_max=80)
+                            if norm_az > self.az_max and norm_az < self.az_min:
+                                return False, "Virtual azimuth limit reached"
+                    elif self.az_min is not None:
+                        if norm_az < self.az_min and not (az == 360 and self.az_min == 360):
+                            return False, "Virtual azimuth left limit reached"
+                    elif self.az_max is not None:
+                        if norm_az > self.az_max:
+                            return False, "Virtual azimuth right limit reached"
+
+                if el is not None:
+                    if self.el_min is not None and el < self.el_min:
+                        return False, "Virtual elevation down limit reached"
+                    if self.el_max is not None and el > self.el_max:
+                        return False, "Virtual elevation up limit reached"
 
             if self.cable_guard_enabled and self.last_az is not None:
                 delta = _shortest_distance(self.last_az, az)

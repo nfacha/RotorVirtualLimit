@@ -311,8 +311,8 @@ input[type=text]{width:120px;font-family:inherit}
 @media(max-width:640px){.map-polar{grid-template-columns:1fr}}
 #map{height:400px;border-radius:var(--r);overflow:hidden;background:var(--s1);min-height:300px}
 .leaflet-container{background:var(--s1)!important}
-.polar-wrap{background:var(--s1);border-radius:var(--r);display:flex;align-items:center;justify-content:center;padding:10px;position:relative;min-height:300px}
-#polar{display:block;width:100%;height:100%;max-width:400px;max-height:400px}
+.polar-wrap{background:var(--s1);border-radius:var(--r);display:flex;align-items:center;justify-content:center;padding:10px;position:relative;height:400px;min-height:300px}
+#polar{display:block;max-width:100%;max-height:100%}
 
 /* ═══ SAT ═══ */
 .sat-wrap{max-height:220px;overflow-y:auto;border-radius:var(--rs);background:var(--s1)}
@@ -350,27 +350,6 @@ footer a:hover{text-decoration:underline}
 <div class="hdr">
   <div class="hdr-top">
     <span class="hdr-name">Rotor Controller</span>
-    <div class="hdr-badges">
-      <a href="https://github.com/nfacha/RotorVirtualLimit" target="_blank" rel="noopener" class="pill gh-link" title="GitHub Repository"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> GitHub</a>
-      <div class="pill off" id="badge-api"><span class="dt"></span> API</div>
-      <div class="pill off" id="badge-backend"><span class="dt"></span> Backend</div>
-      <div class="pill off hidden" id="badge-blocked"><span class="dt"></span> Blocked</div>
-      <div class="pill off hidden" id="badge-tracking"><span class="dt"></span> Tracking</div>
-    </div>
-  </div>
-  <div class="hdr-pos">
-    <div class="pv">
-  <div class="hdr-pos">
-    <div class="pv" title="Azimuth: Horizontal compass angle (0° North, 90° East, 180° South, 270° West)">
-      <span class="pv-l">AZ</span>
-      <span class="pv-n" id="v-az">---</span><span class="pv-u">°</span>
-      <span class="off-pill hidden" id="az-offset-badge"></span>
-    </div>
-    <div class="pv" title="Elevation: Vertical angle above horizon (0° Horizon, 90° Zenith Directly Overhead)">
-      <span class="pv-l">EL</span>
-      <span class="pv-n" id="v-el">---</span><span class="pv-u">°</span>
-      <span class="off-pill hidden" id="el-offset-badge"></span>
-    </div>
     <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
       <span class="info-strip" style="padding:0" title="Rotctld Hamlib Server Port (Emulation Port)">
         <span class="is-item">Port <span class="is-val" id="footer-port">4534</span></span>
@@ -380,6 +359,13 @@ footer a:hover{text-decoration:underline}
         <input type="checkbox" id="block-toggle">
         <span class="sl"></span>
       </label>
+      <div class="hdr-badges" style="margin-left:4px">
+        <a href="https://github.com/nfacha/RotorVirtualLimit" target="_blank" rel="noopener" class="pill gh-link" title="GitHub Repository"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> GitHub</a>
+        <div class="pill off" id="badge-api"><span class="dt"></span> API</div>
+        <div class="pill off" id="badge-backend"><span class="dt"></span> Backend</div>
+        <div class="pill off hidden" id="badge-blocked"><span class="dt"></span> Blocked</div>
+        <div class="pill off hidden" id="badge-tracking"><span class="dt"></span> Tracking</div>
+      </div>
     </div>
   </div>
 </div>
@@ -394,36 +380,37 @@ footer a:hover{text-decoration:underline}
     <!-- ═══ GAUGES ROW ═══ -->
     <div class="dash">
       <div class="g-panel">
-        <svg width="100" height="56" viewBox="0 0 100 56" id="az-gauge">
-          <path d="M 6 50 A 44 44 0 0 1 94 50" fill="none" stroke="var(--s2)" stroke-width="5" stroke-linecap="round"/>
-          <path id="az-lim-arc" d="" fill="none" stroke="rgba(34,197,94,0.25)" stroke-width="8" stroke-linecap="round" class="hidden"/>
+        <svg width="76" height="76" viewBox="0 0 100 100" id="az-gauge">
+          <circle cx="50" cy="50" r="38" fill="none" stroke="var(--s2)" stroke-width="4"/>
+          <path id="az-lim-arc" d="" fill="none" stroke="rgba(34,197,94,0.35)" stroke-width="7" stroke-linecap="round" class="hidden"/>
           <line id="az-min-line" x1="0" y1="0" x2="0" y2="0" stroke="var(--red)" stroke-width="2" stroke-linecap="round" class="hidden"/>
           <line id="az-max-line" x1="0" y1="0" x2="0" y2="0" stroke="var(--red)" stroke-width="2" stroke-linecap="round" class="hidden"/>
-          <path id="az-arc" d="M 6 50 A 44 44 0 0 1 94 50" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-dasharray="0 140"/>
-          <text x="4" y="55" fill="var(--dim)" font-size="5.5" text-anchor="middle" font-family="JetBrains Mono">0</text>
-          <text x="50" y="6" fill="var(--dim)" font-size="5.5" text-anchor="middle" font-family="JetBrains Mono">180</text>
-          <text x="96" y="55" fill="var(--dim)" font-size="5.5" text-anchor="middle" font-family="JetBrains Mono">360</text>
-          <circle id="az-dot" cx="6" cy="50" r="4" fill="var(--accent)"/>
+          <line id="az-needle" x1="50" y1="50" x2="50" y2="12" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+          <circle id="az-dot" cx="50" cy="12" r="4" fill="var(--accent)"/>
+          <text x="50" y="8" fill="var(--dim)" font-size="6.5" font-weight="700" text-anchor="middle" font-family="JetBrains Mono">N</text>
+          <text x="96" y="52" fill="var(--dim)" font-size="6.5" font-weight="700" text-anchor="middle" font-family="JetBrains Mono">E</text>
+          <text x="50" y="97" fill="var(--dim)" font-size="6.5" font-weight="700" text-anchor="middle" font-family="JetBrains Mono">S</text>
+          <text x="4" y="52" fill="var(--dim)" font-size="6.5" font-weight="700" text-anchor="middle" font-family="JetBrains Mono">W</text>
         </svg>
         <div class="g-info">
-          <div class="g-top"><span class="g-big" id="g-az-val">---</span><span class="g-unit">°</span></div>
+          <div class="g-top"><span class="g-big" id="g-az-val">---</span><span class="g-unit">°</span><span class="off-pill hidden" id="az-offset-badge"></span></div>
           <div class="g-sub">AZIMUTH <span id="g-az-lim" style="color:var(--green)"></span></div>
           <div class="help-txt">Horizontal heading (0°–360°)</div>
         </div>
       </div>
       <div class="g-panel">
-        <svg width="30" height="56" viewBox="0 0 30 56" id="el-gauge">
-          <rect x="10" y="4" width="7" height="48" rx="3.5" fill="var(--s2)"/>
-          <rect id="el-lim-rect" x="7" y="4" width="13" height="48" rx="3" fill="rgba(34,197,94,0.12)" stroke="var(--green)" stroke-width=".7" class="hidden"/>
-          <line id="el-min-line" x1="5" y1="52" x2="22" y2="52" stroke="var(--red)" stroke-width="2" stroke-linecap="round" class="hidden"/>
-          <line id="el-max-line" x1="5" y1="4" x2="22" y2="4" stroke="var(--red)" stroke-width="2" stroke-linecap="round" class="hidden"/>
-          <rect id="el-fill" x="10" y="52" width="7" height="0" rx="3.5" fill="var(--yellow)"/>
-          <text x="24" y="55" fill="var(--dim)" font-size="5" font-family="JetBrains Mono">0</text>
-          <text x="24" y="8" fill="var(--dim)" font-size="5" font-family="JetBrains Mono">90</text>
-          <circle id="el-dot" cx="13.5" cy="52" r="3" fill="var(--yellow)"/>
+        <svg width="28" height="76" viewBox="0 0 28 76" id="el-gauge">
+          <rect x="9" y="8" width="8" height="60" rx="4" fill="var(--s2)"/>
+          <rect id="el-lim-rect" x="6" y="8" width="14" height="60" rx="3" fill="rgba(34,197,94,0.12)" stroke="var(--green)" stroke-width=".7" class="hidden"/>
+          <line id="el-min-line" x1="4" y1="68" x2="22" y2="68" stroke="var(--red)" stroke-width="2" stroke-linecap="round" class="hidden"/>
+          <line id="el-max-line" x1="4" y1="8" x2="22" y2="8" stroke="var(--red)" stroke-width="2" stroke-linecap="round" class="hidden"/>
+          <rect id="el-fill" x="9" y="68" width="8" height="0" rx="4" fill="var(--yellow)"/>
+          <text x="24" y="71" fill="var(--dim)" font-size="5" font-family="JetBrains Mono">0</text>
+          <text x="24" y="11" fill="var(--dim)" font-size="5" font-family="JetBrains Mono">90</text>
+          <circle id="el-dot" cx="13" cy="68" r="3.5" fill="var(--yellow)"/>
         </svg>
         <div class="g-info">
-          <div class="g-top"><span class="g-big" id="g-el-val">---</span><span class="g-unit">°</span></div>
+          <div class="g-top"><span class="g-big" id="g-el-val">---</span><span class="g-unit">°</span><span class="off-pill hidden" id="el-offset-badge"></span></div>
           <div class="g-sub">ELEVATION <span id="g-el-lim" style="color:var(--green)"></span></div>
           <div class="help-txt">Vertical tilt (0°–90°)</div>
         </div>
@@ -478,6 +465,7 @@ footer a:hover{text-decoration:underline}
             <div style="font-size:.55rem;color:var(--dim);font-weight:700;text-transform:uppercase">Azimuth Limits</div>
             <div class="lim-bar" id="az-lim-bar">
               <div class="lim-range" id="az-range" style="left:0;width:100%"></div>
+              <div class="lim-range hidden" id="az-range2" style="left:0;width:0%"></div>
               <div class="lim-edge hidden" id="az-min-e"><span id="az-min-lbl">0°</span></div>
               <div class="lim-edge hidden" id="az-max-e"><span id="az-max-lbl">360°</span></div>
               <div class="lim-pos" id="az-pos" style="left:0%"></div>
@@ -735,8 +723,8 @@ function toggleDrawer(id,header){
   if(!body)return;
   body.classList.toggle('collapsed');
   if(arrow) arrow.classList.toggle('rotated');
-  if(id==='map-body'&&!body.classList.contains('collapsed')&&typeof map!=='undefined'&&map){
-    setTimeout(()=>map.invalidateSize(),300);
+  if(id==='map-body'&&!body.classList.contains('collapsed')){
+    setTimeout(()=>{if(map)map.invalidateSize();if(S)drawPolar(S);},300);
   }
 }
 function toggleCollapse(id,header){toggleDrawer(id,header)}
@@ -763,13 +751,29 @@ async function fetchStatus(){
 fetchStatus();
 setTimeout(refreshSatellites,300);
 
+// ResizeObserver: redraw polar plot as soon as container has real dimensions
+(function(){
+  const polarWrap=document.getElementById('polar')?.parentElement;
+  if(!polarWrap) return;
+  if(typeof ResizeObserver!=='undefined'){
+    const ro=new ResizeObserver(entries=>{
+      const e=entries[0]; if(!e) return;
+      const {width,height}=e.contentRect;
+      if(width>10&&height>10) drawPolar(S||{});
+    });
+    ro.observe(polarWrap);
+  } else {
+    setTimeout(()=>drawPolar(S||{}),500);
+  }
+})();
+
 function setVal(id,v){const e=document.getElementById(id);if(e&&e!=document.activeElement&&!e.dataset.dirty)e.value=v;}
 document.addEventListener('input',e=>{if(e.target.tagName=='INPUT')e.target.dataset.dirty='1';});
 function clearDirty(...ids){ids.forEach(id=>{const e=document.getElementById(id);if(e)delete e.dataset.dirty;});}
 
 /* ═══ GAUGES ═══ */
-// Az gauge: viewBox 0 0 100 56, center at (50, 50), radius 44
-const AZ_R=44,AZ_CX=50,AZ_CY=50;
+// Az gauge: 360° circular compass dial, viewBox 0 0 100 100, center (50, 50), radius 38
+const AZ_R=38,AZ_CX=50,AZ_CY=50;
 function setLine(id,x1,y1,x2,y2,show){
   const el=document.getElementById(id);if(!el)return;
   if(show){el.setAttribute('x1',x1);el.setAttribute('y1',y1);el.setAttribute('x2',x2);el.setAttribute('y2',y2);el.classList.remove('hidden');}
@@ -777,30 +781,47 @@ function setLine(id,x1,y1,x2,y2,show){
 }
 function updateAzGauge(az,s){
   if(az!=null){
-    const frac=Math.max(0,Math.min(360,az))/360;
-    const totalLen=Math.PI*AZ_R;
-    const arc=document.getElementById('az-arc');
-    if(arc) arc.setAttribute('stroke-dasharray',frac*totalLen+' '+totalLen);
-    const a=frac*Math.PI;
+    const normAz=((az%360)+360)%360;
+    const rad=(normAz-90)*Math.PI/180;
     const dot=document.getElementById('az-dot');
-    if(dot){dot.setAttribute('cx',AZ_CX-AZ_R*Math.cos(a));dot.setAttribute('cy',AZ_CY-AZ_R*Math.sin(a));}
+    if(dot){dot.setAttribute('cx',AZ_CX+AZ_R*Math.cos(rad));dot.setAttribute('cy',AZ_CY+AZ_R*Math.sin(rad));}
+    const needle=document.getElementById('az-needle');
+    if(needle){needle.setAttribute('x2',AZ_CX+(AZ_R-8)*Math.cos(rad));needle.setAttribute('y2',AZ_CY+(AZ_R-8)*Math.sin(rad));}
   }
   const showLim=s&&s.enabled;
   const hasMin=showLim&&s.az_min!=null,hasMax=showLim&&s.az_max!=null;
-  if(hasMin){const f=s.az_min/360,a=f*Math.PI;setLine('az-min-line',AZ_CX-(AZ_R-5)*Math.cos(a),AZ_CY-(AZ_R-5)*Math.sin(a),AZ_CX-(AZ_R+5)*Math.cos(a),AZ_CY-(AZ_R+5)*Math.sin(a),true);}
-  else setLine('az-min-line',0,0,0,0,false);
-  if(hasMax){const f=s.az_max/360,a=f*Math.PI;setLine('az-max-line',AZ_CX-(AZ_R-5)*Math.cos(a),AZ_CY-(AZ_R-5)*Math.sin(a),AZ_CX-(AZ_R+5)*Math.cos(a),AZ_CY-(AZ_R+5)*Math.sin(a),true);}
-  else setLine('az-max-line',0,0,0,0,false);
+  if(hasMin){
+    const a1=(s.az_min-90)*Math.PI/180;
+    const rIn=AZ_R-6,rOut=AZ_R+6;
+    setLine('az-min-line',AZ_CX+rIn*Math.cos(a1),AZ_CY+rIn*Math.sin(a1),AZ_CX+rOut*Math.cos(a1),AZ_CY+rOut*Math.sin(a1),true);
+  }else setLine('az-min-line',0,0,0,0,false);
+
+  if(hasMax){
+    const a2=(s.az_max-90)*Math.PI/180;
+    const rIn=AZ_R-6,rOut=AZ_R+6;
+    setLine('az-max-line',AZ_CX+rIn*Math.cos(a2),AZ_CY+rIn*Math.sin(a2),AZ_CX+rOut*Math.cos(a2),AZ_CY+rOut*Math.sin(a2),true);
+  }else setLine('az-max-line',0,0,0,0,false);
+
   const limArc=document.getElementById('az-lim-arc');
-  if(hasMin&&hasMax&&s.az_min<s.az_max&&limArc){
-    const a1=s.az_min/360*Math.PI,a2=s.az_max/360*Math.PI;
-    limArc.setAttribute('d',`M ${AZ_CX-AZ_R*Math.cos(a1)} ${AZ_CY-AZ_R*Math.sin(a1)} A ${AZ_R} ${AZ_R} 0 0 1 ${AZ_CX-AZ_R*Math.cos(a2)} ${AZ_CY-AZ_R*Math.sin(a2)}`);
+  if(hasMin&&hasMax&&limArc){
+    const a1=(s.az_min-90)*Math.PI/180;
+    const a2_deg=s.az_max>=s.az_min?s.az_max:s.az_max+360;
+    const a2=(a2_deg-90)*Math.PI/180;
+    const span=a2_deg-s.az_min;
+    if(span>=360){
+      limArc.setAttribute('d',`M ${AZ_CX} ${AZ_CY-AZ_R} A ${AZ_R} ${AZ_R} 0 1 1 ${AZ_CX-0.001} ${AZ_CY-AZ_R}`);
+    }else{
+      const x1=AZ_CX+AZ_R*Math.cos(a1),y1=AZ_CY+AZ_R*Math.sin(a1);
+      const x2=AZ_CX+AZ_R*Math.cos(a2),y2=AZ_CY+AZ_R*Math.sin(a2);
+      const largeArc=span>180?1:0;
+      limArc.setAttribute('d',`M ${x1} ${y1} A ${AZ_R} ${AZ_R} 0 ${largeArc} 1 ${x2} ${y2}`);
+    }
     limArc.classList.remove('hidden');
   }else if(limArc) limArc.classList.add('hidden');
 }
 
-// El gauge: viewBox 0 0 30 56, bar from y=4 to y=52 => height 48
-const EL_H=48,EL_BY=52;
+// El gauge: viewBox 0 0 28 76, bar from y=8 to y=68 => height 60
+const EL_H=60,EL_BY=68;
 function updateElGauge(el,s){
   if(el!=null){
     const frac=Math.max(0,Math.min(90,el))/90;
@@ -812,8 +833,8 @@ function updateElGauge(el,s){
   }
   const showLim=s&&s.enabled;
   const hasMin=showLim&&s.el_min!=null,hasMax=showLim&&s.el_max!=null;
-  if(hasMin){const y=EL_BY-(s.el_min/90)*EL_H;setLine('el-min-line',5,y,22,y,true);}else setLine('el-min-line',0,0,0,0,false);
-  if(hasMax){const y=EL_BY-(s.el_max/90)*EL_H;setLine('el-max-line',5,y,22,y,true);}else setLine('el-max-line',0,0,0,0,false);
+  if(hasMin){const y=EL_BY-(s.el_min/90)*EL_H;setLine('el-min-line',4,y,22,y,true);}else setLine('el-min-line',0,0,0,0,false);
+  if(hasMax){const y=EL_BY-(s.el_max/90)*EL_H;setLine('el-max-line',4,y,22,y,true);}else setLine('el-max-line',0,0,0,0,false);
   const limRect=document.getElementById('el-lim-rect');
   if(hasMin&&hasMax&&s.el_min<s.el_max&&limRect){
     const yMin=EL_BY-(s.el_min/90)*EL_H,yMax=EL_BY-(s.el_max/90)*EL_H;
@@ -929,15 +950,104 @@ function render(s){
 
 function renderLimBar(pfx,lo,hi,pos,max){
   const has=lo!=null&&hi!=null;
-  const r=document.getElementById(pfx+'-range'),e1=document.getElementById(pfx+'-min-e'),e2=document.getElementById(pfx+'-max-e'),m=document.getElementById(pfx+'-pos');
+  const r=document.getElementById(pfx+'-range'),r2=document.getElementById(pfx+'-range2'),e1=document.getElementById(pfx+'-min-e'),e2=document.getElementById(pfx+'-max-e'),m=document.getElementById(pfx+'-pos');
   if(has){
     const lp=lo/max*100,hp=hi/max*100;
-    r.style.left=lp+'%';r.style.width=(hp-lp)+'%';
+    if(lo<=hi){
+      r.style.left=lp+'%';r.style.width=(hp-lp)+'%';
+      if(r2) r2.classList.add('hidden');
+    }else{
+      r.style.left='0%';r.style.width=hp+'%';
+      if(r2){
+        r2.style.left=lp+'%';r2.style.width=(100-lp)+'%';
+        r2.classList.remove('hidden');
+      }
+    }
     e1.style.left=lp+'%';e2.style.left=hp+'%';
     e1.querySelector('span').textContent=lo.toFixed(1)+'°';e2.querySelector('span').textContent=hi.toFixed(1)+'°';
     e1.classList.remove('hidden');e2.classList.remove('hidden');
-  }else{r.style.left='0';r.style.width='100%';e1.classList.add('hidden');e2.classList.add('hidden');}
+  }else{
+    r.style.left='0';r.style.width='100%';
+    if(r2) r2.classList.add('hidden');
+    e1.classList.add('hidden');e2.classList.add('hidden');
+  }
   if(pos!=null) m.style.left=(pos/max*100)+'%';
+}
+
+/* ═══ LEAFLET MAP ═══ */
+let map=null, marker=null, azimuthLine=null, _mapCentered=false;
+
+function _createMap(initLat, initLng){
+  const mapEl=document.getElementById('map');
+  if(!mapEl||typeof L==='undefined'||map) return;
+  const lat=(initLat!=null)?initLat:((S&&S.latitude!=null)?S.latitude:38.7223);
+  const lng=(initLng!=null)?initLng:((S&&S.longitude!=null)?S.longitude:-9.1393);
+  const hasLoc=(S&&S.latitude!=null&&S.longitude!=null);
+  const zoom=hasLoc?10:2;
+  if(hasLoc) _mapCentered=true;
+
+  map=L.map('map',{zoomControl:true,attributionControl:false}).setView([lat,lng],zoom);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd'}).addTo(map);
+  
+  const icon=L.divIcon({className:'',html:'<div style="width:14px;height:14px;background:#3b82f6;border:2px solid #fff;border-radius:50%;box-shadow:0 0 10px rgba(59,130,246,.9);margin:-7px 0 0 -7px"></div>',iconSize:[0,0]});
+  marker=L.marker([lat,lng],{icon,draggable:true}).addTo(map);
+  marker.bindPopup('<b>Ground Station</b>');
+  marker.on('dragend',async function(){
+    const p=marker.getLatLng();
+    const dLat=parseFloat(p.lat.toFixed(4));
+    const dLng=parseFloat(p.lng.toFixed(4));
+    document.getElementById('loc-lat').value=dLat;
+    document.getElementById('loc-lng').value=dLng;
+    clearDirty('loc-lat','loc-lng');
+    if(S){S.latitude=dLat;S.longitude=dLng;}
+    _mapCentered=true;
+    const r=await post(API+'/location',{latitude:dLat,longitude:dLng});
+    if(r.ok){
+      toast('success','Location set');
+      await fetchStatus();
+    }
+  });
+
+  azimuthLine=L.polyline([[lat,lng],[lat,lng]],{color:'#3b82f6',weight:3,opacity:.9,dashArray:'6 6'}).addTo(map);
+  setTimeout(()=>{if(map)map.invalidateSize();},200);
+}
+
+// Wait for BOTH: (1) status data loaded into S, AND (2) a paint cycle for container dimensions.
+// Polls every 200ms until S has data, then creates the map with the saved coordinates.
+(function _waitAndCreateMap(){
+  if(map) return; // already created
+  if(S && S.latitude!=null && S.longitude!=null){
+    // Status data is available — create map with saved coords (deferred = after paint)
+    _createMap(S.latitude, S.longitude);
+    if(map) return;
+  }
+  // Not ready yet (status still loading, or Leaflet CDN not loaded) — retry
+  setTimeout(_waitAndCreateMap, 250);
+})();
+window.addEventListener('resize',()=>{if(map)map.invalidateSize();});
+
+function updateMap(lat,lng,az){
+  if(!map){
+    // Map not created yet — the _waitAndCreateMap poller will handle it.
+    // But also try here in case poller hasn't fired yet.
+    if(lat!=null&&lng!=null) _createMap(lat, lng);
+    if(!map) return;
+  }
+  if(lat!=null&&lng!=null){
+    if(!_mapCentered){
+      map.setView([lat,lng],10);
+      _mapCentered=true;
+    }
+    if(marker) marker.setLatLng([lat,lng]);
+  }
+  const currentLat=(marker?marker.getLatLng().lat:(lat!=null?lat:38.7223));
+  const currentLng=(marker?marker.getLatLng().lng:(lng!=null?lng:-9.1393));
+  if(az!=null&&azimuthLine){
+    const R=6371,bear=az*Math.PI/180,dlat=50/R,lat1=currentLat*Math.PI/180,lng1=currentLng*Math.PI/180;
+    const lat2=Math.asin(Math.sin(lat1)*Math.cos(dlat)+Math.cos(lat1)*Math.sin(dlat)*Math.cos(bear));
+    const lng2=lng1+Math.atan2(Math.sin(bear)*Math.sin(dlat)*Math.cos(lat1),Math.cos(dlat)-Math.sin(lat1)*Math.sin(lat2));
+    azimuthLine.setLatLngs([[currentLat,currentLng],[lat2*180/Math.PI,lng2*180/Math.PI]]);
+  }
 }
 
 /* ═══ POLAR PLOT (Gpredict Style) ═══ */
@@ -945,13 +1055,17 @@ function drawPolar(s){
   const canvas=document.getElementById('polar');
   if(!canvas) return;
   const wrap=canvas.parentElement;
-  const sz=Math.min(wrap.clientWidth-10, wrap.clientHeight-10, 420);
+  const rect=wrap?wrap.getBoundingClientRect():{width:0,height:0};
+  const w=rect.width, h=rect.height;
+  if(w<10||h<10) return; // container not yet laid out, ResizeObserver will retry
+  const pad=10;
+  const sz=Math.max(100, Math.min(w-pad*2, h-pad*2, 420));
   const dpr=window.devicePixelRatio||1;
   canvas.width=sz*dpr;canvas.height=sz*dpr;
   canvas.style.width=sz+'px';canvas.style.height=sz+'px';
   const ctx=canvas.getContext('2d');
   ctx.scale(dpr,dpr);
-  const cx=sz/2, cy=sz/2, maxR=sz/2-38;
+  const cx=sz/2, cy=sz/2, maxR=Math.max(10, sz/2-38);
 
   function azElToXY(az,el){
     const r=maxR*(1-Math.max(0,Math.min(90,el))/90);
@@ -967,7 +1081,9 @@ function drawPolar(s){
 
   // Allowed Azimuth Virtual Limits Wedge (if enabled)
   if(s.enabled&&s.az_min!=null&&s.az_max!=null){
-    const a1=(s.az_min-90)*Math.PI/180, a2=(s.az_max-90)*Math.PI/180;
+    const a1=(s.az_min-90)*Math.PI/180;
+    const a2_deg=s.az_max>=s.az_min?s.az_max:s.az_max+360;
+    const a2=(a2_deg-90)*Math.PI/180;
     ctx.beginPath();ctx.moveTo(cx,cy);
     ctx.arc(cx,cy,maxR,a1,a2,false);
     ctx.closePath();
@@ -1266,18 +1382,8 @@ document.getElementById('prof-save').addEventListener('click',lock(document.getE
 }));
 const _origRender=render;render=function(s){_origRender(s);refreshProfiles();};
 
-/* ═══ Map ═══ */
-let map,marker,azimuthLine;
-function updateMap(lat,lng,az){
-  if(!map){map=L.map('map',{zoomControl:false,attributionControl:false}).setView([lat||0,lng||0],lat!=null?10:1);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(map);map.attributionControl=L.control.attribution({prefix:false}).addTo(map);setTimeout(()=>map.invalidateSize(),300);}
-  if(lat!=null&&lng!=null){
-    if(!marker){marker=L.marker([lat,lng],{draggable:true}).addTo(map);marker.on('dragend',async function(){const p=marker.getLatLng();document.getElementById('loc-lat').value=parseFloat(p.lat.toFixed(4));document.getElementById('loc-lng').value=parseFloat(p.lng.toFixed(4));const r=await post(API+'/location',{latitude:p.lat,longitude:p.lng});if(r.ok){toast('success','Location set');await fetchStatus();}});}
-    else marker.setLatLng([lat,lng]);
-    if(!azimuthLine) azimuthLine=L.polyline([[lat,lng],[lat,lng]],{color:'#3b82f6',weight:3,opacity:.9,dashArray:'6 6'}).addTo(map);
-    if(az!=null){const R=6371,bear=az*Math.PI/180,dlat=50/R,lat1=lat*Math.PI/180,lng1=lng*Math.PI/180;const lat2=Math.asin(Math.sin(lat1)*Math.cos(dlat)+Math.cos(lat1)*Math.sin(dlat)*Math.cos(bear));const lng2=lng1+Math.atan2(Math.sin(bear)*Math.sin(dlat)*Math.cos(lat1),Math.cos(dlat)-Math.sin(lat1)*Math.sin(lat2));azimuthLine.setLatLngs([[lat,lng],[lat2*180/Math.PI,lng2*180/Math.PI]]);}
-  }
-}
-document.getElementById('loc-apply').addEventListener('click',lock(document.getElementById('loc-apply'),async()=>{const lat=parseFloat(document.getElementById('loc-lat').value),lng=parseFloat(document.getElementById('loc-lng').value);if(isNaN(lat)||isNaN(lng)){toast('error','Invalid');return;}const altM=parseFloat(document.getElementById('loc-alt').value);const body={latitude:lat,longitude:lng};if(!isNaN(altM)) body.altitude=altM/1000;const r=await post(API+'/location',body);if(r.ok){toast('success','Location saved');clearDirty('loc-lat','loc-lng','loc-alt');await fetchStatus();}else toast('error','Failed');}));
+/* ═══ Map (unified at the top) ═══ */
+document.getElementById('loc-apply').addEventListener('click',lock(document.getElementById('loc-apply'),async()=>{const lat=parseFloat(document.getElementById('loc-lat').value),lng=parseFloat(document.getElementById('loc-lng').value);if(isNaN(lat)||isNaN(lng)){toast('error','Invalid');return;}const altM=parseFloat(document.getElementById('loc-alt').value);const body={latitude:lat,longitude:lng};if(!isNaN(altM)) body.altitude=altM/1000;if(S){S.latitude=lat;S.longitude=lng;}_mapCentered=false;const r=await post(API+'/location',body);if(r.ok){toast('success','Location saved');clearDirty('loc-lat','loc-lng','loc-alt');await fetchStatus();}else toast('error','Failed');}));
 document.getElementById('poll-apply').addEventListener('click',lock(document.getElementById('poll-apply'),async()=>{const ms=parseInt(document.getElementById('poll-ms').value);if(isNaN(ms)||ms<200) return;await post(API+'/refresh-interval',{ms});_poll_ms=ms;toast('success',ms+'ms');clearDirty('poll-ms');if(_poll_timer) clearTimeout(_poll_timer);_poll_timer=setTimeout(fetchStatus,_poll_ms);}));
 
 /* ═══ Satellite Tracking ═══ */

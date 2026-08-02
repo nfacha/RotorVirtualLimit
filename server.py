@@ -291,9 +291,9 @@ class APIHandler(BaseHTTPRequestHandler):
                 el_off = step
             if direction & 4:
                 el_off = -step
-            az = (_api_limits.last_az or 0) + az_off
-            el = (_api_limits.last_el or 0) + el_off
-            az = max(0, min(360, az))
+            az = (_api_limits.last_az if _api_limits.last_az is not None else 0.0) + az_off
+            el = (_api_limits.last_el if _api_limits.last_el is not None else 0.0) + el_off
+            az = (az % 360 + 360) % 360
             el = max(0, min(90, el))
             # Apply offset before limits check
             if _api_limits.offset_enabled:
@@ -393,7 +393,7 @@ class APIHandler(BaseHTTPRequestHandler):
             el = az
         target_az = round(az + az_delta, 1)
         target_el = round(el + el_delta, 1)
-        target_az = max(0, min(360, target_az))
+        target_az = (target_az % 360 + 360) % 360
         target_el = max(0, min(90, target_el))
         allowed, _ = _api_limits.check_position(target_az, target_el)
         if not allowed:
