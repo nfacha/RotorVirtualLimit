@@ -33,11 +33,18 @@ class TestTrackerPrepositioning(unittest.TestCase):
         now = datetime.now(timezone.utc)
         now_ts = (now.timestamp() - (self.sat.epoch_jd - 2440587.5) * 86400) / 60.0
         
-        aos_ts, aos_az = self.tracker._find_next_aos(now_ts, self.limits.latitude, self.limits.longitude, self.limits.altitude)
-        if aos_ts is not None:
-            self.assertGreaterEqual(aos_ts, now_ts)
-            self.assertGreaterEqual(aos_az, 0.0)
-            self.assertLessEqual(aos_az, 360.0)
+    def test_compute_upcoming_passes(self):
+        passes = self.tracker.compute_upcoming_passes(self.sat, self.limits.latitude, self.limits.longitude)
+        self.assertIsInstance(passes, list)
+        for p in passes:
+            self.assertIn("aos", p)
+            self.assertIn("los", p)
+            self.assertIn("max_el", p)
+            self.assertIn("aos_az", p)
+            self.assertIn("los_az", p)
+            self.assertIn("duration_sec", p)
+            self.assertGreater(p["max_el"], 0.0)
+            self.assertLessEqual(p["max_el"], 90.0)
 
 if __name__ == "__main__":
     unittest.main()

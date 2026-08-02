@@ -11,6 +11,13 @@ from urllib.error import URLError
 
 log = logging.getLogger("tracker")
 
+try:
+    from sgp4.api import Satrec
+    _HAS_SGP4_LIB = True
+except ImportError:
+    _HAS_SGP4_LIB = False
+
+
 # ── WGS-84 Constants ──────────────────────────────────
 EARTH_R = 6378.137
 J2 = 0.00108262998905
@@ -166,6 +173,13 @@ class TleSatellite:
 class SGP4:
     def __init__(self, sat):
         self._sat = sat
+        self._satrec = None
+        if _HAS_SGP4_LIB and hasattr(sat, "line1") and hasattr(sat, "line2"):
+            try:
+                self._satrec = Satrec.twoline2rv(sat.line1, sat.line2)
+            except Exception as e:
+                log.debug("Satrec init failed, falling back to analytical SGP4: %s", e)
+                self._satrec = None
         self._init(sat)
 
     def _init(self, sat):
@@ -182,6 +196,7 @@ class SGP4:
         theta = math.cos(i0)
         sin_i0 = math.sin(i0)
         beta0 = math.sqrt(1.0 - e0 * e0)
+        beta04 = beta0 * beta0 * beta0 * beta0
         perigee = (a0 * (1.0 - e0) - 1.0) * EARTH_R
 
         s = 78.0
@@ -241,10 +256,10 @@ class SGP4:
         n_dot = bstar * self._C2 * 2.0 + bstar * bstar * (self._D2 + self._D3 + self._D4)
         a_dot = -2.0 * a0 * n_dot / (3.0 * n0)
 
-        # Secular rates
+        # Secular rates (standard Vallado / Brouwer SGP4 equations)
         self._omn = n0 + a_dot / 2.0
-        self._omg_dot = -0.75 * J2 * n0 * (1.0 - 5.0 * theta * theta) / (beta0 * beta0) + 2.0 * bstar * C1 / (a0 * beta0 * beta0)
-        self._raan_dot = 1.5 * J2 * n0 * theta / (beta0 * beta0 * beta0 * beta0)
+        self._omg_dot = -0.75 * J2 * n0 * (1.0 - 5.0 * theta * theta) / (a0 * a0 * beta04) + 2.0 * bstar * C1 / (a0 * beta0 * beta0)
+        self._raan_dot = -1.5 * J2 * n0 * theta / (a0 * a0 * beta04)
 
         self._mean_motion_dot = n_dot
         self._a_dot = a_dot
@@ -252,8 +267,13 @@ class SGP4:
         self._initialized = True
 
     def propagate(self, tsince):
+        if self._satrec is not None:
+            e, r, v = self._satrec.sgp4_tsince(tsince)
+            if e == 0:
+                return r
         if not self._initialized:
             return (0.0, 0.0, 0.0)
+
 
         n0 = self._n0
         e0 = self._e0
@@ -849,84 +869,220 @@ class SatelliteTracker:
         now_ts = (now.timestamp() - (epoch_jd - 2440587.5) * 86400) / 60.0
         obs_alt = self.limits.altitude if self.limits.altitude is not None else 0.0
 
-        passes = []
-        in_pass = False
-        aos_time = None
-        aos_az = 0.0
-        max_el = 0.0
+        def _eval_az_el(ts):
+            x, y, z = sgp4.propagate(ts)
+            dt = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + ts * 60, tz=timezone.utc)
+            az, el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, obs_alt, dt=dt)
+            return az, el, dt
 
-        step = 1
-        total = look_ahead_hours * 60
-        for i in range(0, total, step):
-            tsince = now_ts + i
-            x, y, z = sgp4.propagate(tsince)
-            dt = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + tsince * 60, tz=timezone.utc)
+        def _find_aos(t_prev, t_curr):
+            t_low, t_high = t_prev, t_curr
+            for _ in range(12):
+                t_mid = (t_low + t_high) / 2.0
+                try:
+                    _, el_mid, _ = _eval_az_el(t_mid)
+                    if el_mid >= 0:
+                        t_high = t_mid
+                    else:
+                        t_low = t_mid
+                except Exception:
+                    break
+            az, el, dt = _eval_az_el(t_high)
+            return t_high, az, dt
+
+        def _find_los(t_curr, t_next):
+            t_low, t_high = t_curr, t_next
+            for _ in range(12):
+                t_mid = (t_low + t_high) / 2.0
+                try:
+                    _, el_mid, _ = _eval_az_el(t_mid)
+                    if el_mid >= 0:
+                        t_low = t_mid
+                    else:
+                        t_high = t_mid
+                except Exception:
+                    break
+            az, el, dt = _eval_az_el(t_low)
+            return t_low, az, dt
+
+        def _find_max_el(t_aos, t_los):
+            best_el = -90.0
+            best_t = t_aos
+            best_az = 0.0
+            t = t_aos
+            step_5s = 5.0 / 60.0
+            while t <= t_los:
+                try:
+                    az, el, _ = _eval_az_el(t)
+                    if el > best_el:
+                        best_el = el
+                        best_t = t
+                        best_az = az
+                except Exception:
+                    pass
+                t += step_5s
+
+            t_ref_start = max(t_aos, best_t - 10.0 / 60.0)
+            t_ref_end = min(t_los, best_t + 10.0 / 60.0)
+            t_fine = t_ref_start
+            step_1s = 1.0 / 60.0
+            while t_fine <= t_ref_end:
+                try:
+                    az, el, _ = _eval_az_el(t_fine)
+                    if el > best_el:
+                        best_el = el
+                        best_t = t_fine
+                        best_az = az
+                except Exception:
+                    pass
+                t_fine += step_1s
+            _, _, max_dt = _eval_az_el(best_t)
+            return best_el, best_az, max_dt, best_t
+
+        passes = []
+        look_minutes = look_ahead_hours * 60
+        i = 0
+
+        # Check if currently in pass at now_ts
+        try:
+            _, cur_el, _ = _eval_az_el(now_ts)
+        except Exception:
+            cur_el = -90.0
+
+        if cur_el >= 0:
+            # Active pass! Search backwards for AOS
+            t_prev = now_ts
+            t_aos_start = None
+            while t_prev > now_ts - 35:
+                t_check = t_prev - 1.0
+                try:
+                    _, el_c, _ = _eval_az_el(t_check)
+                    if el_c < 0:
+                        t_aos_start = (t_check, t_prev)
+                        break
+                except Exception:
+                    break
+                t_prev = t_check
+            if t_aos_start:
+                t_aos, aos_az, aos_time = _find_aos(t_aos_start[0], t_aos_start[1])
+            else:
+                t_aos = now_ts
+                aos_az, _, aos_time = _eval_az_el(now_ts)
+
+            # Search forwards for LOS
+            t_curr = now_ts
+            t_los_end = None
+            while t_curr < now_ts + 35:
+                t_next = t_curr + 1.0
+                try:
+                    _, el_n, _ = _eval_az_el(t_next)
+                    if el_n < 0:
+                        t_los_end = (t_curr, t_next)
+                        break
+                except Exception:
+                    break
+                t_curr = t_next
+            if t_los_end:
+                t_los, los_az, los_time = _find_los(t_los_end[0], t_los_end[1])
+                max_el, max_el_az, max_el_time, _ = _find_max_el(t_aos, t_los)
+                duration_sec = int((los_time - aos_time).total_seconds())
+                duration_min = round(duration_sec / 60.0, 1)
+
+                pass_sky = []
+                pass_ground = []
+                t_sub = t_aos
+                while t_sub <= t_los:
+                    try:
+                        az_s, el_s, dt_s = _eval_az_el(t_sub)
+                        if el_s >= 0:
+                            pass_sky.append([round(az_s, 1), round(el_s, 1)])
+                        x_g, y_g, z_g = sgp4.propagate(t_sub)
+                        lat_g, lon_g, _ = _teme_to_geodetic(x_g, y_g, z_g, dt=dt_s)
+                        pass_ground.append([round(math.degrees(lat_g), 4), round(math.degrees(lon_g), 4)])
+                    except Exception:
+                        pass
+                    t_sub += 10.0 / 60.0
+
+                passes.append({
+                    "id": len(passes),
+                    "aos": aos_time.isoformat(),
+                    "los": los_time.isoformat(),
+                    "max_el": round(max_el, 1),
+                    "aos_az": round(aos_az, 1),
+                    "los_az": round(los_az, 1),
+                    "duration_min": duration_min,
+                    "duration_sec": duration_sec,
+                    "max_el_time": max_el_time.isoformat(),
+                    "sky_track": pass_sky,
+                    "ground_track": pass_ground,
+                })
+                i = int(t_los - now_ts) + 1
+
+        # Search upcoming passes
+        prev_el = -90.0
+        prev_t = now_ts + i - 1.0
+        try:
+            _, prev_el, _ = _eval_az_el(prev_t)
+        except Exception:
+            pass
+
+        t_aos_pair = None
+        while i <= look_minutes and len(passes) < 10:
+            curr_t = now_ts + i
             try:
-                az, el, _ = teme_to_az_el(x, y, z, obs_lat, obs_lon, obs_alt, dt=dt)
+                az_c, el_c, dt_c = _eval_az_el(curr_t)
             except Exception:
+                i += 1
                 continue
 
-            if el > 0:
-                if not in_pass:
-                    aos_time = dt
-                    aos_az = az
-                    max_el = el
-                    in_pass = True
-                elif el > max_el:
-                    max_el = el
-            else:
-                if in_pass and aos_time is not None:
-                    los_time = dt
-                    duration = int((los_time - aos_time).total_seconds() / 60)
-                    if duration >= 1:
-                        pass_sky = []
-                        pass_ground = []
-                        t_aos = (aos_time.timestamp() - (epoch_jd - 2440587.5) * 86400) / 60.0
-                        t_los = (los_time.timestamp() - (epoch_jd - 2440587.5) * 86400) / 60.0
-                        
-                        # 1. Sky track for Polar Plot (from AOS to LOS)
-                        t_sub = t_aos
-                        while t_sub <= t_los:
-                            x_s, y_s, z_s = sgp4.propagate(t_sub)
-                            dt_sub = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + t_sub * 60, tz=timezone.utc)
-                            try:
-                                az_s, el_s, _ = teme_to_az_el(x_s, y_s, z_s, obs_lat, obs_lon, obs_alt, dt=dt_sub)
-                                if el_s >= 0:
-                                    pass_sky.append([round(az_s, 1), round(el_s, 1)])
-                            except Exception:
-                                pass
-                            t_sub += 10.0 / 60.0
+            if el_c >= 0 and prev_el < 0:
+                t_aos_pair = (prev_t, curr_t)
+            elif el_c < 0 and prev_el >= 0 and t_aos_pair is not None:
+                t_los_pair = (prev_t, curr_t)
+                t_aos, aos_az, aos_time = _find_aos(t_aos_pair[0], t_aos_pair[1])
+                t_los, los_az, los_time = _find_los(t_los_pair[0], t_los_pair[1])
+                max_el, max_el_az, max_el_time, _ = _find_max_el(t_aos, t_los)
 
-                        # 2. Pass Ground Track for Map (single smooth track from AOS to LOS)
-                        t_g = t_aos
-                        while t_g <= t_los:
-                            x_g, y_g, z_g = sgp4.propagate(t_g)
-                            dt_g = datetime.fromtimestamp((epoch_jd - 2440587.5) * 86400 + t_g * 60, tz=timezone.utc)
-                            try:
-                                lat_g, lon_g, _ = _teme_to_geodetic(x_g, y_g, z_g, dt=dt_g)
-                                pass_ground.append([round(math.degrees(lat_g), 4), round(math.degrees(lon_g), 4)])
-                            except Exception:
-                                pass
-                            t_g += 10.0 / 60.0
+                duration_sec = int((los_time - aos_time).total_seconds())
+                duration_min = round(duration_sec / 60.0, 1)
 
-                        passes.append({
-                            "id": len(passes),
-                            "aos": aos_time.isoformat(),
-                            "los": los_time.isoformat(),
-                            "max_el": round(max_el, 1),
-                            "aos_az": round(aos_az, 1),
-                            "los_az": round(az, 1),
-                            "duration_min": duration,
-                            "sky_track": pass_sky,
-                            "ground_track": pass_ground,
-                        })
-                    in_pass = False
-                    aos_time = None
+                if duration_sec >= 60:
+                    pass_sky = []
+                    pass_ground = []
+                    t_sub = t_aos
+                    while t_sub <= t_los:
+                        try:
+                            az_s, el_s, dt_s = _eval_az_el(t_sub)
+                            if el_s >= 0:
+                                pass_sky.append([round(az_s, 1), round(el_s, 1)])
+                            x_g, y_g, z_g = sgp4.propagate(t_sub)
+                            lat_g, lon_g, _ = _teme_to_geodetic(x_g, y_g, z_g, dt=dt_s)
+                            pass_ground.append([round(math.degrees(lat_g), 4), round(math.degrees(lon_g), 4)])
+                        except Exception:
+                            pass
+                        t_sub += 10.0 / 60.0
 
-            if len(passes) >= 10:
-                break
+                    passes.append({
+                        "id": len(passes),
+                        "aos": aos_time.isoformat(),
+                        "los": los_time.isoformat(),
+                        "max_el": round(max_el, 1),
+                        "aos_az": round(aos_az, 1),
+                        "los_az": round(los_az, 1),
+                        "duration_min": duration_min,
+                        "duration_sec": duration_sec,
+                        "max_el_time": max_el_time.isoformat(),
+                        "sky_track": pass_sky,
+                        "ground_track": pass_ground,
+                    })
+                t_aos_pair = None
+
+            prev_el = el_c
+            prev_t = curr_t
+            i += 1
 
         return passes
+
 
     def compute_sky_track(self, sat=None, obs_lat=None, obs_lon=None):
         sat = sat or self.target

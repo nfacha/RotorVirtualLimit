@@ -637,7 +637,10 @@ footer a:hover{text-decoration:underline}
           </div>
         </div>
         <div id="track-passes-area" class="hidden" style="margin-top:6px">
-          <div style="font-size:.55rem;color:var(--dim);font-weight:700;text-transform:uppercase;margin-bottom:2px">Upcoming Passes</div>
+          <div class="flex" style="justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:.55rem;color:var(--dim);font-weight:700;text-transform:uppercase">Upcoming Passes</span>
+            <button class="btn bt btn-sm" id="pass-tz-btn" style="font-size:.55rem;padding:1px 6px;height:20px;line-height:1">Time: UTC</button>
+          </div>
           <div id="track-passes-list" class="sat-wrap">
             <div style="padding:8px;text-align:center;color:var(--dim);font-size:.65rem">No passes computed</div>
           </div>
@@ -717,6 +720,17 @@ footer a:hover{text-decoration:underline}
 <script>
 const API='/api';let S={};
 
+function preloadLocationForm(){
+  if(S){
+    const elLat=document.getElementById('loc-lat');
+    const elLng=document.getElementById('loc-lng');
+    const elAlt=document.getElementById('loc-alt');
+    if(elLat&&S.latitude!=null&&(!elLat.value||!elLat.dataset.dirty)) elLat.value=S.latitude;
+    if(elLng&&S.longitude!=null&&(!elLng.value||!elLng.dataset.dirty)) elLng.value=S.longitude;
+    if(elAlt&&S.altitude!=null&&(!elAlt.value||!elAlt.dataset.dirty)) elAlt.value=Math.round(S.altitude*1000);
+  }
+}
+
 function toggleDrawer(id,header){
   const body=document.getElementById(id);
   const arrow=header.querySelector('.aw');
@@ -725,6 +739,9 @@ function toggleDrawer(id,header){
   if(arrow) arrow.classList.toggle('rotated');
   if(id==='map-body'&&!body.classList.contains('collapsed')){
     setTimeout(()=>{if(map)map.invalidateSize();if(S)drawPolar(S);},300);
+  }
+  if(id==='settings-body'&&!body.classList.contains('collapsed')){
+    preloadLocationForm();
   }
 }
 function toggleCollapse(id,header){toggleDrawer(id,header)}
@@ -1469,11 +1486,39 @@ function updatePassCountdowns(){
 }
 if(!_cdTimer) _cdTimer=setInterval(updatePassCountdowns,1000);
 
+let _useUTC=true;
+function formatPassTime(dt,useUTC){
+  if(useUTC){
+    const h=String(dt.getUTCHours()).padStart(2,'0');
+    const m=String(dt.getUTCMinutes()).padStart(2,'0');
+    const s=String(dt.getUTCSeconds()).padStart(2,'0');
+    return h+':'+m+':'+s;
+  }
+  return dt.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+}
+function formatPassDate(dt,useUTC){
+  if(useUTC){
+    const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months[dt.getUTCMonth()]+' '+dt.getUTCDate();
+  }
+  return dt.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+}
+
 function renderPasses(passes){
   _passesList=passes||[];
   const list=document.getElementById('track-passes-list'),area=document.getElementById('track-passes-area');
   if(!_passesList.length){area.classList.add('hidden');return;}
   area.classList.remove('hidden');
+
+  const tzBtn=document.getElementById('pass-tz-btn');
+  if(tzBtn){
+    tzBtn.textContent='Time: '+(_useUTC?'UTC':'Local');
+    tzBtn.onclick=function(e){
+      e.preventDefault();
+      _useUTC=!_useUTC;
+      renderPasses(_passesList);
+    };
+  }
 
   if(!_selectedPass&&_passesList.length) _selectedPass=_passesList[0];
   else if(_selectedPass){
@@ -1483,11 +1528,21 @@ function renderPasses(passes){
 
   list.innerHTML=_passesList.map(p=>{
     const aosDate=new Date(p.aos),losDate=new Date(p.los);
-    const dateStr=aosDate.toLocaleDateString(undefined,{month:'short',day:'numeric'});
-    const aosStr=aosDate.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
-    const losStr=losDate.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+    const dateStr=formatPassDate(aosDate,_useUTC);
+    const aosStr=formatPassTime(aosDate,_useUTC);
+    const losStr=formatPassTime(losDate,_useUTC);
+    const durSec=p.duration_sec!=null?p.duration_sec:Math.floor((losDate-aosDate)/1000);
+    const durMin=Math.floor(durSec/60),durRemSec=durSec%60;
+    const durStr=durMin+'m '+pad2(durRemSec)+'s';
     const isSel=_selectedPass&&_selectedPass.id===p.id?' selected':'';
-    return '<div class="pass-item'+isSel+'" data-pass-id="'+p.id+'" style="display:flex;align-items:center;gap:4px;padding:6px 8px;min-height:36px;border-bottom:1px solid var(--border);font-size:.65rem;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none"><span style="font-weight:700;min-width:42px;color:var(--text);pointer-events:none">'+dateStr+'</span><span style="min-width:70px;color:var(--sub);font-size:.62rem;pointer-events:none">'+aosStr+'→'+losStr+'</span><span style="min-width:35px;color:var(--accent);font-weight:700;pointer-events:none">'+p.max_el+'°</span><span class="tag tag-m pass-cd" data-aos="'+p.aos+'" data-los="'+p.los+'" style="margin-left:auto;font-family:\'JetBrains Mono\',monospace;font-size:.58rem;pointer-events:none">--</span></div>';
+    const aosAz=(p.aos_az!=null?p.aos_az.toFixed(1):'--')+'°';
+    const losAz=(p.los_az!=null?p.los_az.toFixed(1):'--')+'°';
+
+    return '<div class="pass-item'+isSel+'" data-pass-id="'+p.id+'" style="display:flex;align-items:center;gap:6px;padding:6px 8px;min-height:40px;border-bottom:1px solid var(--border);font-size:.65rem;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none">'
+         + '<div style="display:flex;flex-direction:column;min-width:56px;pointer-events:none"><span style="font-weight:700;color:var(--text)">'+dateStr+'</span><span style="font-size:.55rem;color:var(--dim)">'+durStr+'</span></div>'
+         + '<div style="display:flex;flex-direction:column;flex:1;min-width:115px;pointer-events:none"><span style="color:var(--sub);font-weight:600;font-family:\'JetBrains Mono\',monospace">'+aosStr+' → '+losStr+'</span><span style="font-size:.56rem;color:var(--dim)">Az: '+aosAz+' → '+losAz+'</span></div>'
+         + '<div style="display:flex;flex-direction:column;align-items:flex-end;pointer-events:none"><span style="color:var(--accent);font-weight:800;font-size:.75rem">Max '+p.max_el.toFixed(1)+'°</span><span class="tag tag-m pass-cd" data-aos="'+p.aos+'" data-los="'+p.los+'" style="font-family:\'JetBrains Mono\',monospace;font-size:.55rem">--</span></div>'
+         + '</div>';
   }).join('');
 
   list.querySelectorAll('.pass-item').forEach(el=>{
