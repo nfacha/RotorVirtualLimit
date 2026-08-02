@@ -241,29 +241,27 @@ Searches cached TLE satellites matching a search query string.
 **Payload:**
 ```json
 {
-  "query": "ISS"
+  "search": "ISS"
 }
 ```
 
 ### `POST /api/tracking/passes`
-Calculates upcoming satellite pass predictions for the specified satellite over the given forecast window (in hours).
+Calculates upcoming satellite pass predictions, sky track, and ground track for the specified satellite by NORAD ID.
 
 **Payload:**
 ```json
 {
-  "satellite": "ISS (ZARYA)",
-  "hours": 24
+  "norad_id": 25544
 }
 ```
 
 ### `POST /api/tracking/start`
-Starts tracking engine for a satellite by NORAD ID or name, with optional auto-steering.
+Starts tracking engine for a satellite by NORAD ID.
 
 **Payload:**
 ```json
 {
-  "norad_id": 25544,
-  "auto_steer": true
+  "norad_id": 25544
 }
 ```
 
@@ -339,7 +337,23 @@ Tests TCP connection reachability and position query against upstream daemon.
 ## 9. Configuration Profiles
 
 ### `POST /api/profiles/list`
-Lists saved configuration profiles.
+Lists saved configuration profiles and metadata.
+
+**Response Example:**
+```json
+{
+  "ok": true,
+  "profiles": [
+    {
+      "name": "portable-station",
+      "filename": "portable-station.json",
+      "description": "Field operation limits and location",
+      "created_at": "2026-08-01T12:00:00",
+      "updated_at": "2026-08-02T10:30:00"
+    }
+  ]
+}
+```
 
 ### `POST /api/profiles/save`
 Saves current configuration as a named profile preset.

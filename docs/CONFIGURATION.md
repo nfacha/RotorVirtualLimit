@@ -89,12 +89,60 @@ Named profiles allow saving and switching between operational presets (e.g., "Po
 * **Location:** Stored as individual JSON files in the `profiles/` directory (e.g., `profiles/portable-ops.json`).
 * **Saved Parameters:** Includes limit bounds, cable guard states, ground station location, park coordinates, calibration offsets, and backend settings.
 
+### Profile JSON Schema Example
+
+```json
+{
+  "name": "portable-ops",
+  "description": "Field operation limits and location",
+  "created_at": "2026-08-01T12:00:00",
+  "updated_at": "2026-08-02T10:30:00",
+  "limits": {
+    "az_min": 45.0,
+    "az_max": 315.0,
+    "el_min": 0.0,
+    "el_max": 85.0,
+    "enabled": true
+  },
+  "offset": {
+    "az": 2.5,
+    "el": -1.0,
+    "enabled": true
+  },
+  "cable_guard": {
+    "enabled": true,
+    "max_turns": 1.5,
+    "net_rotation": 0.0,
+    "reference_az": 180.0
+  },
+  "refresh_interval_ms": 1000,
+  "park_az": 180.0,
+  "park_el": 0.0,
+  "latitude": 37.7749,
+  "longitude": -25.5197,
+  "altitude": 100.0,
+  "backend": {
+    "host": "127.0.0.1",
+    "port": 4533
+  }
+}
+```
+
 ---
 
-## 3. Orbital TLE Data Cache (`tle_cache.json`)
+## 3. Station Location & Map Sync
+
+Ground station coordinates (`latitude`, `longitude`, `altitude`) are saved directly to `virtual_limits.json` whenever set via the REST API (`POST /api/location`) or by dragging the ground station marker on the interactive Leaflet map.
+
+On Web UI load or browser refresh (F5), the interactive map synchronizes directly with the loaded location coordinates from `/api/status`, ensuring the marker and center view restore to the saved ground station position without reverting to default coordinates.
+
+---
+
+## 4. Orbital TLE Data Cache (`tle_cache.json`)
 
 Downloaded Celestrak TLE data is cached locally to enable fast satellite search and offline pass predictions.
 
 * **Location:** `tle_cache.json` in root directory.
 * **Format:** Maps satellite names and NORAD IDs to TLE line pairs (`line1`, `line2`) with download timestamps.
 * **Behavior:** Refreshed on demand or automatically when fetching satellite updates via the Web UI or `/api/tracking/fetch`.
+

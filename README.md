@@ -81,7 +81,8 @@ Designed for responsive touchscreens, mobile devices, and desktop browsers alike
 
 ### 🗺️ Live Leaflet Map & Location
 - Interactive map rendering station coordinates, live azimuth pointer line, satellite ground tracks, and coverage footprints.
-- Save ground station latitude, longitude, and elevation to profile.
+- Drag-and-drop marker or manual input to update ground station latitude, longitude, and elevation.
+- Station location is automatically saved to profile and restored on page refresh (F5).
 
 ### 💾 Profile Management
 - Create, load, and delete named configuration profiles (e.g. "Portable Ops", "Home Station", "Low-Profile Satellite").
@@ -273,9 +274,9 @@ All API endpoints return standard JSON responses. POST payloads must be formatte
 | Endpoint | Method | Payload | Description |
 |----------|--------|---------|-------------|
 | `/api/tracking/fetch` | `POST` | `{"force": bool}` | Trigger TLE update from Celestrak / custom URL |
-| `/api/tracking/satellites` | `POST` | `{"query": string}` | Search available satellites in TLE cache |
-| `/api/tracking/passes` | `POST` | `{"satellite": string, "hours": int}` | Predict upcoming passes for a satellite |
-| `/api/tracking/start` | `POST` | `{"norad_id": int, "auto_steer": bool}` | Begin tracking a satellite by NORAD ID or name |
+| `/api/tracking/satellites` | `POST` | `{"search": string}` | Search available satellites in TLE cache |
+| `/api/tracking/passes` | `POST` | `{"norad_id": int}` | Predict upcoming passes, sky track, and ground track |
+| `/api/tracking/start` | `POST` | `{"norad_id": int}` | Begin satellite tracking by NORAD ID |
 | `/api/tracking/stop` | `POST` | — | Stop satellite tracking |
 | `/api/tracking/status` | `GET` | `?extra=1` | Get current tracking state, target position, and pass details |
 | `/api/tracking/sources` | `GET` | — | List available TLE sources and satellite counts |
